@@ -93,7 +93,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include;$(SolutionDir)src\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -111,7 +111,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include;$(SolutionDir)src\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,7 +129,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include;$(SolutionDir)src\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -147,7 +147,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include;$(SolutionDir)src\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -162,12 +162,12 @@
     <ClCompile Include="dependensies\include\glm\detail\glm.cpp" />
     <ClCompile Include="dependensies\include\glm\glm.cppm" />
     <ClCompile Include="src\camera\Camera2D.cpp" />
-    <ClCompile Include="src\test1.cpp" />
     <ClCompile Include="src\graphics\loaders\shader_loader.cpp" />
     <ClCompile Include="src\graphics\Render2D.cpp" />
     <ClCompile Include="src\graphics\Shader.cpp" />
-    <ClCompile Include="src\window\Events.cpp" />
-    <ClCompile Include="src\window\Window.cpp" />
+    <ClCompile Include="src\Events.cpp" />
+    <ClCompile Include="src\Source.cpp" />
+    <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dependensies\include\GLFW\glfw3.h" />
@@ -465,15 +465,16 @@
     <ClInclude Include="dependensies\include\GL\glew.h" />
     <ClInclude Include="dependensies\include\GL\glxew.h" />
     <ClInclude Include="dependensies\include\GL\wglew.h" />
-    <ClInclude Include="src\agent\AgentBase.h" />
-    <ClInclude Include="src\camera\Camera2D.h" />
-    <ClInclude Include="src\GL.h" />
-    <ClInclude Include="src\graphics\loaders\shader_loader.h" />
-    <ClInclude Include="src\graphics\Render2D.h" />
-    <ClInclude Include="src\graphics\Shader.h" />
-    <ClInclude Include="src\utils.h" />
-    <ClInclude Include="src\window\Events.h" />
-    <ClInclude Include="src\window\Window.h" />
+    <ClInclude Include="src\include\Camera2D.h" />
+    <ClInclude Include="src\include\GL.h" />
+    <ClInclude Include="src\include\graphics\shader_loader.h" />
+    <ClInclude Include="src\include\graphics\Render2D.h" />
+    <ClInclude Include="src\include\graphics\Shader.h" />
+    <ClInclude Include="src\include\Simulation.h" />
+    <ClInclude Include="src\include\utils\ArenaAllocator.h" />
+    <ClInclude Include="src\include\utils\utils.h" />
+    <ClInclude Include="src\include\Events.h" />
+    <ClInclude Include="src\include\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dependensies\include\glm\detail\func_common.inl" />

@@ -5,7 +5,7 @@
 #include "Shader.h"
 
 
-namespace Coursework
+namespace CW
 {
 
 	class Window;
@@ -38,4 +38,4 @@ namespace Coursework
 		static Shader sm_BoxShader;
 	};
 
-} // Coursework
+} // CW

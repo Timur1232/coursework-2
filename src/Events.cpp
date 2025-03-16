@@ -4,9 +4,9 @@
 #include <string.h>
 #include <iostream>
 
-#include "Window.h"
+#include <Window.h>
 
-namespace Coursework
+namespace CW
 {
 
 	bool Events::sm_Keys[KEYS_SIZE] = { 0 };
@@ -136,4 +136,4 @@ namespace Coursework
 		sm_MouseScrollDelta = yoffset;
 	}
 
-} // Coursework
+} // CW

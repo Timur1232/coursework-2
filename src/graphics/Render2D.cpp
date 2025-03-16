@@ -1,13 +1,13 @@
-#include "Render2D.h"
+#include "graphics/Render2D.h"
 
 #include <iostream>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-#include "Shader.h"
-#include "../window/Window.h"
+#include <graphics/Shader.h>
+#include <Window.h>
 
-namespace Coursework
+namespace CW
 {
 
 	uint32_t Render2D::sm_VAO = 0;
@@ -87,7 +87,7 @@ namespace Coursework
 		sm_BoxShader.setUniform("iPosition", pos);
 		sm_BoxShader.setUniform("iSize", glm::vec2(width, height));
 		//sm_BoxShader.setUniform("iThickness", thickness);
-		sm_BoxShader.setUniform("iResolution", glm::vec2(window.getWidth(), window.getHeight()));
+		sm_BoxShader.setUniform("iResolution", window.resolution());
 		sm_BoxShader.setUniform("iColor", color);
 		//sm_BoxShader.setUniform("iFade", 0.005f);
 
@@ -142,4 +142,4 @@ namespace Coursework
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-} // Coursework
+} // CW

@@ -1,4 +1,4 @@
-#include "shader_loader.h"
+#include "graphics/shader_loader.h"
 
 #include <exception>
 #include <fstream>
@@ -8,7 +8,7 @@
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
 
-namespace Coursework
+namespace CW
 {
 
     uint32_t compile_shader(const char* shaderPath, uint32_t type)
@@ -89,4 +89,4 @@ namespace Coursework
         return id;
     }
 
-} // Coursework
+} // CW

@@ -1,11 +1,14 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <Window.h>
 
-namespace Coursework
+namespace CW
 {
 	
-	constexpr float m_MinZoom = 0.25f;
+	constexpr float MIN_ZOOM = 0.2f;
+	constexpr float MAX_ZOOM = 10.0f;
+	constexpr float ZOOM_STEP = 0.2f;
 
 	class Camera2D
 	{
@@ -15,6 +18,9 @@ namespace Coursework
 
 		void zoomIn();
 		void zoomOut();
+		void update(const Window& window);
+
+		float zoom() const;
 
 	public:
 		glm::vec2 position = { 0.0f, 0.0f };
@@ -23,4 +29,4 @@ namespace Coursework
 		float m_Zoom = 1.0f;
 	};
 
-} // Coursework
+} // CW

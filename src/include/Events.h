@@ -4,7 +4,7 @@
 
 struct GLFWwindow;
 
-namespace Coursework
+namespace CW
 {
 
 	class Window;
@@ -52,4 +52,4 @@ namespace Coursework
 		static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 	};
 
-} // Coursework
+} // CW

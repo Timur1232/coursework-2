@@ -3,7 +3,7 @@
 #include <string>
 #include <glm/glm.hpp>
 
-namespace Coursework
+namespace CW
 {
 
 	class Shader
@@ -29,4 +29,4 @@ namespace Coursework
 		uint32_t m_Id = 0;
 	};
 
-} // Coursework
+} // CW

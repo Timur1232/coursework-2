@@ -2,10 +2,11 @@
 
 #include <iostream>
 
-#include "window/Window.h"
-#include "graphics/Shader.h"
+#include <Window.h>
+#include <Shader.h>
+#include <Camera2D.h>
 
-using namespace Coursework;
+using namespace CW;
 
 const float vertices[] = {
 		-1, -1,
@@ -24,7 +25,6 @@ int main()
 		std::cerr << "Unable to create window" << std::endl;
 		return 1;
 	}
-	const glm::vec2 resolution = { window.getWidth(), window.getHeight() };
 
 	Shader shader;
 	shader.loadShader("res/shaders/vertex/v_shader.glsl", "res/shaders/fragment/f.glsl");
@@ -40,8 +40,7 @@ int main()
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glm::vec2 cameraPos = { 0.0f, 0.0f };
-	float cameraZoom = 1.0f;
+	Camera2D camera;
 
 	auto clamp = [](float a, float min, float max) -> float {
 		if (a < min) a = min;
@@ -53,46 +52,14 @@ int main()
     {
 		window.clearScreen();
 
-		if (window.events().keyJPressed(GLFW_KEY_UP))
-		{
-			cameraZoom = clamp(cameraZoom - 0.2f, 0.2f, 10.f);
-			std::cout << "Zoom: " << cameraZoom << std::endl;
-		}
-		else if (window.events().keyJPressed(GLFW_KEY_DOWN))
-		{
-			cameraZoom = clamp(cameraZoom + 0.2f, 0.2f, 10.f);
-			std::cout << "Zoom: " << cameraZoom << std::endl;
-		}
-		else if (window.events().mousePressed(GLFW_MOUSE_BUTTON_1))
-		{
-			glm::vec2 delta = window.events().mouseDeltaPos() / (glm::dvec2)resolution;
-			delta *= 2.0f * cameraZoom;
-			delta.y *= -1.0f;
-			cameraPos -= delta;
-		}
-		else if (window.events().keyJPressed(GLFW_KEY_W))
-		{
-			cameraPos.y += 0.2f;
-		}
-		else if (window.events().keyJPressed(GLFW_KEY_S))
-		{
-			cameraPos.y -= 0.2f;
-		}
-		else if (window.events().keyJPressed(GLFW_KEY_D))
-		{
-			cameraPos.x += 0.2f;
-		}
-		else if (window.events().keyJPressed(GLFW_KEY_A))
-		{
-			cameraPos.x -= 0.2f;
-		}
+		camera.update(window);
 
         glBindVertexArray(VAO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         shader.use();
-        shader.setUniform("uCameraPos", cameraPos);
-		shader.setUniform("uCameraZoom", cameraZoom);
-		shader.setUniform("uResolution", resolution);
+        shader.setUniform("uCameraPos", camera.position);
+		shader.setUniform("uCameraZoom", camera.zoom());
+		shader.setUniform("uResolution", window.resolution());
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         window.swapBuffers();

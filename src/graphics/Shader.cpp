@@ -1,4 +1,4 @@
-#include "Shader.h"
+#include "graphics/Shader.h"
 
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
@@ -7,9 +7,9 @@
 #include <string>
 #include <iostream>
 
-#include "loaders/shader_loader.h"
+#include "graphics/shader_loader.h"
 
-namespace Coursework
+namespace CW
 {
 
 	Shader::~Shader()
@@ -84,4 +84,4 @@ namespace Coursework
 		glUniformMatrix4fv(glGetUniformLocation(m_Id, name), 1, GL_FALSE, glm::value_ptr(data));
 	}
 
-} // Coursework
+} // CW

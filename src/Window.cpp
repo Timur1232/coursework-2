@@ -6,7 +6,7 @@
 
 #include "Events.h"
 
-namespace Coursework
+namespace CW
 {
 
 	Window::Window(int width, int height, const char* title)
@@ -90,14 +90,19 @@ namespace Coursework
 		glfwSwapBuffers(m_Window);
 	}
 
-	int Window::getWidth() const
+	int Window::width() const
 	{
 		return m_Width;
 	}
 
-	int Window::getHeight() const
+	int Window::height() const
 	{
 		return m_Height;
+	}
+
+	glm::ivec2 Window::resolution() const
+	{
+		return glm::ivec2(m_Width, m_Height);
 	}
 
 	const GLFWwindow* Window::getWindowPtr() const
@@ -115,4 +120,4 @@ namespace Coursework
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
 
-} // Coursework
+} // CW

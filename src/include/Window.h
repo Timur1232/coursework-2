@@ -4,7 +4,7 @@
 
 struct GLFWwindow;
 
-namespace Coursework
+namespace CW
 {
 
 	class Window
@@ -20,8 +20,9 @@ namespace Coursework
 		bool operator!() const;
 
 		bool shouldClose() const;
-		int getWidth() const;
-		int getHeight() const;
+		int width() const;
+		int height() const;
+		glm::ivec2 resolution() const;
 		const GLFWwindow* getWindowPtr() const;
 
 		const Events& events() const;
@@ -37,4 +38,4 @@ namespace Coursework
 		Events m_Events;
 	};
 
-} // Coursework
+} // CW

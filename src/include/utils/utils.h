@@ -1,6 +1,8 @@
 #pragma once
 
-namespace Corsework
+#include <utils/ArenaAllocator.h>
+
+namespace CW
 {
 	template<class T>
 	T clamp(T a, T min, T max)
@@ -18,4 +20,4 @@ namespace Corsework
 		else a += delta;
 		return a;
 	}
-}
+} // CW

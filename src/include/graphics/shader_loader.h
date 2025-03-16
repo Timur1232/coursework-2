@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace Coursework
+namespace CW
 {
 
 	[[nodiscard]]
@@ -11,4 +11,4 @@ namespace Coursework
 	[[nodiscard]]
 	uint32_t link_program(const uint32_t* shaderIDs, size_t num);
 
-} // Coursework
+} // CW
