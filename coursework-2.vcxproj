@@ -93,7 +93,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include;$(SolutionDir)src\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include;$(SolutionDir)src;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -111,7 +111,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include;$(SolutionDir)src\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include;$(SolutionDir)src;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,7 +129,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include;$(SolutionDir)src\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include;$(SolutionDir)src;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -147,7 +147,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include;$(SolutionDir)src\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependensies\include;$(SolutionDir)src;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -166,6 +166,9 @@
     <ClCompile Include="src\graphics\Render2D.cpp" />
     <ClCompile Include="src\graphics\Shader.cpp" />
     <ClCompile Include="src\Events.cpp" />
+    <ClCompile Include="src\Beacon.cpp" />
+    <ClCompile Include="src\BeaconManager.cpp" />
+    <ClCompile Include="src\Simulation.cpp" />
     <ClCompile Include="src\Source.cpp" />
     <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
@@ -465,16 +468,25 @@
     <ClInclude Include="dependensies\include\GL\glew.h" />
     <ClInclude Include="dependensies\include\GL\glxew.h" />
     <ClInclude Include="dependensies\include\GL\wglew.h" />
-    <ClInclude Include="src\include\Camera2D.h" />
-    <ClInclude Include="src\include\GL.h" />
-    <ClInclude Include="src\include\graphics\shader_loader.h" />
-    <ClInclude Include="src\include\graphics\Render2D.h" />
-    <ClInclude Include="src\include\graphics\Shader.h" />
-    <ClInclude Include="src\include\Simulation.h" />
-    <ClInclude Include="src\include\utils\ArenaAllocator.h" />
-    <ClInclude Include="src\include\utils\utils.h" />
-    <ClInclude Include="src\include\Events.h" />
-    <ClInclude Include="src\include\Window.h" />
+    <ClInclude Include="src\Beacon.h" />
+    <ClInclude Include="src\BeaconManager.h" />
+    <ClInclude Include="src\Camera2D.h" />
+    <ClInclude Include="src\drones\Drone.h" />
+    <ClInclude Include="src\drones\DroneManager.h" />
+    <ClInclude Include="src\GL.h" />
+    <ClInclude Include="src\graphics\shader_loader.h" />
+    <ClInclude Include="src\graphics\Render2D.h" />
+    <ClInclude Include="src\graphics\Shader.h" />
+    <ClInclude Include="src\IDrawable.h" />
+    <ClInclude Include="src\ISimulationObject.h" />
+    <ClInclude Include="src\ISimulationSubsystem.h" />
+    <ClInclude Include="src\resources\ResourceManager.h" />
+    <ClInclude Include="src\Simulation.h" />
+    <ClInclude Include="src\Terrain.h" />
+    <ClInclude Include="src\utils\ArenaAllocator.h" />
+    <ClInclude Include="src\utils\utils.h" />
+    <ClInclude Include="src\Events.h" />
+    <ClInclude Include="src\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dependensies\include\glm\detail\func_common.inl" />
