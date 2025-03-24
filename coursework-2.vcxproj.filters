@@ -21,34 +21,25 @@
     <ClCompile Include="dependensies\include\glm\glm.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\graphics\loaders\shader_loader.cpp">
+    <ClCompile Include="src\test.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\graphics\Render2D.cpp">
+    <ClCompile Include="src\imgui\imgui.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\graphics\Shader.cpp">
+    <ClCompile Include="src\imgui\imgui_draw.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\Events.cpp">
+    <ClCompile Include="src\imgui\imgui_tables.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\Window.cpp">
+    <ClCompile Include="src\imgui\imgui_widgets.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\camera\Camera2D.cpp">
+    <ClCompile Include="src\imgui\imgui-SFML.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\Source.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Simulation.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="src\BeaconManager.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Beacon.cpp">
+    <ClCompile Include="dependencies\include\glm\glm.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -938,61 +929,703 @@
     <ClInclude Include="dependensies\include\glm\vector_relational.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\graphics\shader_loader.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\AudioResource.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\graphics\Render2D.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\Export.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\graphics\Shader.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\InputSoundFile.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\Events.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\Listener.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\Window.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\Music.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\GL.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\OutputSoundFile.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\Camera2D.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\PlaybackDevice.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\utils.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\Sound.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\Simulation.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\SoundBuffer.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\ArenaAllocator.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\SoundBufferRecorder.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\drones\DroneManager.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\SoundChannel.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\drones\Drone.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\SoundFileFactory.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\Beacon.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\SoundFileReader.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\BeaconManager.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\SoundFileWriter.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\resources\ResourceManager.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\SoundRecorder.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\Terrain.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\SoundSource.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\ISimulationSubsystem.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio\SoundStream.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\IDrawable.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\BlendMode.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\ISimulationObject.h">
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\CircleShape.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Color.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\ConvexShape.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\CoordinateType.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Drawable.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Export.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Font.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Glsl.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Glyph.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Image.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\PrimitiveType.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Rect.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\RectangleShape.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\RenderStates.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\RenderTarget.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\RenderTexture.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\RenderWindow.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Shader.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Shape.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Sprite.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\StencilMode.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Text.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Texture.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Transform.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Transformable.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Vertex.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\VertexArray.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\VertexBuffer.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics\View.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Network\Export.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Network\Ftp.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Network\Http.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Network\IpAddress.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Network\Packet.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Network\Socket.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Network\SocketHandle.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Network\SocketSelector.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Network\TcpListener.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Network\TcpSocket.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Network\UdpSocket.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\Angle.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\Clock.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\Err.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\Exception.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\Export.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\FileInputStream.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\InputStream.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\MemoryInputStream.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\NativeActivity.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\Sleep.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\String.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\SuspendAwareClock.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\Time.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\Utf.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\Vector2.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System\Vector3.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\Clipboard.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\Context.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\ContextSettings.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\Cursor.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\Event.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\Export.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\GlResource.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\Joystick.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\Keyboard.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\Mouse.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\Sensor.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\Touch.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\VideoMode.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\Vulkan.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\Window.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\WindowBase.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\WindowEnums.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window\WindowHandle.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Audio.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Config.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\GpuPreference.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Graphics.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Main.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Network.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\OpenGL.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\System.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependensies\SFML-3.0.0\include\SFML\Window.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\AudioResource.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\Export.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\InputSoundFile.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\Listener.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\Music.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\OutputSoundFile.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\PlaybackDevice.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\Sound.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundBuffer.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundBufferRecorder.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundChannel.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundFileFactory.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundFileReader.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundFileWriter.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundRecorder.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundSource.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundStream.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\BlendMode.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\CircleShape.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Color.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\ConvexShape.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\CoordinateType.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Drawable.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Export.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Font.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Glsl.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Glyph.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Image.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\PrimitiveType.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Rect.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\RectangleShape.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\RenderStates.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\RenderTarget.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\RenderTexture.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\RenderWindow.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Shader.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Shape.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Sprite.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\StencilMode.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Text.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Texture.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Transform.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Transformable.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Vertex.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\VertexArray.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\VertexBuffer.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics\View.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Network\Export.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Network\Ftp.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Network\Http.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Network\IpAddress.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Network\Packet.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Network\Socket.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Network\SocketHandle.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Network\SocketSelector.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Network\TcpListener.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Network\TcpSocket.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Network\UdpSocket.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\Angle.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\Clock.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\Err.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\Exception.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\Export.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\FileInputStream.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\InputStream.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\MemoryInputStream.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\NativeActivity.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\Sleep.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\String.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\SuspendAwareClock.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\Time.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\Utf.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\Vector2.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System\Vector3.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\Clipboard.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\Context.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\ContextSettings.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\Cursor.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\Event.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\Export.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\GlResource.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\Joystick.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\Keyboard.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\Mouse.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\Sensor.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\Touch.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\VideoMode.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\Vulkan.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\Window.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\WindowBase.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\WindowEnums.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\WindowHandle.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Config.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\GpuPreference.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Graphics.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Main.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Network.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\OpenGL.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\System.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imconfig.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imgui.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imgui_internal.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imgui-SFML.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imgui-SFML_export.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imstb_rectpack.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imstb_textedit.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imstb_truetype.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\common.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\exponential.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\ext.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\fwd.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\geometric.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\glm.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\integer.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\mat2x2.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\mat2x3.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\mat2x4.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\mat3x2.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\mat3x3.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\mat3x4.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\mat4x2.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\mat4x3.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\mat4x4.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\matrix.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\packing.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\trigonometric.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\vec2.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\vec3.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\vec4.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\include\glm\vector_relational.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1414,6 +2047,83 @@
     <None Include="dependensies\include\glm\gtx\wrap.inl">
       <Filter>Файлы заголовков</Filter>
     </None>
-    <None Include="res\shaders\vertex\v_full_window.glsl" />
+    <None Include="dependensies\SFML-3.0.0\include\SFML\Audio\SoundFileFactory.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Color.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Glsl.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Rect.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependensies\SFML-3.0.0\include\SFML\Graphics\Transform.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependensies\SFML-3.0.0\include\SFML\System\Angle.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependensies\SFML-3.0.0\include\SFML\System\String.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependensies\SFML-3.0.0\include\SFML\System\Time.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependensies\SFML-3.0.0\include\SFML\System\Utf.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependensies\SFML-3.0.0\include\SFML\System\Vector2.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependensies\SFML-3.0.0\include\SFML\System\Vector3.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependensies\SFML-3.0.0\include\SFML\Window\Event.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependensies\SFML-3.0.0\include\SFML\Window\WindowBase.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundFileFactory.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Color.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Glsl.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Rect.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\Graphics\Transform.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\System\Angle.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\System\String.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\System\Time.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\System\Utf.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\System\Vector2.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\System\Vector3.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\Window\Event.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
+    <None Include="dependencies\SFML-3.0.0\include\SFML\Window\WindowBase.inl">
+      <Filter>Файлы заголовков</Filter>
+    </None>
   </ItemGroup>
 </Project>
