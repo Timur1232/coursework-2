@@ -1,5 +1,6 @@
-#ifdef CW_TEST
+#ifndef CW_TEST
 
+#if 0
 #include <SFML/Graphics.hpp>
 #include <imgui.h>
 #include <imgui-SFML.h>
@@ -64,5 +65,43 @@ int main() {
 
     return 0;
 }
+
+#else
+
+#include "debug/Log.h"
+#include "debug/Profiler.h"
+
+void foo1()
+{
+    CW_PROFILE_FUNCTION();
+
+    std::cout << "Hello\n";
+}
+
+void foo2()
+{
+    CW_PROFILE_FUNCTION();
+    int a = 5;
+    a += 10;
+    CW_TRACE("a is {}", a);
+}
+
+int main()
+{
+    CW::Profiler::get().startSession();
+
+    CW_PROFILE_FUNCTION();
+
+    foo1();
+    foo2();
+
+    /*CW_TRACE("Hello, world! {}", 5);
+    CW_INFO("Hello, world! {}", 5);
+    CW_WARN("Hello, world! {}", 5);
+    CW_ERROR("Hello, world! {}", 5);
+    CW_CRITICAL("Hello, world! {}", 5);*/
+}
+
+#endif
 
 #endif

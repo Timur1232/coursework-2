@@ -1,0 +1,1 @@
+{"otherData": {},"traceEvents":[{},{"cat":"function","dur":109,"name":"void __cdecl foo1(void)","ph":"X","pid":0,"ts":10126890122.500},{"cat":"function","dur":113,"name":"void __cdecl foo2(void)","ph":"X","pid":0,"ts":10126890344.700},{"cat":"function","dur":370,"name":"int __cdecl main(void)","ph":"X","pid":0,"ts":10126890122.100}],"displayTimeUnit": "us"}

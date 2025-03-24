@@ -368,6 +368,12 @@
     <ClInclude Include="dependencies\imgui-sfml\imgui-SFML_export.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="src\debug\Log.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\debug\Profiler.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundFileFactory.inl">

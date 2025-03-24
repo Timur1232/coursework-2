@@ -180,6 +180,8 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)dependencies/SFML-3.0.0/include;$(SolutionDir)src;$(SolutionDir)dependencies/imgui;$(SolutionDir)dependencies/imgui-sfml</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -196,6 +198,8 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)dependencies/SFML-3.0.0/include;$(SolutionDir)src;$(SolutionDir)dependencies/imgui;$(SolutionDir)dependencies/imgui-sfml</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -344,6 +348,8 @@
     <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\WindowBase.hpp" />
     <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\WindowEnums.hpp" />
     <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\WindowHandle.hpp" />
+    <ClInclude Include="src\debug\Log.h" />
+    <ClInclude Include="src\debug\Profiler.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundFileFactory.inl" />
