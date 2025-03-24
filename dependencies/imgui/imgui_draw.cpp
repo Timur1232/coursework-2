@@ -1,4 +1,4 @@
-// dear imgui, v1.91.9
+// dear imgui, v1.92.0 WIP
 // (drawing and font code)
 
 /*
@@ -217,6 +217,7 @@ void ImGui::StyleColorsDark(ImGuiStyle* dst)
     colors[ImGuiCol_ResizeGrip]             = ImVec4(0.26f, 0.59f, 0.98f, 0.20f);
     colors[ImGuiCol_ResizeGripHovered]      = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
     colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+    colors[ImGuiCol_InputTextCursor]        = colors[ImGuiCol_Text];
     colors[ImGuiCol_TabHovered]             = colors[ImGuiCol_HeaderHovered];
     colors[ImGuiCol_Tab]                    = ImLerp(colors[ImGuiCol_Header],       colors[ImGuiCol_TitleBgActive], 0.80f);
     colors[ImGuiCol_TabSelected]            = ImLerp(colors[ImGuiCol_HeaderActive], colors[ImGuiCol_TitleBgActive], 0.60f);
@@ -224,8 +225,6 @@ void ImGui::StyleColorsDark(ImGuiStyle* dst)
     colors[ImGuiCol_TabDimmed]              = ImLerp(colors[ImGuiCol_Tab],          colors[ImGuiCol_TitleBg], 0.80f);
     colors[ImGuiCol_TabDimmedSelected]      = ImLerp(colors[ImGuiCol_TabSelected],  colors[ImGuiCol_TitleBg], 0.40f);
     colors[ImGuiCol_TabDimmedSelectedOverline] = ImVec4(0.50f, 0.50f, 0.50f, 0.00f);
-    colors[ImGuiCol_DockingPreview]         = colors[ImGuiCol_HeaderActive] * ImVec4(1.0f, 1.0f, 1.0f, 0.7f);
-    colors[ImGuiCol_DockingEmptyBg]         = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
     colors[ImGuiCol_PlotLines]              = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
     colors[ImGuiCol_PlotLinesHovered]       = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
     colors[ImGuiCol_PlotHistogram]          = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
@@ -282,6 +281,7 @@ void ImGui::StyleColorsClassic(ImGuiStyle* dst)
     colors[ImGuiCol_ResizeGrip]             = ImVec4(1.00f, 1.00f, 1.00f, 0.10f);
     colors[ImGuiCol_ResizeGripHovered]      = ImVec4(0.78f, 0.82f, 1.00f, 0.60f);
     colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.78f, 0.82f, 1.00f, 0.90f);
+    colors[ImGuiCol_InputTextCursor]        = colors[ImGuiCol_Text];
     colors[ImGuiCol_TabHovered]             = colors[ImGuiCol_HeaderHovered];
     colors[ImGuiCol_Tab]                    = ImLerp(colors[ImGuiCol_Header],       colors[ImGuiCol_TitleBgActive], 0.80f);
     colors[ImGuiCol_TabSelected]            = ImLerp(colors[ImGuiCol_HeaderActive], colors[ImGuiCol_TitleBgActive], 0.60f);
@@ -289,8 +289,6 @@ void ImGui::StyleColorsClassic(ImGuiStyle* dst)
     colors[ImGuiCol_TabDimmed]              = ImLerp(colors[ImGuiCol_Tab],          colors[ImGuiCol_TitleBg], 0.80f);
     colors[ImGuiCol_TabDimmedSelected]      = ImLerp(colors[ImGuiCol_TabSelected],  colors[ImGuiCol_TitleBg], 0.40f);
     colors[ImGuiCol_TabDimmedSelectedOverline] = ImVec4(0.53f, 0.53f, 0.87f, 0.00f);
-    colors[ImGuiCol_DockingPreview]         = colors[ImGuiCol_Header] * ImVec4(1.0f, 1.0f, 1.0f, 0.7f);
-    colors[ImGuiCol_DockingEmptyBg]         = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
     colors[ImGuiCol_PlotLines]              = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     colors[ImGuiCol_PlotLinesHovered]       = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
     colors[ImGuiCol_PlotHistogram]          = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
@@ -348,6 +346,7 @@ void ImGui::StyleColorsLight(ImGuiStyle* dst)
     colors[ImGuiCol_ResizeGrip]             = ImVec4(0.35f, 0.35f, 0.35f, 0.17f);
     colors[ImGuiCol_ResizeGripHovered]      = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
     colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+    colors[ImGuiCol_InputTextCursor]        = colors[ImGuiCol_Text];
     colors[ImGuiCol_TabHovered]             = colors[ImGuiCol_HeaderHovered];
     colors[ImGuiCol_Tab]                    = ImLerp(colors[ImGuiCol_Header],       colors[ImGuiCol_TitleBgActive], 0.90f);
     colors[ImGuiCol_TabSelected]            = ImLerp(colors[ImGuiCol_HeaderActive], colors[ImGuiCol_TitleBgActive], 0.60f);
@@ -355,8 +354,6 @@ void ImGui::StyleColorsLight(ImGuiStyle* dst)
     colors[ImGuiCol_TabDimmed]              = ImLerp(colors[ImGuiCol_Tab],          colors[ImGuiCol_TitleBg], 0.80f);
     colors[ImGuiCol_TabDimmedSelected]      = ImLerp(colors[ImGuiCol_TabSelected],  colors[ImGuiCol_TitleBg], 0.40f);
     colors[ImGuiCol_TabDimmedSelectedOverline] = ImVec4(0.26f, 0.59f, 1.00f, 0.00f);
-    colors[ImGuiCol_DockingPreview]         = colors[ImGuiCol_Header] * ImVec4(1.0f, 1.0f, 1.0f, 0.7f);
-    colors[ImGuiCol_DockingEmptyBg]         = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
     colors[ImGuiCol_PlotLines]              = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
     colors[ImGuiCol_PlotLinesHovered]       = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
     colors[ImGuiCol_PlotHistogram]          = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
@@ -859,7 +856,7 @@ void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32
                 dm_x *= half_draw_size; // dm_x, dm_y are offset to the outer edge of the AA area
                 dm_y *= half_draw_size;
 
-                // Add temporary vertexes for the outer edges
+                // Add temporary vertices for the outer edges
                 ImVec2* out_vtx = &temp_points[i2 * 2];
                 out_vtx[0].x = points[i2].x + dm_x;
                 out_vtx[0].y = points[i2].y + dm_y;
@@ -886,7 +883,7 @@ void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32
                 idx1 = idx2;
             }
 
-            // Add vertexes for each point on the line
+            // Add vertices for each point on the line
             if (use_texture)
             {
                 // If we're using textures we only need to emit the left/right edge vertices
@@ -4321,7 +4318,6 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 // - RenderArrow()
 // - RenderBullet()
 // - RenderCheckMark()
-// - RenderArrowDockMenu()
 // - RenderArrowPointingAt()
 // - RenderRectFilledRangeH()
 // - RenderRectFilledWithHole()
@@ -4394,14 +4390,6 @@ void ImGui::RenderArrowPointingAt(ImDrawList* draw_list, ImVec2 pos, ImVec2 half
     case ImGuiDir_Down:  draw_list->AddTriangleFilled(ImVec2(pos.x - half_sz.x, pos.y - half_sz.y), ImVec2(pos.x + half_sz.x, pos.y - half_sz.y), pos, col); return;
     case ImGuiDir_None: case ImGuiDir_COUNT: break; // Fix warnings
     }
-}
-
-// This is less wide than RenderArrow() and we use in dock nodes instead of the regular RenderArrow() to denote a change of functionality,
-// and because the saved space means that the left-most tab label can stay at exactly the same position as the label of a loose window.
-void ImGui::RenderArrowDockMenu(ImDrawList* draw_list, ImVec2 p_min, float sz, ImU32 col)
-{
-    draw_list->AddRectFilled(p_min + ImVec2(sz * 0.20f, sz * 0.15f), p_min + ImVec2(sz * 0.80f, sz * 0.30f), col);
-    RenderArrowPointingAt(draw_list, p_min + ImVec2(sz * 0.50f, sz * 0.85f), ImVec2(sz * 0.30f, sz * 0.40f), ImGuiDir_Down, col);
 }
 
 static inline float ImAcos01(float x)
@@ -4487,17 +4475,6 @@ void ImGui::RenderRectFilledWithHole(ImDrawList* draw_list, const ImRect& outer,
     if (fill_R && fill_U) draw_list->AddRectFilled(ImVec2(inner.Max.x, outer.Min.y), ImVec2(outer.Max.x, inner.Min.y), col, rounding, ImDrawFlags_RoundCornersTopRight);
     if (fill_L && fill_D) draw_list->AddRectFilled(ImVec2(outer.Min.x, inner.Max.y), ImVec2(inner.Min.x, outer.Max.y), col, rounding, ImDrawFlags_RoundCornersBottomLeft);
     if (fill_R && fill_D) draw_list->AddRectFilled(ImVec2(inner.Max.x, inner.Max.y), ImVec2(outer.Max.x, outer.Max.y), col, rounding, ImDrawFlags_RoundCornersBottomRight);
-}
-
-ImDrawFlags ImGui::CalcRoundingFlagsForRectInRect(const ImRect& r_in, const ImRect& r_outer, float threshold)
-{
-    bool round_l = r_in.Min.x <= r_outer.Min.x + threshold;
-    bool round_r = r_in.Max.x >= r_outer.Max.x - threshold;
-    bool round_t = r_in.Min.y <= r_outer.Min.y + threshold;
-    bool round_b = r_in.Max.y >= r_outer.Max.y - threshold;
-    return ImDrawFlags_RoundCornersNone
-        | ((round_t && round_l) ? ImDrawFlags_RoundCornersTopLeft : 0) | ((round_t && round_r) ? ImDrawFlags_RoundCornersTopRight : 0)
-        | ((round_b && round_l) ? ImDrawFlags_RoundCornersBottomLeft : 0) | ((round_b && round_r) ? ImDrawFlags_RoundCornersBottomRight : 0);
 }
 
 // Helper for ColorPicker4()

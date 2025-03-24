@@ -1,8 +1,8 @@
 #ifdef CW_TEST
 
 #include <SFML/Graphics.hpp>
-#include <imgui/imgui.h>
-#include <imgui/imgui-SFML.h>
+#include <imgui.h>
+#include <imgui-SFML.h>
 
 int main() {
     sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "SFML + Dear ImGui");
