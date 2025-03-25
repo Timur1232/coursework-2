@@ -7,8 +7,7 @@
 #include "ISimulationObject.h"
 #include "beacons/BeaconManager.h"
 
-namespace CW
-{
+namespace CW {
 
 	enum class DroneType
 	{

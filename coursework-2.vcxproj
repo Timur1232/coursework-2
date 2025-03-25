@@ -229,15 +229,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\engine\Application.cpp" />
     <ClCompile Include="dependencies\imgui-sfml\imgui-SFML.cpp" />
     <ClCompile Include="dependencies\imgui\imgui.cpp" />
     <ClCompile Include="dependencies\imgui\imgui_demo.cpp" />
     <ClCompile Include="dependencies\imgui\imgui_draw.cpp" />
     <ClCompile Include="dependencies\imgui\imgui_tables.cpp" />
     <ClCompile Include="dependencies\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\engine\Events.cpp" />
+    <ClCompile Include="src\engine\ProgramCore.cpp" />
     <ClCompile Include="src\test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\Events.h" />
+    <ClInclude Include="src\engine\Application.h" />
     <ClInclude Include="dependencies\imgui-sfml\imconfig-SFML.h" />
     <ClInclude Include="dependencies\imgui-sfml\imgui-SFML.h" />
     <ClInclude Include="dependencies\imgui-sfml\imgui-SFML_export.h" />
@@ -348,8 +353,11 @@
     <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\WindowBase.hpp" />
     <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\WindowEnums.hpp" />
     <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\WindowHandle.hpp" />
+    <ClInclude Include="src\engine\IDrawable.h" />
+    <ClInclude Include="src\engine\ProgramCore.h" />
     <ClInclude Include="src\debug\Log.h" />
     <ClInclude Include="src\debug\Profiler.h" />
+    <ClInclude Include="src\engine\EntryPoint.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundFileFactory.inl" />

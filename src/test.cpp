@@ -1,12 +1,20 @@
-#ifndef CW_TEST
+#ifdef CW_TEST
 
 #if 0
 #include <SFML/Graphics.hpp>
 #include <imgui.h>
 #include <imgui-SFML.h>
 
+#include "debug/Log.h"
+#include "debug/Profiler.h"
+
 int main() {
-    sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "SFML + Dear ImGui");
+    CW::Profiler::get().startSession();
+    CW_PROFILE_FUNCTION();
+
+    sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "hui");
+    window.setFramerateLimit(60);
+
     float radius = 100.0f;
     sf::CircleShape shape(radius);
     shape.setFillColor(sf::Color::Green);
@@ -22,11 +30,14 @@ int main() {
     auto& io = ImGui::GetIO();
 
     while (window.isOpen()) {
+        CW_PROFILE_SCOPE("main loop");
         while (const std::optional event = window.pollEvent()) {
+            CW_PROFILE_SCOPE("event loop");
             ImGui::SFML::ProcessEvent(window, *event);
 
             if (event->is<sf::Event::Closed>()) {
                 window.close();
+                break;
             }
         }
 
@@ -60,7 +71,6 @@ int main() {
         window.display();
     }
 
-    window.close();
     ImGui::SFML::Shutdown();
 
     return 0;
@@ -68,38 +78,71 @@ int main() {
 
 #else
 
-#include "debug/Log.h"
-#include "debug/Profiler.h"
+#include <engine/EntryPoint.h>
 
-void foo1()
+#include <engine/ProgramCore.h>
+#include <imgui.h>
+#include <imgui-SFML.h>
+
+class MyApp
+    : public CW::Application
 {
-    CW_PROFILE_FUNCTION();
+public:
+    MyApp()
+        : Application(800, 600, "hui"),
+          radius(100.0f), shape(radius)
+    {
+        shape.setFillColor(sf::Color::Green);
+    }
 
-    std::cout << "Hello\n";
-}
+    void update() override
+    {
+        ImGui::Begin("Hello, world!");
+        ImGui::Text("This is a Dear ImGui window!");
+        ImGui::Checkbox("Show shape", &showShape);
+        if (showShape)
+        {
+            ImGui::SliderFloat("radius", &radius, 10.0f, 200.0f);
+            shape.setRadius(radius);
+        }
+        ImGui::End();
 
-void foo2()
+        ImGui::Begin("Second window");
+        ImGui::Text("This is some useful text.");
+        if (ImGui::Button("Button"))
+            counter++;
+        ImGui::SameLine();
+        ImGui::Text("counter = %d", counter);
+        ImGui::End();
+    }
+
+    void draw(CW::RenderWrapper renderwindow) override
+    {
+        if (showShape)
+            renderwindow.draw(shape);
+    }
+
+    void onEvent(const sf::Event& event) override
+    {
+        if (event.is<sf::Event::Closed>())
+            close();
+    }
+
+    void eventSubscribtion(CW::EventHandlerWrapper handler) override
+    {
+        handler.subscribe(this);
+    }
+
+private:
+    float radius;
+    sf::CircleShape shape;
+    bool showShape = true;
+    int counter = 0;
+};
+
+std::unique_ptr<CW::Application> create_program(int argc, const char** argv)
 {
-    CW_PROFILE_FUNCTION();
-    int a = 5;
-    a += 10;
-    CW_TRACE("a is {}", a);
-}
-
-int main()
-{
-    CW::Profiler::get().startSession();
-
-    CW_PROFILE_FUNCTION();
-
-    foo1();
-    foo2();
-
-    /*CW_TRACE("Hello, world! {}", 5);
-    CW_INFO("Hello, world! {}", 5);
-    CW_WARN("Hello, world! {}", 5);
-    CW_ERROR("Hello, world! {}", 5);
-    CW_CRITICAL("Hello, world! {}", 5);*/
+    return std::make_unique<MyApp>();
 }
 
 #endif
