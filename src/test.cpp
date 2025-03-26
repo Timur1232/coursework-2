@@ -88,7 +88,8 @@ int main() {
 
 class MyApp
     : public CW::Application,
-      public CW::IOnKeyPressed
+      public CW::OnKeyPressed,
+      public CW::OnClosed
 {
 public:
     MyApp()
@@ -96,7 +97,11 @@ public:
           radius(100.0f), shape(radius)
     {
         shape.setFillColor(sf::Color::Green);
-        CW_TRACE("Constructed object MyApp with memory adress: {}", (void*)this);
+    }
+
+    void coreInit() override
+    {
+        getEventHandler().subscribe(this);
     }
 
     void update() override
@@ -138,14 +143,6 @@ public:
         {
             CW_TRACE("Pressed space.");
         }
-    }
-
-    void eventSubscription(CW::EventHandlerWrapper handler) override
-    {
-        CW_TRACE("Memory adress: {}", (void*)this);
-        handler.subscribe(this,
-            CW::EventType::Closed |
-            CW::EventType::KeyPressed);
     }
 
 private:

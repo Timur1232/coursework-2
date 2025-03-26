@@ -7,9 +7,7 @@ namespace CW {
 	template<class T>
 	T clamp(T a, T min, T max)
 	{
-		if (a < min) a = min;
-		else if (a > max) a = max;
-		return a;
+		return (a < min) ? min : (a > max) ? max : a;
 	}
 
 	template<class T>
@@ -21,7 +19,13 @@ namespace CW {
 		return a;
 	}
 
-	constexpr uint64_t bit(int n)
+	template<class T>
+	inline T lerp(T min, T max, double t)
+	{
+		return (max - min) * t + min;
+	}
+
+	constexpr uint64_t bit(unsigned int n)
 	{
 		return 1uLL << n;
 	}
