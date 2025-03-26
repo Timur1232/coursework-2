@@ -2,8 +2,8 @@
 
 #include <utils/ArenaAllocator.h>
 
-namespace CW
-{
+namespace CW {
+
 	template<class T>
 	T clamp(T a, T min, T max)
 	{
@@ -20,4 +20,10 @@ namespace CW
 		else a += delta;
 		return a;
 	}
+
+	constexpr uint64_t bit(int n)
+	{
+		return 1uLL << n;
+	}
+
 } // CW

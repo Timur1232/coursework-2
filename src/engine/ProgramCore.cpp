@@ -10,12 +10,13 @@ namespace CW {
 		  m_Window(sf::VideoMode(m_App->getWindowSize()), m_App->getTitle()),
 		  m_EventHandler(1024)
 	{
+		CW_TRACE("Constructed object MyApp with memory adress: {}", (void*)m_App.get());
 		m_Window.setFramerateLimit(60);
 		if (!ImGui::SFML::Init(m_Window))
 		{
 			CW_CRITICAL("Failing initializing ImGui::SFML.");
 		}
-		m_App->eventSubscribtion(m_EventHandler);
+		m_App->eventSubscription(m_EventHandler);
 	}
 
 	ProgramCore::~ProgramCore()

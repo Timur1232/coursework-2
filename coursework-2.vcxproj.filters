@@ -398,6 +398,9 @@
     <ClInclude Include="src\engine\IDrawable.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\utils.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dependencies\SFML-3.0.0\include\SFML\Audio\SoundFileFactory.inl">

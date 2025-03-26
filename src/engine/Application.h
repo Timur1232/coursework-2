@@ -8,7 +8,7 @@
 namespace CW {
 
 	class Application
-		: public IOnEvent,
+		: public IOnClosed,
 		  public IDrawable
 	{
 	public:

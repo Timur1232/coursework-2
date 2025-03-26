@@ -84,8 +84,11 @@ int main() {
 #include <imgui.h>
 #include <imgui-SFML.h>
 
+#include "debug/Log.h"
+
 class MyApp
-    : public CW::Application
+    : public CW::Application,
+      public CW::IOnKeyPressed
 {
 public:
     MyApp()
@@ -93,6 +96,7 @@ public:
           radius(100.0f), shape(radius)
     {
         shape.setFillColor(sf::Color::Green);
+        CW_TRACE("Constructed object MyApp with memory adress: {}", (void*)this);
     }
 
     void update() override
@@ -122,15 +126,26 @@ public:
             renderwindow.draw(shape);
     }
 
-    void onEvent(const sf::Event& event) override
+    void onClosed() override
     {
-        if (event.is<sf::Event::Closed>())
-            close();
+        close();
     }
 
-    void eventSubscribtion(CW::EventHandlerWrapper handler) override
+    void onKeyPressed(sf::Event::KeyPressed event) override
     {
-        handler.subscribe(this);
+        CW_TRACE("KeyPressed Event happened in class MyApp.");
+        if (event.code == sf::Keyboard::Key::Space)
+        {
+            CW_TRACE("Pressed space.");
+        }
+    }
+
+    void eventSubscription(CW::EventHandlerWrapper handler) override
+    {
+        CW_TRACE("Memory adress: {}", (void*)this);
+        handler.subscribe(this,
+            CW::EventType::Closed |
+            CW::EventType::KeyPressed);
     }
 
 private:
