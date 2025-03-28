@@ -1,7 +1,7 @@
 #include "ProgramCore.h"
 
 #include <imgui-SFML.h>
-#include <debug/Log.h>
+#include <debug_utils/Log.h>
 
 namespace CW {
 

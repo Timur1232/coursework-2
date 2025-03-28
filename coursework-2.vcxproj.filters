@@ -377,10 +377,10 @@
     <ClInclude Include="dependencies\imgui-sfml\imgui-SFML_export.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\debug\Log.h">
+    <ClInclude Include="src\debug_utils\Log.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\debug\Profiler.h">
+    <ClInclude Include="src\debug_utils\Profiler.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\EntryPoint.h">

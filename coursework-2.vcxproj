@@ -355,8 +355,8 @@
     <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Window\WindowHandle.hpp" />
     <ClInclude Include="src\engine\IDrawable.h" />
     <ClInclude Include="src\engine\ProgramCore.h" />
-    <ClInclude Include="src\debug\Log.h" />
-    <ClInclude Include="src\debug\Profiler.h" />
+    <ClInclude Include="src\debug_utils\Log.h" />
+    <ClInclude Include="src\debug_utils\Profiler.h" />
     <ClInclude Include="src\engine\EntryPoint.h" />
     <ClInclude Include="src\utils\utils.h" />
   </ItemGroup>

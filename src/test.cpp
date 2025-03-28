@@ -84,7 +84,7 @@ int main() {
 #include <imgui.h>
 #include <imgui-SFML.h>
 
-#include "debug/Log.h"
+#include "debug_utils/Log.h"
 
 class MyApp
     : public CW::Application,
@@ -138,10 +138,10 @@ public:
 
     void onKeyPressed(sf::Event::KeyPressed event) override
     {
-        CW_TRACE("KeyPressed Event happened in class MyApp.");
+        CW_MSG("KeyPressed Event happened in class MyApp.");
         if (event.code == sf::Keyboard::Key::Space)
         {
-            CW_TRACE("Pressed space.");
+            CW_MSG("Pressed space.");
         }
     }
 
