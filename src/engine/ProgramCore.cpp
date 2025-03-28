@@ -20,6 +20,10 @@ namespace CW {
 		while (m_App->isRunning())
 		{
 			m_EventHandler.handleEvents(m_Window);
+#ifdef CW_USER_EVENTS_LIST
+			m_EventHandler.handleUserEvents();
+#endif
+
 			ImGui::SFML::Update(m_Window, m_DeltaClock.restart());
 
 			m_App->update();
@@ -28,6 +32,8 @@ namespace CW {
 
 			m_Window.clear();
 			m_App->draw(m_Window);
+
+			// TODO: render objects
 
 			ImGui::SFML::Render(m_Window);
 			m_Window.display();

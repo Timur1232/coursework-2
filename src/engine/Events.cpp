@@ -7,88 +7,91 @@
 namespace CW {
 
 	template<>
-	class Dispatcher<void, void>
+	class CoreDispatcher<void, void>
 	{
 	};
 
 
 	template<>
-	void Dispatcher<OnKeyPressed, sf::Event::KeyPressed>::operator()()
+	void CoreDispatcher<OnKeyPressed, sf::Event::KeyPressed>::operator()()
 	{
-		target->onKeyPressed(*event);
+		target->onKeyPressed(event);
 	}
 
 
 	template<>
-	void Dispatcher<OnKeyReleased, sf::Event::KeyReleased>::operator()()
+	void CoreDispatcher<OnKeyReleased, sf::Event::KeyReleased>::operator()()
 	{
-		target->onKeyReleased(*event);
+		target->onKeyReleased(event);
 	}
 
 
 	template<>
-	void Dispatcher<OnMouseButtonPressed, sf::Event::MouseButtonPressed>::operator()()
+	void CoreDispatcher<OnMouseButtonPressed, sf::Event::MouseButtonPressed>::operator()()
 	{
-		target->onMouseButtonPressed(*event);
+		target->onMouseButtonPressed(event);
 	}
 
 
 	template<>
-	void Dispatcher<OnMouseButtonReleased, sf::Event::MouseButtonReleased>::operator()()
+	void CoreDispatcher<OnMouseButtonReleased, sf::Event::MouseButtonReleased>::operator()()
 	{
-		target->onMouseButtonReleased(*event);
+		target->onMouseButtonReleased(event);
 	}
 
 
 	template<>
-	void Dispatcher<OnMouseMoved, sf::Event::MouseMoved>::operator()()
+	void CoreDispatcher<OnMouseMoved, sf::Event::MouseMoved>::operator()()
 	{
-		target->onMouseMoved(*event);
+		target->onMouseMoved(event);
 	}
 
 
 	template<>
-	void Dispatcher<OnMouseWheelScrolled, sf::Event::MouseWheelScrolled>::operator()()
+	void CoreDispatcher<OnMouseWheelScrolled, sf::Event::MouseWheelScrolled>::operator()()
 	{
-		target->onMouseWheelScrolled(*event);
+		target->onMouseWheelScrolled(event);
 	}
 
 
 	template<>
-	void Dispatcher<OnClosed, sf::Event::Closed>::operator()()
+	void CoreDispatcher<OnClosed, sf::Event::Closed>::operator()()
 	{
 		target->onClosed();
 	}
 
 
 	template<>
-	void Dispatcher<OnResized, sf::Event::Resized>::operator()()
+	void CoreDispatcher<OnResized, sf::Event::Resized>::operator()()
 	{
-		target->onResized(*event);
+		target->onResized(event);
 	}
 
 
 	template<class _EventSub = void, class _EventType = void, class... _EventSubArgs>
-	void dispatchEvent(OnEvent* target, const sf::Event& event)
+	void dispatchCoreEvent(OnEvent* target, const sf::Event& event)
 	{
-		if (auto d = Dispatcher<_EventSub, _EventType>(target, event); d.isValid())
+		if (auto d = CoreDispatcher<_EventSub, _EventType>(target, event); d.isValid())
+		{
 			d();
-		dispatchEvent<_EventSubArgs...>(target, event);
+			return;
+		}
+		dispatchCoreEvent<_EventSubArgs...>(target, event);
 	}
 
 	template<>
-	void dispatchEvent<void, void>(OnEvent*, const sf::Event&)
+	void dispatchCoreEvent<void, void>(OnEvent*, const sf::Event&)
 	{
 	}
 
 	EventHandler::EventHandler(size_t reserve)
 	{
-		m_EventSubscribers.reserve(reserve);
+		m_EventTargets.reserve(reserve);
 	}
 
 	void EventHandler::subscribe(OnEvent* newSubscriber)
 	{
-		m_EventSubscribers.push_back(newSubscriber);
+		m_EventTargets.push_back(newSubscriber);
 	}
 
 	void EventHandler::handleEvents(sf::RenderWindow& window)
@@ -97,9 +100,9 @@ namespace CW {
 		{
 			ImGui::SFML::ProcessEvent(window, *event);
 
-			for (auto& sub : m_EventSubscribers)
+			for (auto target : m_EventTargets)
 			{
-				dispatchEvent<
+				dispatchCoreEvent<
 					OnKeyPressed, sf::Event::KeyPressed,
 					OnKeyReleased, sf::Event::KeyReleased,
 					OnMouseButtonPressed, sf::Event::MouseButtonPressed,
@@ -108,46 +111,57 @@ namespace CW {
 					OnMouseWheelScrolled, sf::Event::MouseWheelScrolled,
 					OnClosed, sf::Event::Closed,
 					OnResized, sf::Event::Resized
-				>(sub, *event);
+				>(target, *event);
 			}
 		}
 	}
 
-	/*void EventHandler::dispatchEvent(OnEvent* target, const sf::Event& event)
+
+#ifdef CW_USER_EVENTS_LIST
+
+	template<>
+	class UserDispatcher<void, void>
 	{
-		if (auto d = Dispatcher<OnKeyPressed, sf::Event::KeyPressed>(target, event))
-			d.target->onKeyPressed(*d.event);
+	};
 
-		if (auto d = Dispatcher<OnKeyReleased, sf::Event::KeyReleased>(target, event))
-			d.target->onKeyReleased(*d.event);
+#include "CW_EventConfig-dispatcher.h"
 
-		if (auto d = Dispatcher<OnMouseWheelScrolled, sf::Event::MouseWheelScrolled>(target, event))
-			d.target->onMouseWheelScrolled(*d.event);
+	template<class _EventSub = void, class _EventType = void, class... _EventSubArgs>
+	void dispatchUserEvent(OnEvent* target, const MyEvent& event)
+	{
+		if (auto d = UserDispatcher<_EventSub, _EventType>(target, event); d.isValid())
+		{
+			d();
+			return;
+		}
+		dispatchUserEvent<_EventSubArgs...>(target, event);
+	}
 
-		if (auto d = Dispatcher<OnMouseButtonPressed, sf::Event::MouseButtonPressed>(target, event))
-			d.target->onMouseButtonPressed(*d.event);
+	template<>
+	void dispatchUserEvent<void, void>(OnEvent*, const MyEvent&)
+	{
+	}
 
-		if (auto d = Dispatcher<OnMouseButtonReleased, sf::Event::MouseButtonReleased>(target, event))
-			d.target->onMouseButtonReleased(*d.event);
 
-		if (auto d = Dispatcher<OnMouseMoved, sf::Event::MouseMoved>(target, event))
-			d.target->onMouseMoved(*d.event);
+	void EventHandler::handleUserEvents()
+	{
+		for (auto event : m_UserEvents)
+		{
+			for (auto target : m_EventTargets)
+			{
+				dispatchUserEvent<CW_USER_EVENTS_PAIRS>(target, *event);
+			}
+		}
+		m_UserEvents.clear();
+		m_Allocator.deallocate();
+	}
 
-		if (auto d = Dispatcher<OnClosed, sf::Event::Closed>(target, event))
-			d.target->onClosed();
+#endif
 
-		if (auto d = Dispatcher<OnResized, sf::Event::Resized>(target, event))
-			d.target->onResized(*d.event);
-	}*/
 
 	void EventHandlerWrapper::subscribe(OnEvent* newSubscriber)
 	{
 		m_EventHandler->subscribe(newSubscriber);
-	}
-
-	EventHandlerWrapper::operator bool() const
-	{
-		return m_EventHandler;
 	}
 
 } // CW

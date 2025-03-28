@@ -245,6 +245,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera2D.h" />
+    <ClInclude Include="src\engine\CW_EventConfig-dispatcher.h" />
+    <ClInclude Include="src\engine\CW_EventConfig.h" />
+    <ClInclude Include="src\engine\EventInterface.h" />
     <ClInclude Include="src\engine\Events.h" />
     <ClInclude Include="src\engine\Application.h" />
     <ClInclude Include="dependencies\imgui-sfml\imconfig-SFML.h" />
@@ -363,6 +366,7 @@
     <ClInclude Include="src\debug_utils\Profiler.h" />
     <ClInclude Include="src\engine\EntryPoint.h" />
     <ClInclude Include="src\engine\IUpdate.h" />
+    <ClInclude Include="src\engine\UserEvent.h" />
     <ClInclude Include="src\utils\utils.h" />
   </ItemGroup>
   <ItemGroup>

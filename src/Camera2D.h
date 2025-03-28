@@ -21,10 +21,10 @@ public:
 
 	void update() override;
 
-	void onMouseButtonPressed(sf::Event::MouseButtonPressed e) override;
-	void onMouseButtonReleased(sf::Event::MouseButtonReleased e) override;
-	void onMouseMoved(sf::Event::MouseMoved e) override;
-	void onMouseWheelScrolled(sf::Event::MouseWheelScrolled e) override;
+	void onMouseButtonPressed(const sf::Event::MouseButtonPressed* e) override;
+	void onMouseButtonReleased(const sf::Event::MouseButtonReleased* e) override;
+	void onMouseMoved(const sf::Event::MouseMoved* e) override;
+	void onMouseWheelScrolled(const sf::Event::MouseWheelScrolled* e) override;
 
 	const sf::View& getView() const;
 

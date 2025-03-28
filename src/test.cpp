@@ -11,10 +11,12 @@
 
 #include "Camera2D.h"
 
+
 class MyApp
     : public CW::Application,
       public CW::OnKeyPressed,
-      public CW::OnClosed
+      public CW::OnClosed,
+      public MyEventReciever
 {
 public:
     MyApp(CW::EventHandlerWrapper eventHandler, CW::UpdateHandlerWrapper updateHandler)
@@ -35,6 +37,10 @@ public:
             ImGui::SliderFloat("radius", &radius, 10.0f, 200.0f);
             shape.setRadius(radius);
         }
+        if (ImGui::Button("send event"))
+        {
+            getEventHandler().addEvent<EventData>(EventData{ 5 });
+        }
         ImGui::End();
     }
 
@@ -50,13 +56,18 @@ public:
         close();
     }
 
-    void onKeyPressed(sf::Event::KeyPressed event) override
+    void onKeyPressed(const sf::Event::KeyPressed* event) override
     {
         CW_MSG("KeyPressed Event happened in class MyApp.");
-        if (event.code == sf::Keyboard::Key::Space)
+        if (event->code == sf::Keyboard::Key::Space)
         {
             CW_MSG("Pressed space.");
         }
+    }
+
+    void onE(const EventData* e)
+    {
+        CW_MSG("Catched my own event! a = {}", e->a);
     }
 
 private:

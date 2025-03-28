@@ -22,28 +22,28 @@ void Camera2D::update()
 	ImGui::End();
 }
 
-void Camera2D::onMouseButtonPressed(sf::Event::MouseButtonPressed e)
+void Camera2D::onMouseButtonPressed(const sf::Event::MouseButtonPressed* e)
 {
-	m_IsMoving = e.button == sf::Mouse::Button::Right;
+	m_IsMoving = e->button == sf::Mouse::Button::Right;
 }
 
-void Camera2D::onMouseButtonReleased(sf::Event::MouseButtonReleased e)
+void Camera2D::onMouseButtonReleased(const sf::Event::MouseButtonReleased* e)
 {
-	m_IsMoving = m_IsMoving && e.button != sf::Mouse::Button::Right;
+	m_IsMoving = m_IsMoving && e->button != sf::Mouse::Button::Right;
 }
 
-void Camera2D::onMouseMoved(sf::Event::MouseMoved e)
+void Camera2D::onMouseMoved(const sf::Event::MouseMoved* e)
 {
 	if (m_IsMoving)
 	{
-		m_View.move((sf::Vector2f)(m_PrevPos - e.position) * m_ZoomFactor);
+		m_View.move((sf::Vector2f)(m_PrevPos - e->position) * m_ZoomFactor);
 	}
-	m_PrevPos = e.position;
+	m_PrevPos = e->position;
 }
 
-void Camera2D::onMouseWheelScrolled(sf::Event::MouseWheelScrolled e)
+void Camera2D::onMouseWheelScrolled(const sf::Event::MouseWheelScrolled* e)
 {
-	if (e.delta > 0)
+	if (e->delta > 0)
 	{
 		m_View.zoom(0.9f);
 		m_ZoomFactor *= 0.9f;

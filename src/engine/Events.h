@@ -6,56 +6,53 @@
 #include "utils/utils.h"
 #include "debug_utils/Log.h"
 
+#include "EventInterface.h"
+
+#include "CW_EventConfig.h"
+#include "UserEvent.h"
+
 namespace CW {
-
-	class OnEvent
-	{
-	public:
-		virtual ~OnEvent() = default;
-		virtual bool isAcceptingEvents() const { return true; }
-	};
-
 
 	class OnKeyPressed
 		: virtual public OnEvent
 	{
 	public:
-		virtual void onKeyPressed(sf::Event::KeyPressed) = 0;
+		virtual void onKeyPressed(const sf::Event::KeyPressed*) = 0;
 	};
 
 	class OnKeyReleased
 		: virtual public OnEvent
 	{
 	public:
-		virtual void onKeyReleased(sf::Event::KeyReleased) = 0;
+		virtual void onKeyReleased(const sf::Event::KeyReleased*) = 0;
 	};
 
 	class OnMouseButtonPressed
 		: virtual public OnEvent
 	{
 	public:
-		virtual void onMouseButtonPressed(sf::Event::MouseButtonPressed) = 0;
+		virtual void onMouseButtonPressed(const sf::Event::MouseButtonPressed*) = 0;
 	};
 
 	class OnMouseButtonReleased
 		: virtual public OnEvent
 	{
 	public:
-		virtual void onMouseButtonReleased(sf::Event::MouseButtonReleased) = 0;
+		virtual void onMouseButtonReleased(const sf::Event::MouseButtonReleased*) = 0;
 	};
 
 	class OnMouseMoved
 		: virtual public OnEvent
 	{
 	public:
-		virtual void onMouseMoved(sf::Event::MouseMoved) = 0;
+		virtual void onMouseMoved(const sf::Event::MouseMoved*) = 0;
 	};
 
 	class OnMouseWheelScrolled
 		: virtual public OnEvent
 	{
 	public:
-		virtual void onMouseWheelScrolled(sf::Event::MouseWheelScrolled) = 0;
+		virtual void onMouseWheelScrolled(const sf::Event::MouseWheelScrolled*) = 0;
 	};
 
 	class OnClosed
@@ -69,15 +66,15 @@ namespace CW {
 		: virtual public OnEvent
 	{
 	public:
-		virtual void onResized(sf::Event::Resized) = 0;
+		virtual void onResized(const sf::Event::Resized*) = 0;
 	};
 
 
 	template<class Target_t, class Event_t>
-	class Dispatcher
+	class CoreDispatcher
 	{
 	public:
-		Dispatcher(OnEvent* target, const sf::Event& event)
+		CoreDispatcher(OnEvent* target, const sf::Event& event)
 			: target(dynamic_cast<Target_t*>(target)), event(event.getIf<Event_t>())
 		{
 		}
@@ -106,11 +103,29 @@ namespace CW {
 		EventHandler() = default;
 		EventHandler(size_t reserve);
 
-		void subscribe(OnEvent* newSubscriber);
+		void subscribe(OnEvent* target);
 		void handleEvents(sf::RenderWindow& window);
 
+#ifdef CW_USER_EVENTS_LIST
+
+		void handleUserEvents();
+
+		template<class T>
+		void addEvent(T&& event)
+		{
+			MyEvent* e = m_Allocator.allocate();
+			e->data = std::move(event);
+			m_UserEvents.push_back(e);
+		}
+
+#endif
+
 	private:
-		std::vector<OnEvent*> m_EventSubscribers;
+		std::vector<OnEvent*> m_EventTargets;
+#ifdef CW_USER_EVENTS_LIST
+		std::vector<MyEvent*> m_UserEvents;
+		ArenaAllocator<MyEvent> m_Allocator{1024};
+#endif
 	};
 
 
@@ -123,8 +138,15 @@ namespace CW {
 		{
 		}
 
-		void subscribe(OnEvent* newSubscriber);
-		operator bool() const;
+		void subscribe(OnEvent* target);
+
+#ifdef CW_USER_EVENTS_LIST
+		template<class T>
+		void addEvent(T&& event)
+		{
+			m_EventHandler->addEvent<T>(std::forward<T>(event));
+		}
+#endif
 
 	private:
 		EventHandler* m_EventHandler = nullptr;

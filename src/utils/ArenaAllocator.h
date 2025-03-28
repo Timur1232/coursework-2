@@ -39,7 +39,7 @@ namespace CW
 		}
 	};
 
-	template <class T, size_t BLOCK_SIZE = 1024>
+	template <class T>
 	class ArenaAllocator
 	{
 	public:
