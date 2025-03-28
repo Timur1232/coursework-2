@@ -1,83 +1,6 @@
 #ifdef CW_TEST
 
-#if 0
-#include <SFML/Graphics.hpp>
-#include <imgui.h>
-#include <imgui-SFML.h>
-
-#include "debug/Log.h"
-#include "debug/Profiler.h"
-
-int main() {
-    CW::Profiler::get().startSession();
-    CW_PROFILE_FUNCTION();
-
-    sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "hui");
-    window.setFramerateLimit(60);
-
-    float radius = 100.0f;
-    sf::CircleShape shape(radius);
-    shape.setFillColor(sf::Color::Green);
-
-    if (!ImGui::SFML::Init(window))
-    {
-        return -1;
-    }
-
-    bool showShape = true;
-    int counter = 0;
-    sf::Clock deltaClock;
-    auto& io = ImGui::GetIO();
-
-    while (window.isOpen()) {
-        CW_PROFILE_SCOPE("main loop");
-        while (const std::optional event = window.pollEvent()) {
-            CW_PROFILE_SCOPE("event loop");
-            ImGui::SFML::ProcessEvent(window, *event);
-
-            if (event->is<sf::Event::Closed>()) {
-                window.close();
-                break;
-            }
-        }
-
-        ImGui::SFML::Update(window, deltaClock.restart());
-
-        ImGui::Begin("Hello, world!");
-        ImGui::Text("This is a Dear ImGui window!");
-        ImGui::Checkbox("Show shape", &showShape);
-        if (showShape)
-        {
-            ImGui::SliderFloat("radius", &radius, 10.0f, 200.0f);
-            shape.setRadius(radius);
-        }
-        ImGui::End();
-
-        ImGui::Begin("Second window");                          // Create a window called "Hello, world!" and append into it.
-        ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-        if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-        ImGui::End();
-
-        window.clear();
-
-        if (showShape)
-            window.draw(shape);
-
-        ImGui::SFML::Render(window);
-        window.display();
-    }
-
-    ImGui::SFML::Shutdown();
-
-    return 0;
-}
-
-#else
-
+#if 1
 #include <engine/EntryPoint.h>
 
 #include <engine/ProgramCore.h>
@@ -86,28 +9,26 @@ int main() {
 
 #include "debug_utils/Log.h"
 
+#include "Camera2D.h"
+
 class MyApp
     : public CW::Application,
       public CW::OnKeyPressed,
       public CW::OnClosed
 {
 public:
-    MyApp()
-        : Application(800, 600, "hui"),
-          radius(100.0f), shape(radius)
+    MyApp(CW::EventHandlerWrapper eventHandler, CW::UpdateHandlerWrapper updateHandler)
+        : Application(800, 600, "test", eventHandler, updateHandler),
+        radius(100.0f), shape(radius),
+        m_Camera(0, 0, 800, 600, eventHandler, updateHandler)
     {
         shape.setFillColor(sf::Color::Green);
-    }
-
-    void coreInit() override
-    {
-        getEventHandler().subscribe(this);
+        eventHandler.subscribe(this);
     }
 
     void update() override
     {
-        ImGui::Begin("Hello, world!");
-        ImGui::Text("This is a Dear ImGui window!");
+        ImGui::Begin("Debug");
         ImGui::Checkbox("Show shape", &showShape);
         if (showShape)
         {
@@ -115,20 +36,13 @@ public:
             shape.setRadius(radius);
         }
         ImGui::End();
-
-        ImGui::Begin("Second window");
-        ImGui::Text("This is some useful text.");
-        if (ImGui::Button("Button"))
-            counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
-        ImGui::End();
     }
 
-    void draw(CW::RenderWrapper renderwindow) override
+    void draw(CW::RenderWrapper render) const override
     {
+        render.setView(m_Camera.getView());
         if (showShape)
-            renderwindow.draw(shape);
+            render.draw(shape);
     }
 
     void onClosed() override
@@ -150,11 +64,124 @@ private:
     sf::CircleShape shape;
     bool showShape = true;
     int counter = 0;
+
+    Camera2D m_Camera;
 };
 
-std::unique_ptr<CW::Application> create_program(int argc, const char** argv)
+std::unique_ptr<CW::Application> create_program(int argc, const char** argv, CW::EventHandlerWrapper eh, CW::UpdateHandlerWrapper uh)
 {
-    return std::make_unique<MyApp>();
+    return std::make_unique<MyApp>(eh, uh);
+}
+
+#else
+
+#include <SFML/Graphics.hpp>
+#include <imgui.h>
+#include <imgui-SFML.h>
+
+#include "debug_utils/Log.h"
+
+#include <ranges>
+
+int main() {
+    sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "hui");
+
+
+
+    window.setFramerateLimit(60);
+
+    float radius = 100.0f;
+    sf::CircleShape shape(radius);
+    shape.setFillColor(sf::Color::Green);
+
+    if (!ImGui::SFML::Init(window))
+    {
+        return -1;
+    }
+
+    bool showShape = true;
+    int counter = 0;
+    sf::Clock deltaClock;
+    auto& io = ImGui::GetIO();
+
+    sf::View camera{ {400, 300}, {800, 600} };
+    bool cameraMoving = false;
+    sf::Vector2i prevMousePos{ 0, 0 };
+    float zoomFactor = 1.0f;
+
+    while (window.isOpen()) {
+        while (const std::optional event = window.pollEvent()) {
+            ImGui::SFML::ProcessEvent(window, *event);
+
+            if (event->is<sf::Event::Closed>()) {
+                window.close();
+                break;
+            }
+
+            else if (auto e = event->getIf<sf::Event::MouseButtonPressed>())
+            {
+                cameraMoving = e->button == sf::Mouse::Button::Right;
+            }
+
+            else if (auto e = event->getIf<sf::Event::MouseButtonReleased>())
+            {
+                cameraMoving = e->button != sf::Mouse::Button::Right && cameraMoving;
+            }
+
+            else if (auto e = event->getIf<sf::Event::MouseMoved>())
+            {
+                if (cameraMoving)
+                    camera.move((sf::Vector2f)(prevMousePos - e->position) * zoomFactor);
+
+                prevMousePos = e->position;
+            }
+
+            else if (auto e = event->getIf<sf::Event::MouseWheelScrolled>())
+            {
+                if (e->delta < 0)
+                {
+                    camera.zoom(1.1f);
+                    zoomFactor *= 1.1f;
+                }
+
+                else if (e->delta > 0)
+                {
+                    camera.zoom(0.9f);
+                    zoomFactor *= 0.9f;
+                }
+            }
+        }
+
+        ImGui::SFML::Update(window, deltaClock.restart());
+
+        ImGui::Begin("Debug");
+        ImGui::Checkbox("Show shape", &showShape);
+        if (showShape)
+        {
+            ImGui::SliderFloat("radius", &radius, 10.0f, 200.0f);
+            shape.setRadius(radius);
+        }
+
+        ImGui::Text("camera position: (%.2f, %.2f)", camera.getCenter().x, camera.getCenter().y);
+        ImGui::Text("camera size: (%.2f, %.2f)", camera.getSize().x, camera.getSize().y);
+        ImGui::Text("zoom factor: %.2f", zoomFactor);
+
+        ImGui::End();
+
+        window.clear();
+
+        window.setView(camera);
+
+        if (showShape)
+            window.draw(shape);
+
+        ImGui::SFML::Render(window);
+        window.display();
+    }
+
+    ImGui::SFML::Shutdown();
+
+    return 0;
 }
 
 #endif

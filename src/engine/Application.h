@@ -4,24 +4,20 @@
 
 #include "Events.h"
 #include "IDrawable.h"
+#include "IUpdate.h"
 
 namespace CW {
 
 	class Application
-		: public IDrawable
+		: public IDrawable,
+		  public IUpdate
 	{
 	public:
 		Application() = delete;
-		explicit Application(int width, int height, const char* title);
-
-		// Метод для инициализации систем ядра после инициализации самого ядра.
-		// Необходим для вызова, например, getEventHandler()->subscribe(this).
-		// Внимание! При вызове указанной функции и пободной в конструкторе произойдет ошибка,
-		// так как ядро в этот момент еще не инициализировалось.
-		virtual void coreInit() {}
-
-		// Одна итерация обновления программы
-		virtual void update() = 0;
+		Application(int width, int height, const char* title,
+			EventHandlerWrapper eventHandler,
+			UpdateHandlerWrapper updateHandler);
+		virtual ~Application() = default;
 
 		sf::Vector2u getWindowSize() const;
 		const char* getTitle() const;
@@ -29,8 +25,8 @@ namespace CW {
 		bool isRunning() const;
 		void close();
 
-		void setEventHandler(EventHandlerWrapper handler);
 		EventHandlerWrapper getEventHandler() const;
+		UpdateHandlerWrapper getUpdateHandler() const;
 
 	private:
 		sf::Vector2u m_WindowSize;
@@ -39,6 +35,7 @@ namespace CW {
 		bool m_Running = true;
 
 		EventHandlerWrapper m_EventHandler;
+		UpdateHandlerWrapper m_UpdateHandler;
 	};
 
 } // CW

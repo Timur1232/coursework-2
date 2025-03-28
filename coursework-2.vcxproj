@@ -229,6 +229,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Camera2D.cpp" />
     <ClCompile Include="src\engine\Application.cpp" />
     <ClCompile Include="dependencies\imgui-sfml\imgui-SFML.cpp" />
     <ClCompile Include="dependencies\imgui\imgui.cpp" />
@@ -237,10 +238,13 @@
     <ClCompile Include="dependencies\imgui\imgui_tables.cpp" />
     <ClCompile Include="dependencies\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\engine\Events.cpp" />
+    <ClCompile Include="src\engine\IDrawable.cpp" />
+    <ClCompile Include="src\engine\IUpdate.cpp" />
     <ClCompile Include="src\engine\ProgramCore.cpp" />
     <ClCompile Include="src\test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Camera2D.h" />
     <ClInclude Include="src\engine\Events.h" />
     <ClInclude Include="src\engine\Application.h" />
     <ClInclude Include="dependencies\imgui-sfml\imconfig-SFML.h" />
@@ -358,6 +362,7 @@
     <ClInclude Include="src\debug_utils\Log.h" />
     <ClInclude Include="src\debug_utils\Profiler.h" />
     <ClInclude Include="src\engine\EntryPoint.h" />
+    <ClInclude Include="src\engine\IUpdate.h" />
     <ClInclude Include="src\utils\utils.h" />
   </ItemGroup>
   <ItemGroup>

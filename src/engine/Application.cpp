@@ -4,8 +4,10 @@
 
 namespace CW {
 
-    Application::Application(int width, int height, const char* title)
-        : m_WindowSize(width, height), m_WindowTitle(title)
+    Application::Application(int width, int height, const char* title,
+		EventHandlerWrapper eventHandler,
+		UpdateHandlerWrapper updateHandler)
+        : m_WindowSize(width, height), m_WindowTitle(title), m_EventHandler(eventHandler), m_UpdateHandler(updateHandler)
     {
     }
 
@@ -29,29 +31,14 @@ namespace CW {
 		m_Running = false;
 	}
 
-	void Application::setEventHandler(EventHandlerWrapper handler)
-	{
-		if (!m_EventHandler)
-			m_EventHandler = handler;
-		else
-			CW_ASSERT("Not allowed to set EventHandler more than one time!");
-	}
-
 	EventHandlerWrapper Application::getEventHandler() const
 	{
-		if (!m_EventHandler)
-			CW_ASSERT("Using of getEventHandler() before core initialization! Use it coreInit() instead.");
 		return m_EventHandler;
 	}
 
-	RenderWrapper::RenderWrapper(sf::RenderWindow& window)
-		: m_Window(window)
+	UpdateHandlerWrapper Application::getUpdateHandler() const
 	{
-	}
-
-	void RenderWrapper::draw(const sf::Drawable& drawable)
-	{
-		m_Window.draw(drawable);
+		return m_UpdateHandler;
 	}
 
 } // CW

@@ -10,15 +10,19 @@ namespace CW {
 	class ProgramCore
 	{
 	public:
-		ProgramCore() = delete;
+		ProgramCore() = default;
 		ProgramCore(const ProgramCore&) = delete;
 		ProgramCore(ProgramCore&&) = delete;
 
-		ProgramCore(std::unique_ptr<Application>&& app);
 		~ProgramCore();
 
 		// Основной цикл программы
 		void run();
+
+		void setApplication(std::unique_ptr<Application>&& app);
+
+		EventHandler* getEventHandler();
+		UpdateHandler* getUpdateHandler();
 
 	private:
 		std::unique_ptr<Application> m_App;
@@ -26,7 +30,8 @@ namespace CW {
 		sf::RenderWindow m_Window;
 		sf::Clock m_DeltaClock;
 
-		EventHandler m_EventHandler;
+		EventHandler m_EventHandler{ 1024 };
+		UpdateHandler m_UpdateHandler{ 1024 };
 	};
 
 } // CW

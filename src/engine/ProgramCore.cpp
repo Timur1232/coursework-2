@@ -5,21 +5,6 @@
 
 namespace CW {
 
-	ProgramCore::ProgramCore(std::unique_ptr<Application>&& app)
-		: m_App(std::forward<std::unique_ptr<Application>>(app)),
-		  m_Window(sf::VideoMode(m_App->getWindowSize()), m_App->getTitle()),
-		  m_EventHandler(1024)
-	{
-		m_Window.setFramerateLimit(60);
-		if (!ImGui::SFML::Init(m_Window))
-		{
-			CW_CRITICAL("Failing initializing ImGui::SFML.");
-		}
-
-		m_App->setEventHandler(&m_EventHandler);
-		m_App->coreInit();
-	}
-
 	ProgramCore::~ProgramCore()
 	{
 		if (!m_Window.isOpen())
@@ -39,12 +24,37 @@ namespace CW {
 
 			m_App->update();
 
+			m_UpdateHandler.handleUpdates();
+
 			m_Window.clear();
 			m_App->draw(m_Window);
 
 			ImGui::SFML::Render(m_Window);
 			m_Window.display();
 		}
+	}
+
+	void ProgramCore::setApplication(std::unique_ptr<Application>&& app)
+	{
+		m_App = std::forward<std::unique_ptr<Application>>(app);
+
+		m_Window.create(sf::VideoMode(m_App->getWindowSize()), m_App->getTitle());
+
+		m_Window.setFramerateLimit(60);
+		if (!ImGui::SFML::Init(m_Window))
+		{
+			CW_CRITICAL("Failing initializing ImGui::SFML.");
+		}
+	}
+
+	EventHandler* ProgramCore::getEventHandler()
+	{
+		return &m_EventHandler;
+	}
+
+	UpdateHandler* ProgramCore::getUpdateHandler()
+	{
+		return &m_UpdateHandler;
 	}
 
 } // CW

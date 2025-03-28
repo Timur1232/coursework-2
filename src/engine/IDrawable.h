@@ -10,6 +10,7 @@ namespace CW {
 		RenderWrapper(sf::RenderWindow& window);
 
 		void draw(const sf::Drawable& drawable);
+		void setView(const sf::View& view);
 
 	private:
 		sf::RenderWindow& m_Window;
@@ -18,7 +19,7 @@ namespace CW {
 	class IDrawable
 	{
 	public:
-		virtual void draw(RenderWrapper) = 0;
+		virtual void draw(RenderWrapper) const = 0;
 	};
 
 } // CW
