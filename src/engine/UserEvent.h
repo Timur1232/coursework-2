@@ -38,7 +38,7 @@ namespace CW {
 
 		void operator()()
 		{
-			CW_ASSERT("Need overloading for this type of event!");
+			CW_ERROR("Need overloading for this type of event!");
 		}
 
 	private:

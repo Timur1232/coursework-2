@@ -16,11 +16,35 @@ public:
 	virtual void onE(const EventData*) = 0;
 };
 
+
+struct OtherEventData
+{
+	float f;
+	int i;
+};
+
+class OtherReciever
+	:virtual public CW::OnEvent
+{
+public:
+	virtual void onOtherEvent(const OtherEventData*) = 0;
+};
+
+
+struct Thing {};
+
+class OnThing
+	: virtual public CW::OnEvent
+{
+public:
+	virtual void gimme(void) = 0;
+};
+
 // ƒл€ определени€ пользовательских типов ивентов нужно объ€вить в этом файле макрос CW_USER_EVENTS_LIST
 // и записать через зап€тую типы отправл€емых ивентов
-#define CW_USER_EVENTS_LIST EventData
+#define CW_USER_EVENTS_LIST EventData, OtherEventData, Thing
 
 // ≈сли определены пользовательские типы ивентов, то необходимо объ€вить макрос CW_USER_EVENTS_PAIRS,
 // в котором через зап€тую указываетс€ тип цели дл€ отправлени€ ивента и тип самого ивента
 // <тип_цели>, <тип_ивента>, <тип_цели>, <тип_ивента>, ...
-#define CW_USER_EVENTS_PAIRS MyEventReciever, EventData
+#define CW_USER_EVENTS_PAIRS MyEventReciever, EventData, OtherReciever, OtherEventData, OnThing, Thing

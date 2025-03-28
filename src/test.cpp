@@ -16,7 +16,8 @@ class MyApp
     : public CW::Application,
       public CW::OnKeyPressed,
       public CW::OnClosed,
-      public MyEventReciever
+      public MyEventReciever,
+      public OnThing
 {
 public:
     MyApp(CW::EventHandlerWrapper eventHandler, CW::UpdateHandlerWrapper updateHandler)
@@ -39,7 +40,20 @@ public:
         }
         if (ImGui::Button("send event"))
         {
+            getEventHandler().addEvent<EventData>(EventData{ 1 });
+            getEventHandler().addEvent<EventData>(EventData{ 2 });
+            getEventHandler().addEvent<EventData>(EventData{ 3 });
+            getEventHandler().addEvent<EventData>(EventData{ 4 });
             getEventHandler().addEvent<EventData>(EventData{ 5 });
+        }
+        if (ImGui::Button("send other event"))
+        {
+            getEventHandler().addEvent<OtherEventData>(OtherEventData{ 10.5f, 6 });
+            getEventHandler().addEvent<OtherEventData>(OtherEventData{ -4.6f, 23 });
+        }
+        if (ImGui::Button("send thing"))
+        {
+            getEventHandler().addEvent<Thing>(Thing{});
         }
         ImGui::End();
     }
@@ -65,9 +79,14 @@ public:
         }
     }
 
-    void onE(const EventData* e)
+    void onE(const EventData* e) override
     {
         CW_MSG("Catched my own event! a = {}", e->a);
+    }
+
+    void gimme() override
+    {
+        CW_MSG("eeeeeeeeeeeeeeeeee");
     }
 
 private:

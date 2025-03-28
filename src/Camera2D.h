@@ -12,7 +12,8 @@ class Camera2D
 	  public CW::OnMouseButtonReleased,
 	  public CW::OnMouseMoved,
 	  public CW::OnMouseWheelScrolled,
-	  public CW::IUpdate
+	  public CW::IUpdate,
+	  public OtherReciever
 {
 public:
 	Camera2D(float x, float y, float width, float height,
@@ -27,6 +28,11 @@ public:
 	void onMouseWheelScrolled(const sf::Event::MouseWheelScrolled* e) override;
 
 	const sf::View& getView() const;
+
+	void onOtherEvent(const OtherEventData* e) override
+	{
+		CW_MSG("Recive other event! f = {}, i = {}", e->f, e->i);
+	}
 
 private:
 	sf::View m_View;
