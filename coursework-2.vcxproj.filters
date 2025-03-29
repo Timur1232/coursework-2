@@ -54,6 +54,12 @@
     <ClCompile Include="src\engine\IDrawable.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="src\Drone.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Beacon.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\AudioResource.hpp">
@@ -426,6 +432,12 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\CW_EventConfig-dispatcher.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Drone.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Beacon.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

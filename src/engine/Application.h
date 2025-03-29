@@ -6,7 +6,7 @@
 #include "IDrawable.h"
 #include "IUpdate.h"
 
-namespace CW {
+namespace CW_E {
 
 	class Application
 		: public IDrawable,
@@ -38,4 +38,4 @@ namespace CW {
 		UpdateHandlerWrapper m_UpdateHandler;
 	};
 
-} // CW
+} // CW_E

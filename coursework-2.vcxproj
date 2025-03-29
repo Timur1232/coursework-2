@@ -229,6 +229,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Beacon.cpp" />
+    <ClCompile Include="src\Drone.cpp" />
     <ClCompile Include="src\Camera2D.cpp" />
     <ClCompile Include="src\engine\Application.cpp" />
     <ClCompile Include="dependencies\imgui-sfml\imgui-SFML.cpp" />
@@ -244,6 +246,8 @@
     <ClCompile Include="src\test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Beacon.h" />
+    <ClInclude Include="src\Drone.h" />
     <ClInclude Include="src\Camera2D.h" />
     <ClInclude Include="src\engine\CW_EventConfig-dispatcher.h" />
     <ClInclude Include="src\engine\CW_EventConfig.h" />

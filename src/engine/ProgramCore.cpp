@@ -3,7 +3,12 @@
 #include <imgui-SFML.h>
 #include <debug_utils/Log.h>
 
-namespace CW {
+namespace CW_E {
+
+	ProgramCore::ProgramCore()
+	{
+		CW_INFO("Core initialized.");
+	}
 
 	ProgramCore::~ProgramCore()
 	{
@@ -19,16 +24,17 @@ namespace CW {
 
 		while (m_App->isRunning())
 		{
+			m_DeltaTime = m_DeltaClock.restart();
 			m_EventHandler.handleEvents(m_Window);
 #ifdef CW_USER_EVENTS_LIST
 			m_EventHandler.handleUserEvents();
 #endif
 
-			ImGui::SFML::Update(m_Window, m_DeltaClock.restart());
+			ImGui::SFML::Update(m_Window, m_DeltaTime);
 
-			m_App->update();
+			m_App->update(m_DeltaTime);
 
-			m_UpdateHandler.handleUpdates();
+			m_UpdateHandler.handleUpdates(m_DeltaTime);
 
 			m_Window.clear();
 			m_App->draw(m_Window);
@@ -63,4 +69,4 @@ namespace CW {
 		return &m_UpdateHandler;
 	}
 
-} // CW
+} // CW_E

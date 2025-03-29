@@ -1,6 +1,6 @@
 #include "IDrawable.h"
 
-namespace CW {
+namespace CW_E {
 
 	RenderWrapper::RenderWrapper(sf::RenderWindow& window)
 		: m_Window(window)
@@ -17,4 +17,4 @@ namespace CW {
 		m_Window.setView(view);
 	}
 
-} // CW
+} // CW_E

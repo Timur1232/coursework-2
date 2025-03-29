@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CW {
+namespace CW_E {
 
 	class OnEvent
 	{
@@ -9,4 +9,4 @@ namespace CW {
 		virtual bool isAcceptingEvents() const { return true; }
 	};
 
-} // CW
+} // CW_E

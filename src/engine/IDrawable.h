@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 
-namespace CW {
+namespace CW_E {
 
 	class RenderWrapper
 	{
@@ -19,7 +19,8 @@ namespace CW {
 	class IDrawable
 	{
 	public:
+		virtual ~IDrawable() = default;
 		virtual void draw(RenderWrapper) const = 0;
 	};
 
-} // CW
+} // CW_E

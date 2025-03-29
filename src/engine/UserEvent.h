@@ -4,7 +4,7 @@
 #include <variant>
 #include "debug_utils/Log.h"
 
-namespace CW {
+namespace CW_E {
 
 #ifdef CW_USER_EVENTS_LIST
 
@@ -48,4 +48,4 @@ namespace CW {
 
 #endif
 
-} // CW
+} // CW_E

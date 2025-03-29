@@ -3,8 +3,9 @@
 #include <imgui-SFML.h>
 
 #include "debug_utils/Log.h"
+#include "ProgramCore.h"
 
-namespace CW {
+namespace CW_E {
 
 	template<>
 	class CoreDispatcher<void, void>
@@ -84,14 +85,34 @@ namespace CW {
 	{
 	}
 
-	EventHandler::EventHandler(size_t reserve)
+	EventHandler::EventHandler(size_t targetReserve, size_t eventReserve)
 	{
-		m_EventTargets.reserve(reserve);
+		m_EventTargets.reserve(targetReserve);
+		m_UserEvents.reserve(eventReserve);
 	}
 
-	void EventHandler::subscribe(OnEvent* newSubscriber)
+	size_t EventHandler::subscribe(OnEvent* newSubscriber)
 	{
+		if (m_HasUnsubs)
+		{
+			for (size_t i = 0; i < m_EventTargets.size(); i++)
+			{
+				if (!m_EventTargets[i])
+				{
+					m_EventTargets[i] = newSubscriber;
+					return i;
+				}
+			}
+			m_HasUnsubs = false;
+		}
 		m_EventTargets.push_back(newSubscriber);
+		return m_EventTargets.size() - 1;
+	}
+
+	void EventHandler::unsubscribe(size_t index)
+	{
+		m_EventTargets[index] = nullptr;
+		m_HasUnsubs = true;
 	}
 
 	void EventHandler::handleEvents(sf::RenderWindow& window)
@@ -145,23 +166,27 @@ namespace CW {
 
 	void EventHandler::handleUserEvents()
 	{
-		for (auto event : m_UserEvents)
+		for (auto& event : m_UserEvents)
 		{
 			for (auto target : m_EventTargets)
 			{
-				dispatchUserEvent<CW_USER_EVENTS_PAIRS>(target, *event);
+				dispatchUserEvent<CW_USER_EVENTS_PAIRS>(target, event);
 			}
 		}
 		m_UserEvents.clear();
-		m_Allocator.deallocate();
 	}
 
 #endif
 
 
-	void EventHandlerWrapper::subscribe(OnEvent* newSubscriber)
+	size_t EventHandlerWrapper::subscribe(OnEvent* newSubscriber)
 	{
-		m_EventHandler->subscribe(newSubscriber);
+		return m_EventHandler->subscribe(newSubscriber);
 	}
 
-} // CW
+	void EventHandlerWrapper::unsubscribe(size_t index)
+	{
+		m_EventHandler->unsubscribe(index);
+	}
+
+} // CW_E

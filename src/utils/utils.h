@@ -1,6 +1,8 @@
 #pragma once
 
-namespace CW {
+#include <cstdint>
+
+namespace CW_E {
 
 	template<class T>
 	T clamp(T a, T min, T max)
@@ -137,4 +139,4 @@ namespace CW {
 		size_t m_BlockSize = 1024;
 	};
 
-} // CW
+} // CW_E

@@ -8,7 +8,7 @@
 
 #include "debug_utils/Log.h"
 
-namespace CW {
+namespace CW_E {
 
 	struct ProfileResult
 	{
@@ -119,11 +119,11 @@ namespace CW {
 		bool m_Stopped;
 	};
 
-} // CW
+} // CW_E
 
 #define CW_PROFILING 1
 #if CW_PROFILING
-	#define CW_PROFILE_SCOPE(name) CW::ScopeTimer timer(name)
+	#define CW_PROFILE_SCOPE(name) CW_E::ScopeTimer timer(name)
 	#define CW_PROFILE_FUNCTION() CW_PROFILE_SCOPE(__FUNCTION__)
 #else
 	#define CW_PROFILE_SCOPE(name)

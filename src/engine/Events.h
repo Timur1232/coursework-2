@@ -11,12 +11,13 @@
 #include "CW_EventConfig.h"
 #include "UserEvent.h"
 
-namespace CW {
+namespace CW_E {
 
 	class OnKeyPressed
 		: virtual public OnEvent
 	{
 	public:
+		~OnKeyPressed() = default;
 		virtual void onKeyPressed(const sf::Event::KeyPressed*) = 0;
 	};
 
@@ -24,6 +25,7 @@ namespace CW {
 		: virtual public OnEvent
 	{
 	public:
+		virtual ~OnKeyReleased() = default;
 		virtual void onKeyReleased(const sf::Event::KeyReleased*) = 0;
 	};
 
@@ -31,6 +33,7 @@ namespace CW {
 		: virtual public OnEvent
 	{
 	public:
+		virtual ~OnMouseButtonPressed() = default;
 		virtual void onMouseButtonPressed(const sf::Event::MouseButtonPressed*) = 0;
 	};
 
@@ -38,6 +41,7 @@ namespace CW {
 		: virtual public OnEvent
 	{
 	public:
+		virtual ~OnMouseButtonReleased() = default;
 		virtual void onMouseButtonReleased(const sf::Event::MouseButtonReleased*) = 0;
 	};
 
@@ -45,6 +49,7 @@ namespace CW {
 		: virtual public OnEvent
 	{
 	public:
+		virtual ~OnMouseMoved() = default;
 		virtual void onMouseMoved(const sf::Event::MouseMoved*) = 0;
 	};
 
@@ -52,6 +57,7 @@ namespace CW {
 		: virtual public OnEvent
 	{
 	public:
+		virtual ~OnMouseWheelScrolled() = default;
 		virtual void onMouseWheelScrolled(const sf::Event::MouseWheelScrolled*) = 0;
 	};
 
@@ -59,6 +65,7 @@ namespace CW {
 		: virtual public OnEvent
 	{
 	public:
+		virtual ~OnClosed() = default;
 		virtual void onClosed() = 0;
 	};
 
@@ -66,6 +73,7 @@ namespace CW {
 		: virtual public OnEvent
 	{
 	public:
+		virtual ~OnResized() = default;
 		virtual void onResized(const sf::Event::Resized*) = 0;
 	};
 
@@ -96,14 +104,16 @@ namespace CW {
 		const Event_t* event = nullptr;
 	};
 
+	class ProgramCore;
 
 	class EventHandler
 	{
 	public:
-		EventHandler() = default;
-		EventHandler(size_t reserve);
+		EventHandler() = delete;
+		EventHandler(size_t reserve, size_t eventReserve);
 
-		void subscribe(OnEvent* target);
+		size_t subscribe(OnEvent* target);
+		void unsubscribe(size_t index);
 		void handleEvents(sf::RenderWindow& window);
 
 #ifdef CW_USER_EVENTS_LIST
@@ -113,9 +123,7 @@ namespace CW {
 		template<class T>
 		void addEvent(T&& event)
 		{
-			MyEvent* e = m_Allocator.allocate();
-			e->data = std::move(event);
-			m_UserEvents.push_back(e);
+			m_UserEvents.push_back(MyEvent{ std::move(event) });
 		}
 
 #endif
@@ -123,9 +131,9 @@ namespace CW {
 	private:
 		std::vector<OnEvent*> m_EventTargets;
 #ifdef CW_USER_EVENTS_LIST
-		std::vector<MyEvent*> m_UserEvents;
-		ArenaAllocator<MyEvent> m_Allocator{1024};
+		std::vector<MyEvent> m_UserEvents;
 #endif
+		bool m_HasUnsubs = false;
 	};
 
 
@@ -138,7 +146,8 @@ namespace CW {
 		{
 		}
 
-		void subscribe(OnEvent* target);
+		size_t subscribe(OnEvent* target);
+		void unsubscribe(size_t index);
 
 #ifdef CW_USER_EVENTS_LIST
 		template<class T>
@@ -152,4 +161,4 @@ namespace CW {
 		EventHandler* m_EventHandler = nullptr;
 	};	
 
-} // CW
+} // CW_E

@@ -4,19 +4,7 @@
 #include "UserEvent.h"
 
 template<>
-void CW::UserDispatcher<MyEventReciever, EventData>::operator()()
+void CW_E::UserDispatcher<OnBeaconDischarge, BeaconDischarge>::operator()()
 {
-    target->onE(event);
-}
-
-template<>
-void CW::UserDispatcher<OtherReciever, OtherEventData>::operator()()
-{
-    target->onOtherEvent(event);
-}
-
-template<>
-void CW::UserDispatcher<OnThing, Thing>::operator()()
-{
-    target->gimme();
+    target->onBeaconDischarge(event);
 }

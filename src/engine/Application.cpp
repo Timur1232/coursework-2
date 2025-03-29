@@ -2,7 +2,7 @@
 
 #include "debug_utils/Log.h"
 
-namespace CW {
+namespace CW_E {
 
     Application::Application(int width, int height, const char* title,
 		EventHandlerWrapper eventHandler,
@@ -41,4 +41,4 @@ namespace CW {
 		return m_UpdateHandler;
 	}
 
-} // CW
+} // CW_E

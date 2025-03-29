@@ -5,12 +5,12 @@
 #include "Application.h"
 #include "Events.h"
 
-namespace CW {
+namespace CW_E {
 
 	class ProgramCore
 	{
 	public:
-		ProgramCore() = default;
+		ProgramCore();
 		ProgramCore(const ProgramCore&) = delete;
 		ProgramCore(ProgramCore&&) = delete;
 
@@ -29,9 +29,10 @@ namespace CW {
 
 		sf::RenderWindow m_Window;
 		sf::Clock m_DeltaClock;
+		sf::Time m_DeltaTime;
 
-		EventHandler m_EventHandler{ 1024 };
+		EventHandler m_EventHandler{ 1024, 1024 };
 		UpdateHandler m_UpdateHandler{ 1024 };
 	};
 
-} // CW
+} // CW_E

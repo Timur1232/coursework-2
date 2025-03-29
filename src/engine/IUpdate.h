@@ -2,14 +2,15 @@
 
 #include <vector>
 
-namespace CW {
+#include <SFML/System.hpp>
+
+namespace CW_E {
 
 	class IUpdate
 	{
 	public:
 		virtual ~IUpdate() = default;
-
-		virtual void update() = 0;
+		virtual void update(sf::Time deltaTime) = 0;
 	};
 
 
@@ -18,11 +19,13 @@ namespace CW {
 	public:
 		UpdateHandler(size_t reserve);
 
-		void subscribe(IUpdate* target);
-		void handleUpdates();
+		size_t subscribe(IUpdate* target);
+		void unsubscribe(size_t index);
+		void handleUpdates(sf::Time deltaTime);
 
 	private:
 		std::vector<IUpdate*> m_UpdateTargets;
+		bool m_HasUnsubs = false;
 	};
 
 
@@ -31,7 +34,8 @@ namespace CW {
 	public:
 		UpdateHandlerWrapper(UpdateHandler* handler);
 
-		void subscribe(IUpdate* target);
+		size_t subscribe(IUpdate* target);
+		void unsubscribe(size_t index);
 
 	private:
 		UpdateHandler* m_UpdateHandler;

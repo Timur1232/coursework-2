@@ -2,24 +2,43 @@
 
 #include "debug_utils/Log.h"
 
-namespace CW {
+namespace CW_E {
 
 	UpdateHandler::UpdateHandler(size_t reserve)
 	{
 		m_UpdateTargets.reserve(reserve);
 	}
 
-	void UpdateHandler::subscribe(IUpdate* target)
+	size_t UpdateHandler::subscribe(IUpdate* target)
 	{
-		CW_MSG("Target subscribed with address: {}", (void*)target);
+		if (m_HasUnsubs)
+		{
+			for (size_t i = 0; i < m_UpdateTargets.size(); i++)
+			{
+				if (!m_UpdateTargets[i])
+				{
+					m_UpdateTargets[i] = target;
+					return i;
+				}
+			}
+			m_HasUnsubs = false;
+		}
 		m_UpdateTargets.emplace_back(target);
+		return m_UpdateTargets.size() - 1;
 	}
 
-	void UpdateHandler::handleUpdates()
+	void UpdateHandler::unsubscribe(size_t index)
+	{
+		m_UpdateTargets[index] = nullptr;
+		m_HasUnsubs = true;
+	}
+
+	void UpdateHandler::handleUpdates(sf::Time deltaTime)
 	{
 		for (auto target : m_UpdateTargets)
 		{
-			target->update();
+			if (target)
+				target->update(deltaTime);
 		}
 	}
 
@@ -28,9 +47,14 @@ namespace CW {
 	{
 	}
 
-	void UpdateHandlerWrapper::subscribe(IUpdate* target)
+	size_t UpdateHandlerWrapper::subscribe(IUpdate* target)
 	{
-		m_UpdateHandler->subscribe(target);
+		return m_UpdateHandler->subscribe(target);
+	}
+
+	void UpdateHandlerWrapper::unsubscribe(size_t index)
+	{
+		m_UpdateHandler->unsubscribe(index);
 	}
 
 }
