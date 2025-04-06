@@ -6,45 +6,41 @@
 #include "engine/IDrawable.h"
 #include "engine/Events.h"
 
-namespace CW {
+#include "BeaconType.h"
 
-	enum class BeconType
-	{
-		None = 0,
-		Navigation,
-		Recource
-	};
+namespace CW {
 
 	class Beacon
 		: public CW_E::IUpdate,
 		  public CW_E::IDrawable
 	{
 	public:
-		Beacon(size_t index, sf::Vector2f position,
-			CW_E::UpdateHandlerWrapper u_h, CW_E::EventHandlerWrapper e_h);
-		~Beacon();
+		Beacon(sf::Vector2f position, BeaconType type);
 
 		void update(sf::Time deltaTime) override;
-		void draw(CW_E::RenderWrapper render) const override;
+		void draw(sf::RenderWindow& render) const override;
 
 		bool isAlive() const;
 
-	private:
-		size_t m_Index;
-		size_t m_UIndex;
-		CW_E::UpdateHandlerWrapper m_UpdateHandler;
-		CW_E::EventHandlerWrapper m_EventHandler;
+		void revive(sf::Vector2f newPosition, BeaconType newType);
 
+		sf::Vector2f getPos() const;
+		BeaconType getType() const;
+
+		void setBeaconColor(BeaconType type);
+
+	private:
+		BeaconType m_Type;
 		bool m_Alive = true;
 
 		sf::Vector2f m_Position;
 		float m_Charge = 1.0f;
-		float m_ChargeThreshold = 0.1f;
-		float m_DischargeRate = 0.1f;
+		static float s_ChargeThreshold;
+		static float s_DischargeRate;
 
 		// TODO: сделать систему управления ресурсами
 		sf::CircleShape m_Mesh{10.0f};
-		sf::Color m_Color{255, 255, 255, 255};
+		sf::Color m_Color;
 	};
 
 } // CW

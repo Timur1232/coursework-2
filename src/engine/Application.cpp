@@ -4,10 +4,8 @@
 
 namespace CW_E {
 
-    Application::Application(int width, int height, const char* title,
-		EventHandlerWrapper eventHandler,
-		UpdateHandlerWrapper updateHandler)
-        : m_WindowSize(width, height), m_WindowTitle(title), m_EventHandler(eventHandler), m_UpdateHandler(updateHandler)
+    Application::Application(int width, int height, const char* title)
+        : m_WindowSize(width, height), m_WindowTitle(title)
     {
     }
 
@@ -29,16 +27,6 @@ namespace CW_E {
 	void Application::close()
 	{
 		m_Running = false;
-	}
-
-	EventHandlerWrapper Application::getEventHandler() const
-	{
-		return m_EventHandler;
-	}
-
-	UpdateHandlerWrapper Application::getUpdateHandler() const
-	{
-		return m_UpdateHandler;
 	}
 
 } // CW_E

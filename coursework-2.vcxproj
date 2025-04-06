@@ -239,14 +239,14 @@
     <ClCompile Include="dependencies\imgui\imgui_draw.cpp" />
     <ClCompile Include="dependencies\imgui\imgui_tables.cpp" />
     <ClCompile Include="dependencies\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\engine\EventInterface.cpp" />
     <ClCompile Include="src\engine\Events.cpp" />
-    <ClCompile Include="src\engine\IDrawable.cpp" />
-    <ClCompile Include="src\engine\IUpdate.cpp" />
     <ClCompile Include="src\engine\ProgramCore.cpp" />
     <ClCompile Include="src\test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Beacon.h" />
+    <ClInclude Include="src\BeaconType.h" />
     <ClInclude Include="src\Drone.h" />
     <ClInclude Include="src\Camera2D.h" />
     <ClInclude Include="src\engine\CW_EventConfig-dispatcher.h" />

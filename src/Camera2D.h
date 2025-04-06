@@ -11,16 +11,14 @@ namespace CW {
 
 	class Camera2D
 		: public CW_E::OnMouseButtonPressed,
-		public CW_E::OnMouseButtonReleased,
-		public CW_E::OnMouseMoved,
-		public CW_E::OnMouseWheelScrolled,
-		public CW_E::OnResized,
-		public CW_E::IUpdate
+		  public CW_E::OnMouseButtonReleased,
+		  public CW_E::OnMouseMoved,
+		  public CW_E::OnMouseWheelScrolled,
+		  public CW_E::OnResized,
+		  public CW_E::IUpdate
 	{
 	public:
-		Camera2D(float x, float y, float width, float height,
-			CW_E::EventHandlerWrapper eventHandler,
-			CW_E::UpdateHandlerWrapper updateHandler);
+		Camera2D(float x, float y, float width, float height);
 
 		void update(sf::Time deltaTime) override;
 

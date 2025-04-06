@@ -25,21 +25,17 @@ namespace CW_E {
 		while (m_App->isRunning())
 		{
 			m_DeltaTime = m_DeltaClock.restart();
-			m_EventHandler.handleEvents(m_Window);
+			EventHandler::get().handleEvents(m_Window);
 #ifdef CW_USER_EVENTS_LIST
-			m_EventHandler.handleUserEvents();
+			EventHandler::get().handleUserEvents();
 #endif
 
 			ImGui::SFML::Update(m_Window, m_DeltaTime);
 
 			m_App->update(m_DeltaTime);
 
-			m_UpdateHandler.handleUpdates(m_DeltaTime);
-
 			m_Window.clear();
 			m_App->draw(m_Window);
-
-			// TODO: render objects
 
 			ImGui::SFML::Render(m_Window);
 			m_Window.display();
@@ -51,22 +47,34 @@ namespace CW_E {
 		m_App = std::forward<std::unique_ptr<Application>>(app);
 
 		m_Window.create(sf::VideoMode(m_App->getWindowSize()), m_App->getTitle());
+		m_Window.setVerticalSyncEnabled(true);
 
 		m_Window.setFramerateLimit(60);
 		if (!ImGui::SFML::Init(m_Window))
 		{
 			CW_CRITICAL("Failing initializing ImGui::SFML.");
 		}
+
+		m_App->subscribeOnEvents();
 	}
 
-	EventHandler* ProgramCore::getEventHandler()
+	void ProgramCore::onKeyPressed(const sf::Event::KeyPressed* e)
 	{
-		return &m_EventHandler;
+		if (e->code == sf::Keyboard::Key::F11)
+		{
+			m_Window.create(sf::VideoMode(m_App->getWindowSize()), m_App->getTitle(), reverseState());
+		}
 	}
 
-	UpdateHandler* ProgramCore::getUpdateHandler()
+	sf::State ProgramCore::reverseState()
 	{
-		return &m_UpdateHandler;
+		switch (m_WindowState)
+		{
+		case sf::State::Windowed: m_WindowState = sf::State::Fullscreen; break;
+		case sf::State::Fullscreen: m_WindowState = sf::State::Windowed; break;
+		default: break;
+		}
+		return m_WindowState;
 	}
 
 } // CW_E

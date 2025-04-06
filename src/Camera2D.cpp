@@ -5,13 +5,9 @@
 
 namespace CW {
 
-	Camera2D::Camera2D(float x, float y, float width, float height,
-		CW_E::EventHandlerWrapper eventHandler,
-		CW_E::UpdateHandlerWrapper updateHandler)
+	Camera2D::Camera2D(float x, float y, float width, float height)
 		: m_View({ x, y }, { width, height })
 	{
-		eventHandler.subscribe(this);
-		updateHandler.subscribe(this);
 	}
 
 	void Camera2D::update(sf::Time deltaTime)
@@ -26,7 +22,8 @@ namespace CW {
 
 	void Camera2D::onMouseButtonPressed(const sf::Event::MouseButtonPressed* e)
 	{
-		m_IsMoving = e->button == sf::Mouse::Button::Right;
+		if (!ImGui::GetIO().WantCaptureMouse)
+			m_IsMoving = e->button == sf::Mouse::Button::Right;
 	}
 
 	void Camera2D::onMouseButtonReleased(const sf::Event::MouseButtonReleased* e)
@@ -45,6 +42,8 @@ namespace CW {
 
 	void Camera2D::onMouseWheelScrolled(const sf::Event::MouseWheelScrolled* e)
 	{
+		if (ImGui::GetIO().WantCaptureMouse)
+			return;
 		if (e->delta > 0)
 		{
 			m_View.zoom(0.9f);

@@ -14,7 +14,7 @@ namespace CW_E {
 	};
 
 
-	class UpdateHandler
+	/*class UpdateHandler
 	{
 	public:
 		UpdateHandler(size_t reserve);
@@ -39,5 +39,5 @@ namespace CW_E {
 
 	private:
 		UpdateHandler* m_UpdateHandler;
-	};
+	};*/
 }

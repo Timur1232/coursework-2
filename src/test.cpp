@@ -10,8 +10,8 @@
 #include "debug_utils/Log.h"
 
 #include "Camera2D.h"
-
 #include "Beacon.h"
+#include "Drone.h"
 
 namespace CW {
 
@@ -21,41 +21,52 @@ namespace CW {
           public CW_E::OnClosed,
           public CW_E::OnMouseButtonPressed,
           public CW_E::OnMouseButtonReleased,
-          public OnBeaconDischarge
+          public OnCreateBeacon
     {
     public:
-        MyApp(CW_E::EventHandlerWrapper eventHandler, CW_E::UpdateHandlerWrapper updateHandler)
-            : Application(800, 600, "test", eventHandler, updateHandler),
-              radius(100.0f), shape(radius),
-              m_Camera(0, 0, 800, 600, eventHandler, updateHandler)
+        MyApp()
+            : Application(1920, 1080, "test"),
+              m_Camera(0, 0, 1920, 1080)
         {
-            shape.setFillColor(sf::Color::Green);
-            eventHandler.subscribe(this);
+            m_Camera.subscribeOnEvents();
+
+            m_Drones.emplace_back(sf::Vector2f{ 0.0f, 0.0f }, sf::Vector2f{ 0.0f, 1.0f });
+            m_Drones.emplace_back(sf::Vector2f{ 0.0f, 200.0f }, sf::Vector2f{ -1.0f, 1.0f }.normalized());
         }
 
         void update(sf::Time deltaTime) override
         {
             ImGui::Begin("Debug");
-            ImGui::Checkbox("Show shape", &showShape);
-            if (showShape)
-            {
-                ImGui::SliderFloat("radius", &radius, 10.0f, 200.0f);
-                shape.setRadius(radius);
-            }
             ImGui::Text("m_Beacons size: %d", m_Beacons.size());
+            ImGui::Text("mouse hovering on any window: %d", ImGui::GetIO().WantCaptureMouse);
             ImGui::End();
+
+            m_Camera.update(deltaTime);
+
+            for (auto& b : m_Beacons)
+            {
+                b.update(deltaTime);
+            }
+
+            for (auto& drone : m_Drones)
+            {
+                drone.update(deltaTime);
+                drone.reactToBeacons(m_Beacons);
+            }
         }
 
-        void draw(CW_E::RenderWrapper render) const override
+        void draw(sf::RenderWindow& render) const override
         {
             render.setView(m_Camera.getView());
-            if (showShape)
-                render.draw(shape);
 
-            for (auto b : m_Beacons)
+            for (const auto& b : m_Beacons)
             {
-                if (b)
-                    b->draw(render);
+                b.draw(render);
+            }
+
+            for (auto& drone : m_Drones)
+            {
+                drone.draw(render);
             }
         }
 
@@ -66,27 +77,17 @@ namespace CW {
 
         void onKeyPressed(const sf::Event::KeyPressed* event) override
         {
-            CW_MSG("KeyPressed Event happened in class MyApp.");
-            if (event->code == sf::Keyboard::Key::Space)
+            if (event->code == sf::Keyboard::Key::F11)
             {
-                CW_MSG("Pressed space.");
+                
             }
         }
 
         void onMouseButtonPressed(const sf::Event::MouseButtonPressed* e) override
         {
-            if (!m_Hold && e->button == sf::Mouse::Button::Left)
+            if (!m_Hold && !ImGui::GetIO().WantCaptureMouse && e->button == sf::Mouse::Button::Left)
             {
-                for (size_t i = 0; i < m_Beacons.size(); i++)
-                {
-                    if (!m_Beacons[i])
-                    {
-                        m_Beacons[i] = new Beacon{ i, m_Camera.worldPosition(e->position), getUpdateHandler(), getEventHandler() };
-                        m_Hold = true;
-                        return;
-                    }
-                }
-                m_Beacons.emplace_back(new Beacon{ m_Beacons.size(), m_Camera.worldPosition(e->position), getUpdateHandler(), getEventHandler()});
+                createBeacon(m_Camera.worldPosition(e->position), BeaconType::Recource);
                 m_Hold = true;
             }
         }
@@ -96,30 +97,37 @@ namespace CW {
             m_Hold = m_Hold && e->button != sf::Mouse::Button::Left;
         }
 
-        void onBeaconDischarge(const BeaconDischarge* e)
+        void onCreateBeacon(const CreateBeacon* e) override
         {
-            delete m_Beacons[e->index];
-            m_Beacons[e->index] = nullptr;
+            createBeacon(e->position, e->type);
         }
 
     private:
-        float radius;
-        sf::CircleShape shape;
-        bool showShape = true;
-        int counter = 0;
+        void createBeacon(sf::Vector2f position, BeaconType type)
+        {
+            for (auto& beacon : m_Beacons)
+            {
+                if (!beacon.isAlive())
+                {
+                    beacon.revive(position, type);
+                    return;
+                }
+            }
+            m_Beacons.emplace_back(position, type);
+        }
 
+    private:
         Camera2D m_Camera;
-
-        std::vector<Beacon*> m_Beacons;
-
         bool m_Hold = false;
+        std::vector<Beacon> m_Beacons;
+        std::vector<Drone> m_Drones;
     };
 
 } // CW
 
-std::unique_ptr<CW_E::Application> create_program(int argc, const char** argv, CW_E::EventHandlerWrapper eh, CW_E::UpdateHandlerWrapper uh)
+std::unique_ptr<CW_E::Application> create_program(int argc, const char** argv)
 {
-    return std::make_unique<CW::MyApp>(eh, uh);
+    return std::make_unique<CW::MyApp>();
 }
 
 #else

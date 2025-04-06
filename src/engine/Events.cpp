@@ -85,7 +85,13 @@ namespace CW_E {
 	{
 	}
 
-	EventHandler::EventHandler(size_t targetReserve, size_t eventReserve)
+	EventHandler& EventHandler::get()
+	{
+		static EventHandler handler;
+		return handler;
+	}
+
+	void EventHandler::reserve(size_t targetReserve, size_t eventReserve)
 	{
 		m_EventTargets.reserve(targetReserve);
 		m_UserEvents.reserve(eventReserve);
@@ -93,26 +99,24 @@ namespace CW_E {
 
 	size_t EventHandler::subscribe(OnEvent* newSubscriber)
 	{
-		if (m_HasUnsubs)
+		if (m_UnsubsCount)
 		{
-			for (size_t i = 0; i < m_EventTargets.size(); i++)
-			{
-				if (!m_EventTargets[i])
-				{
-					m_EventTargets[i] = newSubscriber;
-					return i;
-				}
-			}
-			m_HasUnsubs = false;
+			m_EventTargets[m_EventTargets.size() - m_UnsubsCount] = newSubscriber;
+			--m_UnsubsCount;
 		}
-		m_EventTargets.push_back(newSubscriber);
-		return m_EventTargets.size() - 1;
+		else
+		{
+			m_EventTargets.push_back(newSubscriber);
+		}
+		return m_EventTargets.size() - m_UnsubsCount - 1;
 	}
 
 	void EventHandler::unsubscribe(size_t index)
 	{
-		m_EventTargets[index] = nullptr;
-		m_HasUnsubs = true;
+		++m_UnsubsCount;
+		m_EventTargets[index] = m_EventTargets[m_EventTargets.size() - m_UnsubsCount];
+		m_EventTargets[m_EventTargets.size() - m_UnsubsCount] = nullptr;
+		m_EventTargets[index]->setIndex(index);
 	}
 
 	void EventHandler::handleEvents(sf::RenderWindow& window)
@@ -123,16 +127,19 @@ namespace CW_E {
 
 			for (auto target : m_EventTargets)
 			{
-				dispatchCoreEvent<
-					OnKeyPressed, sf::Event::KeyPressed,
-					OnKeyReleased, sf::Event::KeyReleased,
-					OnMouseButtonPressed, sf::Event::MouseButtonPressed,
-					OnMouseButtonReleased, sf::Event::MouseButtonReleased,
-					OnMouseMoved, sf::Event::MouseMoved,
-					OnMouseWheelScrolled, sf::Event::MouseWheelScrolled,
-					OnClosed, sf::Event::Closed,
-					OnResized, sf::Event::Resized
-				>(target, *event);
+				if (target->isAcceptingEvents())
+				{
+					dispatchCoreEvent<
+						OnKeyPressed, sf::Event::KeyPressed,
+						OnKeyReleased, sf::Event::KeyReleased,
+						OnMouseButtonPressed, sf::Event::MouseButtonPressed,
+						OnMouseButtonReleased, sf::Event::MouseButtonReleased,
+						OnMouseMoved, sf::Event::MouseMoved,
+						OnMouseWheelScrolled, sf::Event::MouseWheelScrolled,
+						OnClosed, sf::Event::Closed,
+						OnResized, sf::Event::Resized
+					>(target, *event);
+				}
 			}
 		}
 	}
@@ -177,16 +184,5 @@ namespace CW_E {
 	}
 
 #endif
-
-
-	size_t EventHandlerWrapper::subscribe(OnEvent* newSubscriber)
-	{
-		return m_EventHandler->subscribe(newSubscriber);
-	}
-
-	void EventHandlerWrapper::unsubscribe(size_t index)
-	{
-		m_EventHandler->unsubscribe(index);
-	}
 
 } // CW_E

@@ -2,27 +2,32 @@
 
 #include "EventInterface.h"
 
-struct BeaconDischarge
+#include "SFML/Graphics.hpp"
+
+#include "BeaconType.h"
+
+struct CreateBeacon
 {
-	size_t index;
+	sf::Vector2f position;
+	CW::BeaconType type;
 };
 
-class OnBeaconDischarge
+class OnCreateBeacon
 	: virtual public CW_E::OnEvent
 {
 public:
-	virtual ~OnBeaconDischarge() = default;
-	virtual void onBeaconDischarge(const BeaconDischarge*) = 0;
+	virtual ~OnCreateBeacon() = default;
+	virtual void onCreateBeacon(const CreateBeacon*) = 0;
 };
 
 // Для определения пользовательских типов ивентов нужно объявить в этом файле макрос CW_USER_EVENTS_LIST
 // и записать через запятую типы отправляемых ивентов
-#define CW_USER_EVENTS_LIST BeaconDischarge
+#define CW_USER_EVENTS_LIST CreateBeacon
 
 // Если определены пользовательские типы ивентов, то необходимо объявить макрос CW_USER_EVENTS_PAIRS,
 // в котором через запятую указывается тип цели для отправления ивента и тип самого ивента
 // <тип_цели>, <тип_ивента>, <тип_цели>, <тип_ивента>, ...
-#define CW_USER_EVENTS_PAIRS OnBeaconDischarge, BeaconDischarge
+#define CW_USER_EVENTS_PAIRS OnCreateBeacon, CreateBeacon
 
 // Пример
 // 

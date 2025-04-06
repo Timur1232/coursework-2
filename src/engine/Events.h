@@ -90,7 +90,6 @@ namespace CW_E {
 		bool isValid() const
 		{
 			bool valid = target && event;
-			if (valid) valid = target->isAcceptingEvents();
 			return valid;
 		}
 
@@ -109,8 +108,12 @@ namespace CW_E {
 	class EventHandler
 	{
 	public:
-		EventHandler() = delete;
-		EventHandler(size_t reserve, size_t eventReserve);
+		EventHandler(const EventHandler&) = delete;
+		EventHandler(EventHandler&&) = delete;
+
+		static EventHandler& get();
+
+		void reserve(size_t targetReserve, size_t eventReserve);
 
 		size_t subscribe(OnEvent* target);
 		void unsubscribe(size_t index);
@@ -129,15 +132,18 @@ namespace CW_E {
 #endif
 
 	private:
+		EventHandler() = default;
+
+	private:
 		std::vector<OnEvent*> m_EventTargets;
 #ifdef CW_USER_EVENTS_LIST
 		std::vector<MyEvent> m_UserEvents;
 #endif
-		bool m_HasUnsubs = false;
+		size_t m_UnsubsCount = 0;
 	};
 
 
-	class EventHandlerWrapper
+	/*class EventHandlerWrapper
 	{
 	public:
 		EventHandlerWrapper() = default;
@@ -159,6 +165,6 @@ namespace CW_E {
 
 	private:
 		EventHandler* m_EventHandler = nullptr;
-	};	
+	};	*/
 
 } // CW_E

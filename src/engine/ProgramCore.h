@@ -8,6 +8,7 @@
 namespace CW_E {
 
 	class ProgramCore
+		: public OnKeyPressed
 	{
 	public:
 		ProgramCore();
@@ -21,18 +22,17 @@ namespace CW_E {
 
 		void setApplication(std::unique_ptr<Application>&& app);
 
-		EventHandler* getEventHandler();
-		UpdateHandler* getUpdateHandler();
+		void onKeyPressed(const sf::Event::KeyPressed* e) override;
+
+		sf::State reverseState();
 
 	private:
 		std::unique_ptr<Application> m_App;
 
 		sf::RenderWindow m_Window;
+		sf::State m_WindowState = sf::State::Windowed;
 		sf::Clock m_DeltaClock;
 		sf::Time m_DeltaTime;
-
-		EventHandler m_EventHandler{ 1024, 1024 };
-		UpdateHandler m_UpdateHandler{ 1024 };
 	};
 
 } // CW_E

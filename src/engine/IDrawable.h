@@ -4,7 +4,7 @@
 
 namespace CW_E {
 
-	class RenderWrapper
+	/*class RenderWrapper
 	{
 	public:
 		RenderWrapper(sf::RenderWindow& window);
@@ -14,13 +14,13 @@ namespace CW_E {
 
 	private:
 		sf::RenderWindow& m_Window;
-	};
+	};*/
 
 	class IDrawable
 	{
 	public:
 		virtual ~IDrawable() = default;
-		virtual void draw(RenderWrapper) const = 0;
+		virtual void draw(sf::RenderWindow&) const = 0;
 	};
 
 } // CW_E
