@@ -2,16 +2,21 @@
 
 #include <ranges>
 #include <imgui.h>
+#include <random>
 
 namespace CW {
 
     float Drone::s_Speed = 50.0f;
+    float Drone::s_TurningSpeed = 1.0f;
     float Drone::s_FOV = 0.2f;
     float Drone::s_BeaconCooldownSec = 5.0f;
+    float Drone::s_WanderCooldownSec = 1.0f;
+    sf::Angle Drone::s_WanderAngle = sf::degrees(15.0f);
     sf::Vector2f Drone::s_ViewDistanse = { 50.0f, 200.0f };
 
-    Drone::Drone(sf::Vector2f position, sf::Vector2f direction)
-        : m_Position(position), m_Direction(direction), m_MeshFOV(s_ViewDistanse.y)
+    Drone::Drone(sf::Vector2f position, sf::Angle directionAngle)
+        : m_Position(position), m_DirectionAngle(directionAngle), m_MeshFOV(s_ViewDistanse.y),
+          m_AtractedAngle(m_DirectionAngle)
     {
         m_DirectionVisual.setOrigin({ m_DirectionVisual.getRadius(), m_DirectionVisual.getRadius() });
 
@@ -30,14 +35,15 @@ namespace CW {
     {
         ImGui::Begin("Drone");
         ImGui::Text("position: (%.2f, %.2f)", m_Position.x, m_Position.y);
-        ImGui::Text("direction: (%.2f, %.2f)", m_Direction.x, m_Direction.y);
+        ImGui::Text("direction angle: %.2f", m_DirectionAngle.asDegrees());
         ImGui::Text("beacon timer: %.1f s", m_BeaconTimerSec);
         ImGui::SliderFloat("drone fov", &s_FOV, 0.0f, 1.0f);
         ImGui::SliderFloat("drone speed", &s_Speed, 10.0f, 100.0f);
         ImGui::SliderFloat("beacon cooldown", &s_BeaconCooldownSec, 0.1f, 50.0f);
         ImGui::End();
 
-        m_Position += m_Direction * s_Speed * deltaTime.asSeconds();
+        turn(deltaTime);
+        m_Position += ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle) * s_Speed * deltaTime.asSeconds();
         setMeshPos(m_Position);
 
         m_BeaconTimerSec -= deltaTime.asSeconds();
@@ -46,6 +52,8 @@ namespace CW {
             CW_E::EventHandler::get().addEvent(CreateBeacon{ m_Position, oppositeBeaconType()});
             m_BeaconTimerSec = s_BeaconCooldownSec;
         }
+
+        wander(deltaTime);
     }
 
     void Drone::draw(sf::RenderWindow& render) const
@@ -60,13 +68,17 @@ namespace CW {
         const Beacon* furthestBeacon = nullptr;
         float furthestDist = -1.0f;
 
-        auto filteredBeacons = beacons | std::views::filter([&](const Beacon& b) { return b.isAlive() && b.getType() == m_TargetBeaconType; });
+        auto filteredBeacons = beacons
+            | std::views::filter([&](const Beacon& b) { return b.isAlive() && b.getType() == m_TargetBeaconType; });
 
         for (const auto& beacon : filteredBeacons)
         {
-            if (auto positionDelta = beacon.getPos() - m_Position; (positionDelta.x != 0.0f || positionDelta.y != 0.0f) && m_Direction.dot(positionDelta.normalized()) >= s_FOV)
+            if (auto positionDelta = beacon.getPos() - m_Position;
+                (positionDelta.x != 0.0f || positionDelta.y != 0.0f)
+                && ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle).dot(positionDelta.normalized()) >= s_FOV)
             {
-                if (float dist = (beacon.getPos() - m_Position).length(); dist <= s_ViewDistanse.y && dist >= s_ViewDistanse.x && dist > furthestDist)
+                if (float dist = (beacon.getPos() - m_Position).length();
+                    dist <= s_ViewDistanse.y && dist >= s_ViewDistanse.x && dist > furthestDist)
                 {
                     furthestDist = dist;
                     furthestBeacon = &beacon;
@@ -76,8 +88,8 @@ namespace CW {
 
         if (furthestBeacon)
         {
-            m_Direction = (furthestBeacon->getPos() - m_Position).normalized();
-            m_DirectionVisual.setPosition(m_Position + m_Direction * 100.0f);
+            m_AtractedAngle = (furthestBeacon->getPos() - m_Position).angle();
+            m_WanderTimer = s_WanderCooldownSec;
         }
     }
 
@@ -91,11 +103,30 @@ namespace CW {
         }
     }
 
+    void Drone::turn(sf::Time deltaTime)
+    {
+        m_DirectionAngle += (m_AtractedAngle - m_DirectionAngle) * s_TurningSpeed * deltaTime.asSeconds();
+        m_DirectionVisual.setPosition(m_Position + ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle) * 100.0f);
+    }
+
+    void Drone::wander(sf::Time deltaTime)
+    {
+        static std::default_random_engine gen(std::time(0));
+        static std::normal_distribution<float> normal(0.0f);
+
+        m_WanderTimer -= deltaTime.asSeconds();
+        if (m_WanderTimer <= 0)
+        {
+            m_AtractedAngle += s_WanderAngle * normal(gen);
+            m_WanderTimer = s_WanderCooldownSec;
+        }
+    }
+
     void Drone::setMeshPos(sf::Vector2f position)
     {
         m_Mesh.setPosition(position);
         m_MeshFOV.setPosition(position);
-        m_DirectionVisual.setPosition(m_Position + m_Direction * 100.0f);
+        m_DirectionVisual.setPosition(m_Position + ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle) * 100.0f);
     }
 
 } // CW

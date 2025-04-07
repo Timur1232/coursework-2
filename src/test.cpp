@@ -25,13 +25,13 @@ namespace CW {
     {
     public:
         MyApp()
-            : Application(1920, 1080, "test"),
-              m_Camera(0, 0, 1920, 1080)
+            : Application(800, 600, "test"),
+              m_Camera(0, 0, 800, 600)
         {
             m_Camera.subscribeOnEvents();
 
-            m_Drones.emplace_back(sf::Vector2f{ 0.0f, 0.0f }, sf::Vector2f{ 0.0f, 1.0f });
-            m_Drones.emplace_back(sf::Vector2f{ 0.0f, 200.0f }, sf::Vector2f{ -1.0f, 1.0f }.normalized());
+            m_Drones.emplace_back(sf::Vector2f{ 0.0f, 0.0f });
+            m_Drones.emplace_back(sf::Vector2f{ 0.0f, 200.0f }, sf::radians(45.0f));
         }
 
         void update(sf::Time deltaTime) override
