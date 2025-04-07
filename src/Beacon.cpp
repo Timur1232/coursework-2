@@ -5,16 +5,16 @@
 
 namespace CW {
 
+	sf::CircleShape Beacon::s_Mesh{ 10.0f };
+
 	float Beacon::s_ChargeThreshold = 0.05f;
 	float Beacon::s_DischargeRate = 0.02f;
 
-	Beacon::Beacon(sf::Vector2f position, BeaconType type)
+	Beacon::Beacon(sf::Vector2f position, TargetType type)
 		: m_Position(position), m_Type(type)
 	{
-		m_Mesh.setOrigin({ m_Mesh.getRadius(), m_Mesh.getRadius() });
-		m_Mesh.setPosition(m_Position);
-
-		setBeaconColor(m_Type);
+		s_Mesh.setOrigin({ s_Mesh.getRadius(), s_Mesh.getRadius() });
+		s_Mesh.setPosition(m_Position);
 	}
 
 	void Beacon::update(sf::Time deltaTime)
@@ -25,15 +25,11 @@ namespace CW {
 		if (m_Charge <= s_ChargeThreshold)
 		{
 			m_Charge = 0.0f;
-			m_Color.a = 0;
-			//CW_E::EventHandler::get().addEvent<BeaconDischarge>(BeaconDischarge{m_Index});
 			m_Alive = false;
 		}
 		else
 		{
-			m_Charge = CW_E::lerp(0.0f, 1.0f, m_Charge - s_DischargeRate * deltaTime.asSeconds());
-			m_Color.a = m_Charge * 255;
-			m_Mesh.setFillColor(m_Color);
+			m_Charge -= s_DischargeRate * deltaTime.asSeconds();
 		}
 
 		ImGui::Begin("Beacons");
@@ -47,7 +43,11 @@ namespace CW {
 	void Beacon::draw(sf::RenderWindow& render) const
 	{
 		if (isAlive())
-			render.draw(m_Mesh);
+		{
+			s_Mesh.setPosition(m_Position);
+			s_Mesh.setFillColor(beaconColor());
+			render.draw(s_Mesh);
+		}
 	}
 
 	bool Beacon::isAlive() const
@@ -55,13 +55,12 @@ namespace CW {
 		return m_Alive;
 	}
 
-	void Beacon::revive(sf::Vector2f newPosition, BeaconType newType)
+	void Beacon::revive(sf::Vector2f newPosition, TargetType newType)
 	{
 		m_Charge = 1.0f;
 		m_Position = newPosition;
 		m_Type = newType;
-		setBeaconColor(m_Type);
-		m_Mesh.setPosition(m_Position);
+		s_Mesh.setPosition(m_Position);
 		m_Alive = true;
 	}
 
@@ -70,19 +69,27 @@ namespace CW {
 		return m_Position;
 	}
 
-	BeaconType Beacon::getType() const
+	TargetType Beacon::getType() const
 	{
 		return m_Type;
 	}
 
-	void Beacon::setBeaconColor(BeaconType type)
+	sf::Color Beacon::beaconColor() const
 	{
+		sf::Color color;
 		switch (m_Type)
 		{
-		case BeaconType::Navigation:	m_Color = sf::Color::White; break;
-		case BeaconType::Recource:		m_Color = sf::Color::Green; break;
-		default:						m_Color = sf::Color::Red; break;
+		case TargetType::Navigation:	color = sf::Color::White; break;
+		case TargetType::Recource:		color = sf::Color::Green; break;
+		default:						color = sf::Color::Red; break;
 		}
+
+		if (m_Alive)
+			color.a = (uint8_t)(m_Charge * 255);
+		else
+			color.a = 0;
+
+		return color;
 	}
 
 } // CW

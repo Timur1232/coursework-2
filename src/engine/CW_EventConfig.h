@@ -4,12 +4,12 @@
 
 #include "SFML/Graphics.hpp"
 
-#include "BeaconType.h"
+#include "TargetType.h"
 
 struct CreateBeacon
 {
 	sf::Vector2f position;
-	CW::BeaconType type;
+	CW::TargetType type;
 };
 
 class OnCreateBeacon

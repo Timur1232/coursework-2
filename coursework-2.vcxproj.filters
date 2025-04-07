@@ -57,6 +57,12 @@
     <ClCompile Include="src\engine\EventInterface.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="src\TargetType.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\utils.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\AudioResource.hpp">
@@ -437,7 +443,7 @@
     <ClInclude Include="src\Beacon.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\BeaconType.h">
+    <ClInclude Include="src\TargetType.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

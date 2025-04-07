@@ -242,11 +242,13 @@
     <ClCompile Include="src\engine\EventInterface.cpp" />
     <ClCompile Include="src\engine\Events.cpp" />
     <ClCompile Include="src\engine\ProgramCore.cpp" />
+    <ClCompile Include="src\TargetType.cpp" />
     <ClCompile Include="src\test.cpp" />
+    <ClCompile Include="src\utils\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Beacon.h" />
-    <ClInclude Include="src\BeaconType.h" />
+    <ClInclude Include="src\TargetType.h" />
     <ClInclude Include="src\Drone.h" />
     <ClInclude Include="src\Camera2D.h" />
     <ClInclude Include="src\engine\CW_EventConfig-dispatcher.h" />

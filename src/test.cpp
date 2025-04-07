@@ -31,7 +31,7 @@ namespace CW {
             m_Camera.subscribeOnEvents();
 
             m_Drones.emplace_back(sf::Vector2f{ 0.0f, 0.0f });
-            m_Drones.emplace_back(sf::Vector2f{ 0.0f, 200.0f }, sf::radians(45.0f));
+            m_Drones.emplace_back(sf::Vector2f{ 0.0f, 200.0f }, sf::degrees(45.0f));
         }
 
         void update(sf::Time deltaTime) override
@@ -87,7 +87,7 @@ namespace CW {
         {
             if (!m_Hold && !ImGui::GetIO().WantCaptureMouse && e->button == sf::Mouse::Button::Left)
             {
-                createBeacon(m_Camera.worldPosition(e->position), BeaconType::Recource);
+                createBeacon(m_Camera.worldPosition(e->position), TargetType::Recource);
                 m_Hold = true;
             }
         }
@@ -103,7 +103,7 @@ namespace CW {
         }
 
     private:
-        void createBeacon(sf::Vector2f position, BeaconType type)
+        void createBeacon(sf::Vector2f position, TargetType type)
         {
             for (auto& beacon : m_Beacons)
             {
@@ -147,7 +147,7 @@ int main() {
 
     window.setFramerateLimit(60);
 
-    float radius = 100.0f;
+    float radius = 10.0f;
     sf::CircleShape shape(radius);
     shape.setFillColor(sf::Color::Green);
 
@@ -229,6 +229,11 @@ int main() {
 
         window.setView(camera);
 
+        shape.setPosition({ 0.0f, 0.0f });
+        if (showShape)
+            window.draw(shape);
+
+        shape.setPosition({10.0f, 100.0f});
         if (showShape)
             window.draw(shape);
 

@@ -1,17 +1,19 @@
 #pragma once
 
 #include <cstdint>
+#include <exception>
+#include <SFML/System/Angle.hpp>
 
 namespace CW_E {
 
-	template<class T>
+	/*template <class T>
 	T clamp(T a, T min, T max)
 	{
 		return (a < min) ? min : (a > max) ? max : a;
-	}
+	}*/
 
-	template<class T>
-	T loop(T a, T delta, T min, T max)
+	template <class T>
+	T loop(T a, T min, T max, T delta)
 	{
 		if (a + delta < min) a = max + (delta - a + min);
 		else if (a + delta > max) a = min + (delta - max + a);
@@ -19,8 +21,8 @@ namespace CW_E {
 		return a;
 	}
 
-	template<class T>
-	inline T lerp(T min, T max, double t)
+	template <class T>
+	inline T lerp(T min, T max, float t)
 	{
 		return (max - min) * t + min;
 	}
@@ -29,6 +31,37 @@ namespace CW_E {
 	{
 		return 1uLL << n;
 	}
+
+	template <class T>
+	constexpr inline bool identical_signs(const T& a, const T& b)
+	{
+		return a > 0 && b > 0 || a < 0 && b < 0 || a == b;
+	}
+
+	template <class T>
+	constexpr inline bool opposite_signs(const T& a, const T& b)
+	{
+		return a > 0 && b < 0 || a < 0 && b > 0;
+	}
+
+
+	namespace angle {
+
+		constexpr inline float PI = sf::priv::pi;
+		constexpr inline float HALF_PI = sf::priv::pi / 2.0f;
+
+		enum class Quarter
+		{
+			First,
+			Second,
+			Third,
+			Fourth
+		};
+
+		Quarter quarter(sf::Angle angle);
+
+	} // angle
+
 
 
 	template <class T>

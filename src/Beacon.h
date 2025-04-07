@@ -6,7 +6,7 @@
 #include "engine/IDrawable.h"
 #include "engine/Events.h"
 
-#include "BeaconType.h"
+#include "TargetType.h"
 
 namespace CW {
 
@@ -15,22 +15,23 @@ namespace CW {
 		  public CW_E::IDrawable
 	{
 	public:
-		Beacon(sf::Vector2f position, BeaconType type);
+		Beacon(sf::Vector2f position, TargetType type);
 
 		void update(sf::Time deltaTime) override;
 		void draw(sf::RenderWindow& render) const override;
 
 		bool isAlive() const;
 
-		void revive(sf::Vector2f newPosition, BeaconType newType);
+		void revive(sf::Vector2f newPosition, TargetType newType);
 
 		sf::Vector2f getPos() const;
-		BeaconType getType() const;
-
-		void setBeaconColor(BeaconType type);
+		TargetType getType() const;
 
 	private:
-		BeaconType m_Type;
+		sf::Color beaconColor() const;
+
+	private:
+		TargetType m_Type;
 		bool m_Alive = true;
 
 		sf::Vector2f m_Position;
@@ -38,9 +39,7 @@ namespace CW {
 		static float s_ChargeThreshold;
 		static float s_DischargeRate;
 
-		// TODO: сделать систему управления ресурсами
-		sf::CircleShape m_Mesh{10.0f};
-		sf::Color m_Color;
+		static sf::CircleShape s_Mesh;
 	};
 
 } // CW
