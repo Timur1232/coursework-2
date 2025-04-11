@@ -16,11 +16,11 @@
 namespace CW {
 
     class MyApp
-        : public CW_E::Application,
-          public CW_E::OnKeyPressed,
-          public CW_E::OnClosed,
-          public CW_E::OnMouseButtonPressed,
-          public CW_E::OnMouseButtonReleased,
+        : public Application,
+          public OnKeyPressed,
+          public OnClosed,
+          public OnMouseButtonPressed,
+          public OnMouseButtonReleased,
           public OnCreateBeacon
     {
     public:
@@ -30,8 +30,12 @@ namespace CW {
         {
             m_Camera.subscribeOnEvents();
 
-            m_Drones.emplace_back(sf::Vector2f{ 0.0f, 0.0f });
-            m_Drones.emplace_back(sf::Vector2f{ 0.0f, 200.0f }, sf::degrees(45.0f));
+            float angleStep = angle::PI / 100.0f;
+            float angle = 0.0f;
+            for (int i = 0; i < 100; ++i, angle += angleStep)
+            {
+                m_Drones.emplace_back(sf::Vector2f{ 0.0f, 0.0f }, sf::radians(angle));
+            }
         }
 
         void update(sf::Time deltaTime) override
@@ -40,6 +44,8 @@ namespace CW {
             ImGui::Text("m_Beacons size: %d", m_Beacons.size());
             ImGui::Text("mouse hovering on any window: %d", ImGui::GetIO().WantCaptureMouse);
             ImGui::End();
+
+            Drone::debugInterface();
 
             m_Camera.update(deltaTime);
 
@@ -125,7 +131,7 @@ namespace CW {
 
 } // CW
 
-std::unique_ptr<CW_E::Application> create_program(int argc, const char** argv)
+std::unique_ptr<CW::Application> create_program(int argc, const char** argv)
 {
     return std::make_unique<CW::MyApp>();
 }

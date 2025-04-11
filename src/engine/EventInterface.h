@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CW_E {
+namespace CW {
 
 	class OnEvent
 	{
@@ -18,4 +18,4 @@ namespace CW_E {
 		size_t m_EventRecieverIndex = 0;
 	};
 
-} // CW_E
+} // CW

@@ -11,7 +11,7 @@
 #include "CW_EventConfig.h"
 #include "UserEvent.h"
 
-namespace CW_E {
+namespace CW {
 
 	class OnKeyPressed
 		: virtual public OnEvent
@@ -167,4 +167,4 @@ namespace CW_E {
 		EventHandler* m_EventHandler = nullptr;
 	};	*/
 
-} // CW_E
+} // CW

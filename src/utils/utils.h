@@ -4,7 +4,7 @@
 #include <exception>
 #include <SFML/System/Angle.hpp>
 
-namespace CW_E {
+namespace CW {
 
 	/*template <class T>
 	T clamp(T a, T min, T max)
@@ -172,4 +172,4 @@ namespace CW_E {
 		size_t m_BlockSize = 1024;
 	};
 
-} // CW_E
+} // CW

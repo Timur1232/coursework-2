@@ -5,11 +5,12 @@
 #include <random>
 
 #include "utils/utils.h"
+#include "engine/Events.h"
 
 namespace CW {
 
     sf::CircleShape Drone::s_Mesh{ 50.0f };
-    sf::CircleShape Drone::s_MeshFOV;
+    sf::CircleShape Drone::s_MeshViewDistance;
     sf::CircleShape Drone::s_DirectionVisual{ 4.0f, 3 };
     sf::CircleShape Drone::s_AttractionAngleVisual{ 4.0f, 3 };
 
@@ -35,16 +36,46 @@ namespace CW {
         s_AttractionAngleVisual.setOrigin({ s_AttractionAngleVisual.getRadius(), s_AttractionAngleVisual.getRadius() });
         s_AttractionAngleVisual.setFillColor(sf::Color::Blue);
 
-        s_MeshFOV.setRadius(s_ViewDistanse.y);
+        s_MeshViewDistance.setRadius(s_ViewDistanse.y);
         s_Mesh.setOrigin({ s_Mesh.getRadius(), s_Mesh.getRadius() });
-        s_MeshFOV.setOrigin({ s_MeshFOV.getRadius(), s_MeshFOV.getRadius() });
+        s_MeshViewDistance.setOrigin({ s_MeshViewDistance.getRadius(), s_MeshViewDistance.getRadius() });
 
         setMeshPos(position);
 
         s_Mesh.setFillColor(sf::Color::Yellow);
-        s_MeshFOV.setFillColor(sf::Color::Transparent);
-        s_MeshFOV.setOutlineColor(sf::Color::White);
-        s_MeshFOV.setOutlineThickness(1.0f);
+        s_MeshViewDistance.setFillColor(sf::Color::Transparent);
+        s_MeshViewDistance.setOutlineColor(sf::Color::White);
+        s_MeshViewDistance.setOutlineThickness(1.0f);
+    }
+
+    void Drone::debugInterface()
+    {
+        ImGui::Begin("Drone");
+        ImGui::SliderFloat("fov", &s_FOV, 0.0f, 1.0f);
+        ImGui::SliderFloat("speed", &s_Speed, 10.0f, 100.0f);
+
+        static float tmp;
+        tmp = Drone::s_TurningSpeed.asRadians();
+        if (ImGui::SliderAngle("turning speed", &tmp, 0.5f, 180.0f))
+            s_TurningSpeed = sf::radians(tmp);
+
+        tmp = s_RandomWanderAngle.asRadians();
+        if (ImGui::SliderAngle("random wander angle", &tmp, 0.0f, 180.0f))
+            s_RandomWanderAngle = sf::radians(tmp);
+
+        tmp = s_WanderAngleThreshold.asRadians();
+        if (ImGui::SliderAngle("wander angle threshold", &tmp, 0.01f, 10.0f))
+            s_WanderAngleThreshold = sf::radians(tmp);
+
+        tmp = s_MaxTurningDelta.asRadians();
+        if (ImGui::SliderAngle("max turning delta", &tmp, 1.0f, 180.0f))
+            s_MaxTurningDelta = sf::radians(tmp);
+
+        ImGui::SliderFloat2("view distanse", &s_ViewDistanse.x, 0.0f, 1000.0f);
+
+        ImGui::SliderFloat("beacon spawn cooldown", &s_BeaconCooldownSec, 0.1f, 50.0f);
+        ImGui::SliderFloat("wander cooldown", &s_WanderCooldownSec, 0.1f, 50.0f);
+        ImGui::End();
     }
 
     void Drone::update(sf::Time deltaTime)
@@ -54,9 +85,6 @@ namespace CW {
         ImGui::Text("direction angle: %.2f", m_DirectionAngle.asDegrees());
         ImGui::Text("attraction angle: %.2f", m_AttractionAngle.asDegrees());
         ImGui::Text("beacon timer: %.1f s", m_BeaconTimerSec);
-        ImGui::SliderFloat("drone fov", &s_FOV, 0.0f, 1.0f);
-        ImGui::SliderFloat("drone speed", &s_Speed, 10.0f, 100.0f);
-        ImGui::SliderFloat("beacon cooldown", &s_BeaconCooldownSec, 0.1f, 50.0f);
         ImGui::End();
 
         turn(deltaTime);
@@ -65,7 +93,7 @@ namespace CW {
         m_BeaconTimerSec -= deltaTime.asSeconds();
         if (m_BeaconTimerSec <= 0)
         {
-            CW_E::EventHandler::get().addEvent(CreateBeacon{ m_Position, opposite_target_type(m_TargetType)});
+            EventHandler::get().addEvent(CreateBeacon{ m_Position, opposite_target_type(m_TargetType)});
             m_BeaconTimerSec = s_BeaconCooldownSec;
         }
 
@@ -75,7 +103,19 @@ namespace CW {
     void Drone::draw(sf::RenderWindow& render) const
     {
         setMeshPos(m_Position);
-        render.draw(s_MeshFOV);
+
+        s_MeshViewDistance.setPosition(m_Position);
+
+        s_MeshViewDistance.setRadius(s_ViewDistanse.x);
+        s_MeshViewDistance.setOrigin({ s_ViewDistanse.x, s_ViewDistanse.x });
+
+        render.draw(s_MeshViewDistance);
+
+        s_MeshViewDistance.setRadius(s_ViewDistanse.y);
+        s_MeshViewDistance.setOrigin({ s_ViewDistanse.y, s_ViewDistanse.y });
+
+        render.draw(s_MeshViewDistance);
+
         render.draw(s_Mesh);
         render.draw(s_DirectionVisual);
         render.draw(s_AttractionAngleVisual);
@@ -114,12 +154,12 @@ namespace CW {
     void Drone::turn(sf::Time deltaTime)
     {
         sf::Angle delta;
-        auto quarter = CW_E::angle::quarter(m_AttractionAngle);
+        auto quarter = angle::quarter(m_AttractionAngle);
 
-        if ((quarter == CW_E::angle::Quarter::Second || quarter == CW_E::angle::Quarter::Third)
-            && CW_E::opposite_signs(m_DirectionAngle.asRadians(), m_AttractionAngle.asRadians()))
+        if ((quarter == angle::Quarter::Second || quarter == angle::Quarter::Third)
+            && opposite_signs(m_DirectionAngle.asRadians(), m_AttractionAngle.asRadians()))
         {
-            if (quarter == CW_E::angle::Quarter::Second)
+            if (quarter == angle::Quarter::Second)
             {
                 delta = m_AttractionAngle - sf::degrees(360.0f) + m_DirectionAngle;
             }
@@ -138,7 +178,7 @@ namespace CW {
                 -s_MaxTurningDelta, s_MaxTurningDelta
             ) * deltaTime.asSeconds());
 
-        m_DirectionAngle = CW_E::loop(m_DirectionAngle, sf::degrees(-180.0f), sf::degrees(180.0f), delta);
+        m_DirectionAngle = loop(m_DirectionAngle, sf::degrees(-180.0f), sf::degrees(180.0f), delta);
     }
 
     void Drone::wander(sf::Time deltaTime)
@@ -160,11 +200,34 @@ namespace CW {
     void Drone::setMeshPos(sf::Vector2f position) const
     {
         s_Mesh.setPosition(position);
-        s_MeshFOV.setPosition(position);
         s_DirectionVisual.setPosition(m_Position + ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle) * 100.0f);
         s_DirectionVisual.setRotation(m_DirectionAngle + sf::degrees(90.0f));
         s_AttractionAngleVisual.setPosition(m_Position + ONE_LENGTH_VEC.rotatedBy(m_AttractionAngle) * 100.0f);
         s_AttractionAngleVisual.setRotation(m_AttractionAngle + sf::degrees(90.0f));
     }
+
+
+    //void DroneDebugInterface::updateInterface() const
+    //{
+    //    ImGui::Begin("Drone");
+    //    ImGui::SliderFloat("fov", &Drone::s_FOV, 0.0f, 1.0f);
+    //    ImGui::SliderFloat("speed", &Drone::s_Speed, 10.0f, 100.0f);
+
+    //    {
+    //        //float tmp = Drone::s_TurningSpeed.asDegrees();
+    //        ImGui::SliderAngle("turning speed", (float*)(&Drone::s_TurningSpeed), 0.5f, 180.0f);
+    //        //Drone::s_TurningSpeed = sf::degrees(tmp);
+
+    //        ImGui::SliderAngle("random wander angle", (float*)(&Drone::s_RandomWanderAngle), 0.0f, 180.0f);
+    //        ImGui::SliderAngle("wander angle threshold", (float*)(&Drone::s_WanderAngleThreshold), 0.01f, 10.0f);
+    //        ImGui::SliderAngle("max turning delta", (float*)(&Drone::s_MaxTurningDelta), 1.0f, 180.0f);
+    //    }
+
+    //    ImGui::SliderFloat2("view distanse", &Drone::s_ViewDistanse.x, 0.0f, 1000.0f);
+
+    //    ImGui::SliderFloat("beacon spawn cooldown", &Drone::s_BeaconCooldownSec, 0.1f, 50.0f);
+    //    ImGui::SliderFloat("wander cooldown", &Drone::s_WanderCooldownSec, 0.1f, 50.0f);
+    //    ImGui::End();
+    //}
 
 } // CW

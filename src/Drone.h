@@ -8,12 +8,16 @@
 
 namespace CW {
 
+	class DroneDebugInterface;
+
 	class Drone
-		: public CW_E::IUpdate,
-		  public CW_E::IDrawable
+		: public IUpdate,
+		  public IDrawable
 	{
 	public:
 		Drone(sf::Vector2f position, sf::Angle directionAngle = sf::Angle::Zero);
+
+		static void debugInterface();
 
 		void update(sf::Time deltaTime) override;
 		void draw(sf::RenderWindow& render) const override;
@@ -21,6 +25,8 @@ namespace CW {
 		void reactToBeacons(const std::vector<Beacon>& beacons);
 
 	private:
+		friend DroneDebugInterface;
+
 		inline void turn(sf::Time deltaTime);
 		inline void wander(sf::Time deltaTime);
 
@@ -53,9 +59,18 @@ namespace CW {
 
 		// TODO: Система ресурсов
 		static sf::CircleShape s_Mesh;
-		static sf::CircleShape s_MeshFOV;
+		static sf::CircleShape s_MeshViewDistance;
 		static sf::CircleShape s_DirectionVisual;
 		static sf::CircleShape s_AttractionAngleVisual;
 	};
+
+
+	/*class DroneDebugInterface
+	{
+	public:
+		DroneDebugInterface() = default;
+
+		void updateInterface() const;
+	};*/
 
 } // CW

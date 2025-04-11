@@ -4,7 +4,7 @@
 #include "UserEvent.h"
 
 template<>
-void CW_E::UserDispatcher<OnCreateBeacon, CreateBeacon>::operator()()
+void CW::UserDispatcher<OnCreateBeacon, CreateBeacon>::operator()()
 {
     target->onCreateBeacon(event);
 }

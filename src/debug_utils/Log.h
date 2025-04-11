@@ -3,7 +3,7 @@
 #include <format>
 #include <iostream>
 
-namespace CW_E {
+namespace CW {
 
 	namespace Log {
 
@@ -52,17 +52,17 @@ namespace CW_E {
 
 	} // Log
 
-} // CW_E
+} // CW
 
 #define CW_COLLECT_LOGS 1
 #if CW_COLLECT_LOGS
-	#define CW_MSG(format, ...) ::CW_E::Log::trace("[MSG] " format, __VA_ARGS__)
-	#define CW_TRACE(format, ...) ::CW_E::Log::trace("[TRACE] [{} : {}] ({}) :: " format, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
-	#define CW_ERROR(format, ...) ::CW_E::Log::error("[ERROR] [{} : {}] ({}) :: " format, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
-	#define CW_INFO(format, ...) ::CW_E::Log::info("[INFO] [{} : {}] ({}) :: " format, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
-	#define CW_WARN(format, ...) ::CW_E::Log::warn("[WARN] [{} : {}] ({}) :: " format, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
-	#define CW_CRITICAL(format, ...) ::CW_E::Log::critical("[CRITICAL] [{} : {}] ({}) :: " format, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
-	#define CW_ASSERT(format, ...) {::CW_E::Log::critical("[ASSERT] [{} : {}] ({}) :: " format, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__); exit(-1);}
+	#define CW_MSG(format, ...) ::CW::Log::trace("[MSG] " format, __VA_ARGS__)
+	#define CW_TRACE(format, ...) ::CW::Log::trace("[TRACE] [{} : {}] ({}) :: " format, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
+	#define CW_ERROR(format, ...) ::CW::Log::error("[ERROR] [{} : {}] ({}) :: " format, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
+	#define CW_INFO(format, ...) ::CW::Log::info("[INFO] [{} : {}] ({}) :: " format, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
+	#define CW_WARN(format, ...) ::CW::Log::warn("[WARN] [{} : {}] ({}) :: " format, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
+	#define CW_CRITICAL(format, ...) ::CW::Log::critical("[CRITICAL] [{} : {}] ({}) :: " format, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
+	#define CW_ASSERT(format, ...) {::CW::Log::critical("[ASSERT] [{} : {}] ({}) :: " format, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__); exit(-1);}
 #else
 	#define CW_TRACE(format, ...)
 	#define CW_ERROR(format, ...)

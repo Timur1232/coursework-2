@@ -10,12 +10,12 @@
 namespace CW {
 
 	class Camera2D
-		: public CW_E::OnMouseButtonPressed,
-		  public CW_E::OnMouseButtonReleased,
-		  public CW_E::OnMouseMoved,
-		  public CW_E::OnMouseWheelScrolled,
-		  public CW_E::OnResized,
-		  public CW_E::IUpdate
+		: public OnMouseButtonPressed,
+		  public OnMouseButtonReleased,
+		  public OnMouseMoved,
+		  public OnMouseWheelScrolled,
+		  public OnResized,
+		  public IUpdate
 	{
 	public:
 		Camera2D(float x, float y, float width, float height);

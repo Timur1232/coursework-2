@@ -6,7 +6,7 @@
 #include "IDrawable.h"
 #include "IUpdate.h"
 
-namespace CW_E {
+namespace CW {
 
 	class Application
 		: public IDrawable,
@@ -31,4 +31,4 @@ namespace CW_E {
 		bool m_Running = true;
 	};
 
-} // CW_E
+} // CW

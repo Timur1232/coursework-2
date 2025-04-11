@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 
-namespace CW_E {
+namespace CW {
 
 	/*class RenderWrapper
 	{
@@ -23,4 +23,4 @@ namespace CW_E {
 		virtual void draw(sf::RenderWindow&) const = 0;
 	};
 
-} // CW_E
+} // CW

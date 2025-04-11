@@ -5,7 +5,7 @@
 #include "Application.h"
 #include "Events.h"
 
-namespace CW_E {
+namespace CW {
 
 	class ProgramCore
 		: public OnKeyPressed
@@ -35,4 +35,4 @@ namespace CW_E {
 		sf::Time m_DeltaTime;
 	};
 
-} // CW_E
+} // CW

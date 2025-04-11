@@ -1,6 +1,6 @@
 #include "utils.h"
 
-namespace CW_E {
+namespace CW {
 
     namespace angle {
 
@@ -19,4 +19,4 @@ namespace CW_E {
 
     }
 
-} // CW_E
+} // CW

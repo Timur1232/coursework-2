@@ -4,7 +4,7 @@
 
 #include <SFML/System.hpp>
 
-namespace CW_E {
+namespace CW {
 
 	class IUpdate
 	{

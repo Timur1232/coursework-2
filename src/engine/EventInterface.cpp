@@ -2,7 +2,7 @@
 
 #include "Events.h"
 
-namespace CW_E {
+namespace CW {
 
     bool OnEvent::isAcceptingEvents() const
     {
@@ -29,4 +29,4 @@ namespace CW_E {
         m_EventRecieverIndex = index;
     }
 
-} // CW_E
+} // CW

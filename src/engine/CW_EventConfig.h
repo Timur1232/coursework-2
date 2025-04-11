@@ -13,7 +13,7 @@ struct CreateBeacon
 };
 
 class OnCreateBeacon
-	: virtual public CW_E::OnEvent
+	: virtual public CW::OnEvent
 {
 public:
 	virtual ~OnCreateBeacon() = default;
@@ -37,7 +37,7 @@ public:
 //};
 //
 //class MyEventReciever
-//	: virtual public CW_E::OnEvent
+//	: virtual public CW::OnEvent
 //{
 //public:
 //	virtual void onE(const EventData*) = 0;
@@ -51,7 +51,7 @@ public:
 //};
 //
 //class OtherReciever
-//	:virtual public CW_E::OnEvent
+//	:virtual public CW::OnEvent
 //{
 //public:
 //	virtual void onOtherEvent(const OtherEventData*) = 0;
@@ -61,7 +61,7 @@ public:
 //struct Thing {};
 //
 //class OnThing
-//	: virtual public CW_E::OnEvent
+//	: virtual public CW::OnEvent
 //{
 //public:
 //	virtual void gimme(void) = 0;

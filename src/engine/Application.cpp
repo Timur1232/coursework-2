@@ -2,7 +2,7 @@
 
 #include "debug_utils/Log.h"
 
-namespace CW_E {
+namespace CW {
 
     Application::Application(int width, int height, const char* title)
         : m_WindowSize(width, height), m_WindowTitle(title)
@@ -29,4 +29,4 @@ namespace CW_E {
 		m_Running = false;
 	}
 
-} // CW_E
+} // CW

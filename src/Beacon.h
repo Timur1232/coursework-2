@@ -4,15 +4,14 @@
 
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"
-#include "engine/Events.h"
 
 #include "TargetType.h"
 
 namespace CW {
 
 	class Beacon
-		: public CW_E::IUpdate,
-		  public CW_E::IDrawable
+		: public IUpdate,
+		  public IDrawable
 	{
 	public:
 		Beacon(sf::Vector2f position, TargetType type);

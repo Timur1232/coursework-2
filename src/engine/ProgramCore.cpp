@@ -3,7 +3,7 @@
 #include <imgui-SFML.h>
 #include <debug_utils/Log.h>
 
-namespace CW_E {
+namespace CW {
 
 	ProgramCore::ProgramCore()
 	{
@@ -77,4 +77,4 @@ namespace CW_E {
 		return m_WindowState;
 	}
 
-} // CW_E
+} // CW

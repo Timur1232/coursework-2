@@ -2,7 +2,7 @@
 
 namespace CW {
 
-    TargetType CW::opposite_target_type(TargetType type)
+    TargetType opposite_target_type(TargetType type)
     {
         switch (type)
         {

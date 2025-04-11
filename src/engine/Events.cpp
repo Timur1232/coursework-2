@@ -5,7 +5,7 @@
 #include "debug_utils/Log.h"
 #include "ProgramCore.h"
 
-namespace CW_E {
+namespace CW {
 
 	template<>
 	class CoreDispatcher<void, void>
@@ -185,4 +185,4 @@ namespace CW_E {
 
 #endif
 
-} // CW_E
+} // CW
