@@ -14,7 +14,13 @@ namespace CW {
 		  public IDrawable
 	{
 	public:
+		Beacon() = default;
 		Beacon(sf::Vector2f position, TargetType type);
+
+		static void staticInit();
+
+		static void debugInterface();
+		void infoInterface(size_t index, bool* open) const;
 
 		void update(sf::Time deltaTime) override;
 		void draw(sf::RenderWindow& render) const override;
@@ -30,7 +36,7 @@ namespace CW {
 		sf::Color beaconColor() const;
 
 	private:
-		TargetType m_Type;
+		TargetType m_Type = TargetType::None;
 		bool m_Alive = true;
 
 		sf::Vector2f m_Position;

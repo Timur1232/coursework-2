@@ -235,7 +235,6 @@
     <ClCompile Include="src\engine\Application.cpp" />
     <ClCompile Include="dependencies\imgui-sfml\imgui-SFML.cpp" />
     <ClCompile Include="dependencies\imgui\imgui.cpp" />
-    <ClCompile Include="dependencies\imgui\imgui_demo.cpp" />
     <ClCompile Include="dependencies\imgui\imgui_draw.cpp" />
     <ClCompile Include="dependencies\imgui\imgui_tables.cpp" />
     <ClCompile Include="dependencies\imgui\imgui_widgets.cpp" />
@@ -373,6 +372,7 @@
     <ClInclude Include="src\engine\EntryPoint.h" />
     <ClInclude Include="src\engine\IUpdate.h" />
     <ClInclude Include="src\engine\UserEvent.h" />
+    <ClInclude Include="src\utils\ArenaAllocator.h" />
     <ClInclude Include="src\utils\utils.h" />
   </ItemGroup>
   <ItemGroup>

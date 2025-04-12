@@ -121,11 +121,15 @@ namespace CW {
 
 } // CW
 
-#define CW_PROFILING 1
+#define CW_PROFILING 0
 #if CW_PROFILING
+	#define CW_START_PROFILE_SESSION(name) ::CW::Profiler::get().startSession(name);
+	#define CW_END_PROFILE_SESSION() ::CW::Profiler::get().endSession();
 	#define CW_PROFILE_SCOPE(name) ::CW::ScopeTimer timer(name)
 	#define CW_PROFILE_FUNCTION() CW_PROFILE_SCOPE(__FUNCTION__)
 #else
+	#define CW_START_PROFILE_SESSION(name)
+	#define CW_END_PROFILE_SESSION()
 	#define CW_PROFILE_SCOPE(name)
 	#define CW_PROFILE_FUNCTION()
 #endif

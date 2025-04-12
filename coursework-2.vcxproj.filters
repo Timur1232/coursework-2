@@ -21,9 +21,6 @@
     <ClCompile Include="dependencies\imgui\imgui.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="dependencies\imgui\imgui_demo.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="dependencies\imgui\imgui_draw.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -444,6 +441,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="src\TargetType.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\ArenaAllocator.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

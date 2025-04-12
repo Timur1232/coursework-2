@@ -3,9 +3,11 @@
 #include "utils/utils.h"
 #include <imgui.h>
 
+#include "debug_utils/Profiler.h"
+
 namespace CW {
 
-	sf::CircleShape Beacon::s_Mesh{ 10.0f };
+	sf::CircleShape Beacon::s_Mesh;
 
 	float Beacon::s_ChargeThreshold = 0.05f;
 	float Beacon::s_DischargeRate = 0.02f;
@@ -13,8 +15,31 @@ namespace CW {
 	Beacon::Beacon(sf::Vector2f position, TargetType type)
 		: m_Position(position), m_Type(type)
 	{
-		s_Mesh.setOrigin({ s_Mesh.getRadius(), s_Mesh.getRadius() });
 		s_Mesh.setPosition(m_Position);
+	}
+
+	void Beacon::staticInit()
+	{
+		s_Mesh.setRadius(10.0f);
+		s_Mesh.setOrigin({ s_Mesh.getRadius(), s_Mesh.getRadius() });
+		s_Mesh.setPointCount(4);
+	}
+
+	void Beacon::debugInterface()
+	{
+		ImGui::SliderFloat("charge threshold", &s_ChargeThreshold, 0.0f, 1.0f);
+		ImGui::SliderFloat("discharge rate", &s_DischargeRate, 0.0f, 1.0f);
+	}
+
+	void Beacon::infoInterface(size_t index, bool* open) const
+	{
+		ImGui::Begin("Beacons", open);
+		ImGui::Separator();
+		ImGui::Text("index: %d", index);
+		ImGui::Text("alive: %d", m_Alive);
+		ImGui::Text("beacon position: (%.2f, %.2f)", m_Position.x, m_Position.y);
+		ImGui::Text("beacon charge: %.2f", m_Charge);
+		ImGui::End();
 	}
 
 	void Beacon::update(sf::Time deltaTime)
@@ -31,13 +56,6 @@ namespace CW {
 		{
 			m_Charge -= s_DischargeRate * deltaTime.asSeconds();
 		}
-
-		ImGui::Begin("Beacons");
-		ImGui::SliderFloat("charge threshold", &s_ChargeThreshold, 0.0f, 1.0f);
-		ImGui::SliderFloat("discharge rate", &s_DischargeRate, 0.0f, 1.0f);
-		ImGui::Text("beacon position: (%.2f, %.2f)", m_Position.x, m_Position.y);
-		ImGui::Text("beacon charge: %.2f", m_Charge);
-		ImGui::End();
 	}
 
 	void Beacon::draw(sf::RenderWindow& render) const
@@ -60,7 +78,6 @@ namespace CW {
 		m_Charge = 1.0f;
 		m_Position = newPosition;
 		m_Type = newType;
-		s_Mesh.setPosition(m_Position);
 		m_Alive = true;
 	}
 
@@ -85,9 +102,13 @@ namespace CW {
 		}
 
 		if (m_Alive)
+		{
 			color.a = (uint8_t)(m_Charge * 255);
+		}
 		else
+		{
 			color.a = 0;
+		}
 
 		return color;
 	}

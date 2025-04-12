@@ -3,6 +3,7 @@
 #include <imgui-SFML.h>
 
 #include "debug_utils/Log.h"
+#include "debug_utils/Profiler.h"
 #include "ProgramCore.h"
 
 namespace CW {
@@ -121,12 +122,15 @@ namespace CW {
 
 	void EventHandler::handleEvents(sf::RenderWindow& window)
 	{
+		CW_PROFILE_FUNCTION();
 		while (const std::optional event = window.pollEvent())
 		{
+			CW_PROFILE_SCOPE("outer loop");
 			ImGui::SFML::ProcessEvent(window, *event);
 
 			for (auto target : m_EventTargets)
 			{
+				CW_PROFILE_SCOPE("inner loop");
 				if (target->isAcceptingEvents())
 				{
 					dispatchCoreEvent<
@@ -173,10 +177,13 @@ namespace CW {
 
 	void EventHandler::handleUserEvents()
 	{
+		CW_PROFILE_FUNCTION();
 		for (auto& event : m_UserEvents)
 		{
+			CW_PROFILE_SCOPE("outer loop");
 			for (auto target : m_EventTargets)
 			{
+				CW_PROFILE_SCOPE("inner loop");
 				dispatchUserEvent<CW_USER_EVENTS_PAIRS>(target, event);
 			}
 		}

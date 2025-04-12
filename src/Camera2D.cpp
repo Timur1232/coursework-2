@@ -10,14 +10,17 @@ namespace CW {
 	{
 	}
 
-	void Camera2D::update(sf::Time deltaTime)
+	void Camera2D::debugInterface()
 	{
-		ImGui::Begin("Debug");
 		ImGui::Text("camera position: (%.2f, %.2f)", m_View.getCenter().x, m_View.getCenter().y);
 		ImGui::Text("camera zoom factor: %.2f", m_ZoomFactor);
 		ImGui::Text("camera is moving: %d", m_IsMoving);
 		ImGui::Text("mouse position: (%d, %d)", m_PrevPos.x, m_PrevPos.y);
-		ImGui::End();
+	}
+
+	void Camera2D::update(sf::Time deltaTime)
+	{
+		
 	}
 
 	void Camera2D::onMouseButtonPressed(const sf::Event::MouseButtonPressed* e)

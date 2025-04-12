@@ -2,6 +2,7 @@
 
 #include <imgui-SFML.h>
 #include <debug_utils/Log.h>
+#include <debug_utils/Profiler.h>
 
 namespace CW {
 
@@ -21,9 +22,12 @@ namespace CW {
 	void ProgramCore::run()
 	{
 		CW_INFO("Starting main loop.");
+		CW_START_PROFILE_SESSION();
+		CW_PROFILE_FUNCTION();
 
 		while (m_App->isRunning())
 		{
+			CW_PROFILE_SCOPE("main loop");
 			m_DeltaTime = m_DeltaClock.restart();
 			EventHandler::get().handleEvents(m_Window);
 #ifdef CW_USER_EVENTS_LIST
@@ -40,6 +44,7 @@ namespace CW {
 			ImGui::SFML::Render(m_Window);
 			m_Window.display();
 		}
+		CW_END_PROFILE_SESSION();
 	}
 
 	void ProgramCore::setApplication(std::unique_ptr<Application>&& app)

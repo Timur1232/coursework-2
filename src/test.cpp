@@ -8,6 +8,8 @@
 #include <imgui-SFML.h>
 
 #include "debug_utils/Log.h"
+#include "debug_utils/Profiler.h"
+#include "utils/ArenaAllocator.h"
 
 #include "Camera2D.h"
 #include "Beacon.h"
@@ -15,9 +17,11 @@
 
 namespace CW {
 
+    constexpr size_t BEACONS_RESERVE = 1024 * 1024;
+
     class MyApp
         : public Application,
-          public OnKeyPressed,
+          //public OnKeyPressed,
           public OnClosed,
           public OnMouseButtonPressed,
           public OnMouseButtonReleased,
@@ -30,9 +34,22 @@ namespace CW {
         {
             m_Camera.subscribeOnEvents();
 
-            float angleStep = angle::PI / 100.0f;
+            Drone::staticInit();
+            Beacon::staticInit();
+            restartSim(10);
+        }
+
+        void restartSim(size_t droneCount)
+        {
+            m_Beacons.clear();
+            m_AllocatorBeacon.deallocate();
+            m_Beacons.reserve(BEACONS_RESERVE);
+
+            m_Drones.clear();
+            m_Drones.reserve(droneCount);
+            float angleStep = 2.0f * angle::PI / (float)droneCount;
             float angle = 0.0f;
-            for (int i = 0; i < 100; ++i, angle += angleStep)
+            for (size_t i = 0; i < droneCount; ++i, angle += angleStep)
             {
                 m_Drones.emplace_back(sf::Vector2f{ 0.0f, 0.0f }, sf::radians(angle));
             }
@@ -40,39 +57,101 @@ namespace CW {
 
         void update(sf::Time deltaTime) override
         {
+            CW_PROFILE_FUNCTION();
             ImGui::Begin("Debug");
-            ImGui::Text("m_Beacons size: %d", m_Beacons.size());
-            ImGui::Text("mouse hovering on any window: %d", ImGui::GetIO().WantCaptureMouse);
-            ImGui::End();
+                if (ImGui::CollapsingHeader("App statistics"))
+                {
+                    ImGui::Text("fps: %.1f", ImGui::GetIO().Framerate);
+                    ImGui::Spacing();
+                    ImGui::Text("m_Beacons size: %d", m_Beacons.size());
+                    ImGui::Text("m_Beacons capasity: %d", m_Beacons.capacity());
+                    ImGui::Text("allocator current allocated: %d", m_AllocatorBeacon.currentAllocated());
+                    ImGui::Text("allocator current capasity: %d", m_AllocatorBeacon.currentCapasity());
+                    ImGui::Text("allocator total allocated: %d", m_AllocatorBeacon.totalAllocated());
+                    ImGui::Text("allocator total capasity: %d", m_AllocatorBeacon.totalCapasity());
+                    ImGui::Text("allocator blocks count: %d", m_AllocatorBeacon.blockCount());
+                    ImGui::Spacing();
+                    ImGui::Text("mouse hovering on any window: %d", ImGui::GetIO().WantCaptureMouse);
+                    m_Camera.debugInterface();
+                }
 
-            Drone::debugInterface();
+                if (ImGui::CollapsingHeader("Drones"))
+                {
+                    static int droneCount = 100;
+                    ImGui::InputInt("drone count", &droneCount);
+                    if (ImGui::Button("restart simulation"))
+                        restartSim(droneCount);
+
+                    ImGui::Checkbox("show drones info", &m_DronesInfo);
+                    Drone::debugInterface();
+                }
+
+                if (ImGui::CollapsingHeader("Beacons"))
+                {
+                    ImGui::Text("default drones settings");
+                    if (ImGui::Button("default drone"))
+                        Drone::staticInit();
+
+                    ImGui::Text("default beacons settings");
+                    if (ImGui::Button("default beacon"))
+                        Beacon::staticInit();
+
+                    ImGui::Checkbox("show beacons info", &m_BeaconsInfo);
+                    Beacon::debugInterface();
+                }
+            ImGui::End();
 
             m_Camera.update(deltaTime);
 
-            for (auto& b : m_Beacons)
             {
-                b.update(deltaTime);
+                CW_PROFILE_SCOPE("beacons update");
+                for (size_t i = 0; i < m_Beacons.size() - m_DeadBeacons; ++i)
+                {
+                    m_Beacons[i]->update(deltaTime);
+                    if (m_BeaconsInfo)
+                        m_Beacons[i]->infoInterface(i, &m_BeaconsInfo);
+
+                    if (!m_Beacons[i]->isAlive())
+                    {
+                        ++m_DeadBeacons;
+                        std::swap(m_Beacons[i], m_Beacons[m_Beacons.size() - m_DeadBeacons]);
+                    }
+                }
             }
 
-            for (auto& drone : m_Drones)
             {
-                drone.update(deltaTime);
-                drone.reactToBeacons(m_Beacons);
+                CW_PROFILE_SCOPE("drones update");
+                size_t index = 0;
+                for (auto& drone : m_Drones)
+                {
+                    drone.update(deltaTime);
+                    drone.reactToBeacons(m_Beacons);
+                    if (m_DronesInfo)
+                        drone.infoInterface(index, &m_DronesInfo);
+                    ++index;
+                }
             }
         }
 
         void draw(sf::RenderWindow& render) const override
         {
+            CW_PROFILE_FUNCTION();
             render.setView(m_Camera.getView());
 
-            for (const auto& b : m_Beacons)
             {
-                b.draw(render);
+                CW_PROFILE_SCOPE("beacons draw");
+                for (const auto& b : m_Beacons)
+                {
+                    b->draw(render);
+                }
             }
 
-            for (auto& drone : m_Drones)
             {
-                drone.draw(render);
+                CW_PROFILE_SCOPE("drones draw");
+                for (auto& drone : m_Drones)
+                {
+                    drone.draw(render);
+                }
             }
         }
 
@@ -81,13 +160,10 @@ namespace CW {
             close();
         }
 
-        void onKeyPressed(const sf::Event::KeyPressed* event) override
+        /*void onKeyPressed(const sf::Event::KeyPressed* event) override
         {
-            if (event->code == sf::Keyboard::Key::F11)
-            {
-                
-            }
-        }
+            
+        }*/
 
         void onMouseButtonPressed(const sf::Event::MouseButtonPressed* e) override
         {
@@ -111,22 +187,33 @@ namespace CW {
     private:
         void createBeacon(sf::Vector2f position, TargetType type)
         {
-            for (auto& beacon : m_Beacons)
+            CW_PROFILE_FUNCTION();
+            if (m_DeadBeacons)
             {
-                if (!beacon.isAlive())
-                {
-                    beacon.revive(position, type);
-                    return;
-                }
+                m_Beacons[m_Beacons.size() - m_DeadBeacons]->revive(position, type);
+                --m_DeadBeacons;
             }
-            m_Beacons.emplace_back(position, type);
+            else
+            {
+                Beacon* newBeacon = m_AllocatorBeacon.allocate();
+                newBeacon->revive(position, type);
+                m_Beacons.push_back(newBeacon);
+            }
         }
 
     private:
         Camera2D m_Camera;
         bool m_Hold = false;
-        std::vector<Beacon> m_Beacons;
+
+        std::vector<Beacon*> m_Beacons;
+        size_t m_DeadBeacons = 0;
+        ArenaAllocator<Beacon> m_AllocatorBeacon{1024};
+
         std::vector<Drone> m_Drones;
+
+        // Debug
+        bool m_BeaconsInfo = false;
+        bool m_DronesInfo = false;
     };
 
 } // CW

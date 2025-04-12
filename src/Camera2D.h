@@ -20,6 +20,8 @@ namespace CW {
 	public:
 		Camera2D(float x, float y, float width, float height);
 
+		void debugInterface();
+
 		void update(sf::Time deltaTime) override;
 
 		void onMouseButtonPressed(const sf::Event::MouseButtonPressed* e) override;

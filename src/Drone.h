@@ -17,12 +17,15 @@ namespace CW {
 	public:
 		Drone(sf::Vector2f position, sf::Angle directionAngle = sf::Angle::Zero);
 
+		static void staticInit();
+
 		static void debugInterface();
+		void infoInterface(size_t index, bool* open) const;
 
 		void update(sf::Time deltaTime) override;
 		void draw(sf::RenderWindow& render) const override;
 
-		void reactToBeacons(const std::vector<Beacon>& beacons);
+		void reactToBeacons(const std::vector<Beacon*>& beacons);
 
 	private:
 		friend DroneDebugInterface;
@@ -57,11 +60,14 @@ namespace CW {
 		float m_BeaconTimerSec = s_BeaconCooldownSec;
 		float m_WanderTimer = 0.0f;
 
-		// TODO: Система ресурсов
+		// Debug
 		static sf::CircleShape s_Mesh;
 		static sf::CircleShape s_MeshViewDistance;
 		static sf::CircleShape s_DirectionVisual;
 		static sf::CircleShape s_AttractionAngleVisual;
+
+		static bool s_DrawViewDistance;
+		static bool s_DrawDirection;
 	};
 
 
