@@ -197,6 +197,15 @@ namespace CW {
         }
     }
 
+    void Drone::reactToResourceReciver(const ResourceReciever& reciever)
+    {
+        if (float dist = (reciever.getPos() - m_Position).length();
+            dist <= reciever.getBroadcastRadius())
+        {
+            CW_WARN("TODO");
+        }
+    }
+
     void Drone::turn(sf::Time deltaTime)
     {
         sf::Angle delta;

@@ -5,6 +5,7 @@
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"
 #include "Beacon.h"
+#include "ResourceReciever.h"
 
 namespace CW {
 
@@ -26,6 +27,7 @@ namespace CW {
 		void draw(sf::RenderWindow& render) const override;
 
 		void reactToBeacons(const std::vector<Beacon*>& beacons);
+		void reactToResourceReciver(const ResourceReciever& reciever);
 
 	private:
 		friend DroneDebugInterface;
