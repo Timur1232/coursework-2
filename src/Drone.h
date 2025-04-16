@@ -6,6 +6,7 @@
 #include "engine/IDrawable.h"
 #include "Beacon.h"
 #include "ResourceReciever.h"
+#include "Resource.h"
 
 namespace CW {
 
@@ -16,7 +17,7 @@ namespace CW {
 		  public IDrawable
 	{
 	public:
-		Drone(sf::Vector2f position, sf::Angle directionAngle = sf::Angle::Zero);
+		Drone(sf::Vector2f position, sf::Angle directionAngle = sf::Angle::Zero, TargetType target = TargetType::Recource);
 
 		static void staticInit();
 
@@ -27,7 +28,8 @@ namespace CW {
 		void draw(sf::RenderWindow& render) const override;
 
 		void reactToBeacons(const std::vector<Beacon*>& beacons);
-		void reactToResourceReciver(const ResourceReciever& reciever);
+		bool reactToResourceReciver(ResourceReciever& reciever);
+		std::vector<Resource>::const_iterator reactToResources(const std::vector<Resource>& resources);
 
 	private:
 		friend DroneDebugInterface;
@@ -47,10 +49,13 @@ namespace CW {
 
 		TargetType m_TargetType = TargetType::Recource;
 
+		int m_CarriedResources = 0;
+
 		static float s_Speed;
 		static sf::Angle s_TurningSpeed;
 		static float s_FOV;
 		static sf::Vector2f s_ViewDistanse;
+		static float s_PickupDist;
 
 		static float s_BeaconCooldownSec;
 		static float s_WanderCooldownSec;

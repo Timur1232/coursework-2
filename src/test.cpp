@@ -36,14 +36,14 @@ namespace CW {
 
             Drone::staticInit();
             Beacon::staticInit();
-            restartSim(10);
         }
 
-        void restartSim(size_t droneCount)
+        void restartSim(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource)
         {
             m_Beacons.clear();
             m_AllocatorBeacon.deallocate();
             m_Beacons.reserve(BEACONS_RESERVE);
+            m_DeadBeacons = 0;
 
             m_Drones.clear();
             m_Drones.reserve(droneCount);
@@ -51,8 +51,9 @@ namespace CW {
             float angle = 0.0f;
             for (size_t i = 0; i < droneCount; ++i, angle += angleStep)
             {
-                m_Drones.emplace_back(sf::Vector2f{ 0.0f, 0.0f }, sf::radians(angle));
+                m_Drones.emplace_back(startPosition, sf::radians(angle), target);
             }
+            CW_TRACE("Restarting simulation with {} drones", droneCount);
         }
 
         void update(sf::Time deltaTime) override
@@ -75,23 +76,41 @@ namespace CW {
                     m_Camera.debugInterface();
                 }
 
+                if (ImGui::CollapsingHeader("Resources"))
+                {
+                    m_ResourceReciever.debugInterface();
+                }
+
                 if (ImGui::CollapsingHeader("Drones"))
                 {
                     static int droneCount = 100;
+                    static sf::Vector2f startPos = { 0.0f, 0.0f };
+                    static TargetType target = TargetType::Recource;
+
                     ImGui::InputInt("drone count", &droneCount);
+                    ImGui::InputFloat2("starting position", &startPos.x);
+                    ImGui::Text("target on start");
+                    if (ImGui::RadioButton("Recource", target == TargetType::Recource))
+                        target = TargetType::Recource;
+                    ImGui::SameLine();
+                    if (ImGui::RadioButton("Navigation", target == TargetType::Navigation))
+                        target = TargetType::Navigation;
+
                     if (ImGui::Button("restart simulation"))
-                        restartSim(droneCount);
+                    {
+                        restartSim(droneCount, startPos, target);
+                    }
 
                     ImGui::Checkbox("show drones info", &m_DronesInfo);
                     Drone::debugInterface();
+
+                    ImGui::Text("default drones settings");
+                    if (ImGui::Button("default drone"))
+                        Drone::staticInit();
                 }
 
                 if (ImGui::CollapsingHeader("Beacons"))
                 {
-                    ImGui::Text("default drones settings");
-                    if (ImGui::Button("default drone"))
-                        Drone::staticInit();
-
                     ImGui::Text("default beacons settings");
                     if (ImGui::Button("default beacon"))
                         Beacon::staticInit();
@@ -125,7 +144,8 @@ namespace CW {
                 for (auto& drone : m_Drones)
                 {
                     drone.update(deltaTime);
-                    drone.reactToBeacons(m_Beacons);
+                    if (!drone.reactToResourceReciver(m_ResourceReciever))
+                        drone.reactToBeacons(m_Beacons);
                     if (m_DronesInfo)
                         drone.infoInterface(index, &m_DronesInfo);
                     ++index;
@@ -138,6 +158,8 @@ namespace CW {
             CW_PROFILE_FUNCTION();
             render.setView(m_Camera.getView());
 
+            m_ResourceReciever.draw(render);
+
             {
                 CW_PROFILE_SCOPE("beacons draw");
                 for (const auto& b : m_Beacons)
@@ -148,7 +170,7 @@ namespace CW {
 
             {
                 CW_PROFILE_SCOPE("drones draw");
-                for (auto& drone : m_Drones)
+                for (const auto& drone : m_Drones)
                 {
                     drone.draw(render);
                 }
@@ -210,6 +232,8 @@ namespace CW {
         ArenaAllocator<Beacon> m_AllocatorBeacon{1024};
 
         std::vector<Drone> m_Drones;
+
+        ResourceReciever m_ResourceReciever{ {0.0f, 0.0f} };
 
         // Debug
         bool m_BeaconsInfo = false;

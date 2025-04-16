@@ -40,7 +40,6 @@ namespace CW {
 
 			m_Window.clear();
 			m_App->draw(m_Window);
-
 			ImGui::SFML::Render(m_Window);
 			m_Window.display();
 		}

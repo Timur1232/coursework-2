@@ -3,7 +3,6 @@
 #include <SFML/Graphics.hpp>
 
 #include "engine/IDrawable.h"
-#include "engine/IUpdate.h"
 
 namespace CW {
 
@@ -13,21 +12,27 @@ namespace CW {
 	public:
 		ResourceReciever(sf::Vector2f position);
 
+		void debugInterface();
+
 		void draw(sf::RenderWindow& render) const override;
 
-		inline int getResources() const;
-		inline sf::Vector2f getPos() const;
-		inline float getBroadcastRadius() const;
+		int getResources() const;
+		sf::Vector2f getPos() const;
+		float getBroadcastRadius() const;
+		float getRecieveRadius() const;
 
-		inline void addResources(int amount);
-		inline int takeResources(int amount);
+		void addResources(int amount);
+		int takeResources(int amount);
 
 	private:
 		sf::Vector2f m_Position;
 		int m_ResourceCount = 0;
 		float m_RecieveRadius;
 		float m_BroadcastRadius;
+
 		sf::CircleShape m_Mesh;
+		sf::CircleShape m_RecieveMesh;
+		sf::CircleShape m_BroadcastMesh;
 	};
 
 } // CW

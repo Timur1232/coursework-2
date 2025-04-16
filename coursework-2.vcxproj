@@ -241,6 +241,7 @@
     <ClCompile Include="src\engine\EventInterface.cpp" />
     <ClCompile Include="src\engine\Events.cpp" />
     <ClCompile Include="src\engine\ProgramCore.cpp" />
+    <ClCompile Include="src\Resource.cpp" />
     <ClCompile Include="src\ResourceReciever.cpp" />
     <ClCompile Include="src\TargetType.cpp" />
     <ClCompile Include="src\test.cpp" />
@@ -248,6 +249,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Beacon.h" />
+    <ClInclude Include="src\Resource.h" />
     <ClInclude Include="src\ResourceReciever.h" />
     <ClInclude Include="src\TargetType.h" />
     <ClInclude Include="src\Drone.h" />

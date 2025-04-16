@@ -1,6 +1,7 @@
 #include "Drone.h"
 
 #include <ranges>
+#include <algorithm>
 #include <imgui.h>
 #include <random>
 
@@ -33,9 +34,10 @@ namespace CW {
     bool Drone::s_DrawViewDistance;
     bool Drone::s_DrawDirection;
 
-    Drone::Drone(sf::Vector2f position, sf::Angle directionAngle)
+    Drone::Drone(sf::Vector2f position, sf::Angle directionAngle, TargetType target)
         : m_Position(position), m_DirectionAngle(directionAngle.wrapSigned()),
-          m_AttractionAngle(directionAngle.wrapSigned())
+          m_AttractionAngle(directionAngle.wrapSigned()),
+          m_TargetType(target)
     {
         setMeshPos(position);
     }
@@ -66,6 +68,8 @@ namespace CW {
         s_TurningSpeed = sf::degrees(5.0f);
 
         s_FOV = 0.5f;
+
+        s_PickupDist = 70.0f;
 
         s_BeaconCooldownSec = 5.0f;
         s_WanderCooldownSec = 5.0f;
@@ -119,6 +123,7 @@ namespace CW {
         ImGui::Text("direction angle: %.2f", m_DirectionAngle.asDegrees());
         ImGui::Text("attraction angle: %.2f", m_AttractionAngle.asDegrees());
         ImGui::Text("beacon timer: %.1f s", m_BeaconTimerSec);
+        ImGui::Text("carried resources: %d", m_CarriedResources);
         ImGui::End();
     }
 
@@ -197,13 +202,60 @@ namespace CW {
         }
     }
 
-    void Drone::reactToResourceReciver(const ResourceReciever& reciever)
+    bool Drone::reactToResourceReciver(ResourceReciever& reciever)
     {
-        if (float dist = (reciever.getPos() - m_Position).length();
-            dist <= reciever.getBroadcastRadius())
+        if (m_TargetType == TargetType::Navigation)
         {
-            CW_WARN("TODO");
+            if (float dist = (reciever.getPos() - m_Position).length();
+                dist <= reciever.getRecieveRadius())
+            {
+                reciever.addResources(10);
+                m_TargetType = TargetType::Recource;
+                m_AttractionAngle = (m_AttractionAngle - sf::degrees(180.0f)).wrapSigned();
+                m_DirectionAngle = m_AttractionAngle;
+                return true;
+            }
+            else if (dist <= reciever.getBroadcastRadius())
+            {
+                m_AttractionAngle = (reciever.getPos() - m_Position).angle();
+                m_WanderTimer = s_WanderCooldownSec;
+                return true;
+            }
         }
+        return false;
+    }
+
+    std::vector<Resource>::const_iterator Drone::reactToResources(const std::vector<Resource>& resources)
+    {
+        if (m_TargetType == TargetType::Recource && !resources.empty())
+        {
+            // TODO: переделать - дрон должен выбрать ресурс один раз и плыть к нему, чтобы поднять 
+            float minDist = (resources.front().getPos() - m_Position).length();
+            auto found = resources.begin();
+            auto iter = resources.begin() + 1;
+            while (iter != resources.end())
+            {
+                if (float otherDist = (iter->getPos() - m_Position).length();
+                    otherDist < minDist)
+                {
+                    minDist = otherDist;
+                    found = iter;
+                }
+                ++iter;
+            }
+
+            // TODO: сначала дрон должен двигаться к ресурсу
+            if (minDist <= s_PickupDist)
+            {
+                CW_TRACE("Drone picked {} resources on ({}, {})", found->getResources(), found->getPos().x, found->getPos().y);
+                m_TargetType = TargetType::Navigation;
+                m_AttractionAngle = (m_AttractionAngle - sf::degrees(180.0f)).wrapSigned();
+                m_DirectionAngle = m_AttractionAngle;
+                m_CarriedResources = found->getResources();
+                return found;
+            }
+        }
+        return resources.end();
     }
 
     void Drone::turn(sf::Time deltaTime)

@@ -16,6 +16,7 @@ namespace CW {
 		ImGui::Text("camera zoom factor: %.2f", m_ZoomFactor);
 		ImGui::Text("camera is moving: %d", m_IsMoving);
 		ImGui::Text("mouse position: (%d, %d)", m_PrevPos.x, m_PrevPos.y);
+		ImGui::Text("mouse world position: (%f, %f)", worldPosition(m_PrevPos).x, worldPosition(m_PrevPos).y);
 	}
 
 	void Camera2D::update(sf::Time deltaTime)
