@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "TargetType.h"
 
 namespace CW {

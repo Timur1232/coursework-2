@@ -1,11 +1,10 @@
-#ifdef CW_TEST
+//#ifdef CW_TEST
+#include "pch.h"
 
 #if 1
 #include <engine/EntryPoint.h>
 
 #include <engine/ProgramCore.h>
-#include <imgui.h>
-#include <imgui-SFML.h>
 
 #include "debug_utils/Log.h"
 #include "debug_utils/Profiler.h"
@@ -365,4 +364,4 @@ int main() {
 
 #endif
 
-#endif
+//#endif

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+#include "pch.h"
 
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"

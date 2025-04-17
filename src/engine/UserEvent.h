@@ -1,7 +1,8 @@
 #pragma once
 
+#include "pch.h"
+
 #include "CW_EventConfig.h"
-#include <variant>
 #include "debug_utils/Log.h"
 
 namespace CW {

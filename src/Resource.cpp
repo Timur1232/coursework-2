@@ -1,6 +1,9 @@
+#include "pch.h"
 #include "Resource.h"
 
 namespace CW {
+
+	sf::CircleShape Resource::s_Mesh;
 
 	Resource::Resource(sf::Vector2f position)
 		: m_Position(position)

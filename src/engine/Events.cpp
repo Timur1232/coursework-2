@@ -1,6 +1,5 @@
+#include "pch.h"
 #include "Events.h"
-
-#include <imgui-SFML.h>
 
 #include "debug_utils/Log.h"
 #include "debug_utils/Profiler.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+#include "pch.h"
 
 #include "Application.h"
 #include "Events.h"

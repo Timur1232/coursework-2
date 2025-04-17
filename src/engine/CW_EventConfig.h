@@ -1,9 +1,8 @@
 #pragma once
 
+#include "pch.h"
+
 #include "EventInterface.h"
-
-#include "SFML/Graphics.hpp"
-
 #include "TargetType.h"
 
 struct CreateBeacon

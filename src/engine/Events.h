@@ -1,7 +1,6 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
-#include <vector>
+#include "pch.h"
 
 #include "utils/utils.h"
 #include "debug_utils/Log.h"

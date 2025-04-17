@@ -1,8 +1,7 @@
+#include "pch.h"
 #include "Beacon.h"
 
 #include "utils/utils.h"
-#include <imgui.h>
-
 #include "debug_utils/Profiler.h"
 
 namespace CW {
@@ -38,7 +37,7 @@ namespace CW {
 		ImGui::Text("index: %d", index);
 		ImGui::Text("alive: %d", m_Alive);
 		ImGui::Text("beacon position: (%.2f, %.2f)", m_Position.x, m_Position.y);
-		ImGui::Text("beacon charge: %.2f", m_Charge);
+		ImGui::Text("beacon charge: %.3f", m_Charge);
 		ImGui::End();
 	}
 

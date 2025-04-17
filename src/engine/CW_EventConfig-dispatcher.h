@@ -1,5 +1,7 @@
 #pragma once
 
+#include "pch.h"
+
 #include "CW_EventConfig.h"
 #include "UserEvent.h"
 

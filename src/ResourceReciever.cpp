@@ -1,6 +1,5 @@
+#include "pch.h"
 #include "ResourceReciever.h"
-
-#include <imgui.h>
 
 #include "debug_utils/Log.h"
 
@@ -63,7 +62,7 @@ namespace CW {
 
 	void ResourceReciever::addResources(int amount)
 	{
-		CW_TRASE("Added {} resources", amount);
+		CW_TRACE("Added {} resources", amount);
 		m_ResourceCount += amount;
 	}
 

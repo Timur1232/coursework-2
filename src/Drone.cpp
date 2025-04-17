@@ -1,9 +1,5 @@
+#include "pch.h"
 #include "Drone.h"
-
-#include <ranges>
-#include <algorithm>
-#include <imgui.h>
-#include <random>
 
 #include "utils/utils.h"
 #include "engine/Events.h"
@@ -21,6 +17,8 @@ namespace CW {
     sf::Angle Drone::s_TurningSpeed;
 
     float Drone::s_FOV;
+
+    float Drone::s_PickupDist;
 
     float Drone::s_BeaconCooldownSec;
     float Drone::s_WanderCooldownSec;
