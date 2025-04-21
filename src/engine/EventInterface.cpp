@@ -5,27 +5,27 @@
 
 namespace CW {
 
-    bool OnEvent::isAcceptingEvents() const
+    bool OnEvent::IsAcceptingEvents() const
     {
         return true;
     }
 
-    void OnEvent::subscribeOnEvents()
+    void OnEvent::SubscribeOnEvents()
     {
-        m_EventRecieverIndex = EventHandler::get().subscribe(this);
+        m_EventRecieverIndex = EventHandler::Get().Subscribe(this);
     }
 
-    void OnEvent::unsubscribeOnEvents() const
+    void OnEvent::UnsubscribeOnEvents() const
     {
-        EventHandler::get().unsubscribe(m_EventRecieverIndex);
+        EventHandler::Get().Unsubscribe(m_EventRecieverIndex);
     }
 
-    size_t OnEvent::getIndex() const
+    size_t OnEvent::GetIndex() const
     {
         return m_EventRecieverIndex;
     }
 
-    void OnEvent::setIndex(size_t index)
+    void OnEvent::SetIndex(size_t index)
     {
         m_EventRecieverIndex = index;
     }

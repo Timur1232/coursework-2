@@ -7,16 +7,16 @@ namespace CW {
 	template <class T>
 	struct MemoryBlock
 	{
-		size_t allocated;
-		size_t capasity;
-		MemoryBlock<T>* next;
-		T* memory;
+		size_t Allocated;
+		size_t Capasity;
+		MemoryBlock<T>* Next;
+		T* Memory;
 
 		MemoryBlock(size_t size)
-			: allocated(0), capasity(size), next(nullptr)
+			: Allocated(0), Capasity(size), Next(nullptr)
 		{
-			memory = new T[size];
-			if (!memory)
+			Memory = new T[size];
+			if (!Memory)
 			{
 				throw std::bad_alloc();
 			}
@@ -24,13 +24,13 @@ namespace CW {
 
 		~MemoryBlock()
 		{
-			delete[] memory;
+			delete[] Memory;
 		}
 
-		T* allocate(size_t count = 1)
+		T* Allocate(size_t count = 1)
 		{
-			T* mem = &memory[allocated];
-			allocated += count;
+			T* mem = &Memory[Allocated];
+			Allocated += count;
 			return mem;
 		}
 	};
@@ -53,54 +53,54 @@ namespace CW {
 		}
 		~ArenaAllocator()
 		{
-			free();
+			Free();
 		}
 
-		inline size_t currentAllocated() const
+		inline size_t CurrentAllocated() const
 		{
-			return m_CurrentBlock->allocated * sizeof(T);
+			return m_CurrentBlock->Allocated * sizeof(T);
 		}
 
-		inline size_t currentCapasity() const
+		inline size_t CurrentCapasity() const
 		{
-			return m_CurrentBlock->capasity * sizeof(T);
+			return m_CurrentBlock->Capasity * sizeof(T);
 		}
 
-		inline size_t totalAllocated() const
+		inline size_t TotalAllocated() const
 		{
 			return m_TotalAllocated * sizeof(T);
 		}
 
-		inline size_t totalCapasity() const
+		inline size_t TotalCapasity() const
 		{
 			return m_TotalCapasity * sizeof(T);
 		}
 
-		inline size_t blockCount() const
+		inline size_t BlockCount() const
 		{
 			return m_BlockCount;
 		}
 
-		T* allocate(size_t count = 1)
+		T* Allocate(size_t count = 1)
 		{
-			if (!m_CurrentBlock || m_CurrentBlock->capasity - m_CurrentBlock->allocated < count)
+			if (!m_CurrentBlock || m_CurrentBlock->Capasity - m_CurrentBlock->Allocated < count)
 			{
 				newBlock();
 			}
 			m_TotalAllocated += count;
-			return m_CurrentBlock->allocate(count);
+			return m_CurrentBlock->Allocate(count);
 		}
 
-		void free()
+		void Free()
 		{
 			MemoryBlock<T>* tmp1 = m_BlockList;
-			MemoryBlock<T>* tmp2 = m_BlockList->next;
+			MemoryBlock<T>* tmp2 = m_BlockList->Next;
 
 			while (tmp2 != nullptr)
 			{
 				delete tmp1;
 				tmp1 = tmp2;
-				tmp2 = tmp2->next;
+				tmp2 = tmp2->Next;
 			}
 			delete tmp1;
 
@@ -111,14 +111,14 @@ namespace CW {
 			m_BlockCount = 0;
 		}
 
-		void deallocate()
+		void Deallocate()
 		{
 			m_CurrentBlock = m_BlockList;
 			MemoryBlock<T>* iter = m_BlockList;
 			while (iter != nullptr)
 			{
-				iter->allocated = 0;
-				iter = iter->next;
+				iter->Allocated = 0;
+				iter = iter->Next;
 			}
 			m_TotalAllocated = 0;
 		}
@@ -126,20 +126,20 @@ namespace CW {
 	private:
 		void newBlock()
 		{
-			if (m_CurrentBlock && m_CurrentBlock->next)
+			if (m_CurrentBlock && m_CurrentBlock->Next)
 			{
-				m_CurrentBlock = m_CurrentBlock->next;
+				m_CurrentBlock = m_CurrentBlock->Next;
 				return;
 			}
 
 			if (m_CurrentBlock)
 			{
-				m_CurrentBlock->next = new MemoryBlock<T>(m_BlockSize);
-				if (!m_CurrentBlock->next)
+				m_CurrentBlock->Next = new MemoryBlock<T>(m_BlockSize);
+				if (!m_CurrentBlock->Next)
 				{
 					throw std::bad_alloc();
 				}
-				m_CurrentBlock = m_CurrentBlock->next;
+				m_CurrentBlock = m_CurrentBlock->Next;
 			}
 			else
 			{

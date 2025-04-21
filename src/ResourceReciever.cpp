@@ -28,45 +28,45 @@ namespace CW {
 		m_BroadcastMesh.setOutlineThickness(1.0f);
 	}
 
-	void ResourceReciever::debugInterface()
+	void ResourceReciever::DebugInterface()
 	{
 		ImGui::Text("resources amount: %d", m_ResourceCount);
 	}
 
-	void ResourceReciever::draw(sf::RenderWindow& render) const
+	void ResourceReciever::Draw(sf::RenderWindow& render) const
 	{
 		render.draw(m_Mesh);
 		render.draw(m_RecieveMesh);
 		render.draw(m_BroadcastMesh);
 	}
 
-	int ResourceReciever::getResources() const
+	int ResourceReciever::GetResources() const
 	{
 		return m_ResourceCount;
 	}
 
-	sf::Vector2f ResourceReciever::getPos() const
+	sf::Vector2f ResourceReciever::GetPos() const
 	{
 		return m_Position;
 	}
 
-	float ResourceReciever::getBroadcastRadius() const
+	float ResourceReciever::GetBroadcastRadius() const
 	{
 		return m_BroadcastRadius;
 	}
 
-	float ResourceReciever::getRecieveRadius() const
+	float ResourceReciever::GetRecieveRadius() const
 	{
 		return m_RecieveRadius;
 	}
 
-	void ResourceReciever::addResources(int amount)
+	void ResourceReciever::AddResources(int amount)
 	{
 		CW_TRACE("Added {} resources", amount);
 		m_ResourceCount += amount;
 	}
 
-	int ResourceReciever::takeResources(int amount)
+	int ResourceReciever::TakeResources(int amount)
 	{
 		int take;
 		if (amount > m_ResourceCount)

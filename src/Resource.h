@@ -12,16 +12,19 @@ namespace CW {
 	public:
 		Resource(sf::Vector2f position);
 
-		static void staticInit();
+		static void StaticInit();
 
-		inline sf::Vector2f getPos() const { return m_Position; }
-		inline int getResources() const { return m_Amount; }
+		inline sf::Vector2f GetPos() const { return m_Position; }
+		inline int GetResources() const { return m_Amount; }
+		inline bool IsCarried() const { return m_IsCarried; }
+		void PickUp();
 
-		void draw(sf::RenderWindow& render) const override;
+		void Draw(sf::RenderWindow& render) const override;
 
 	private:
 		sf::Vector2f m_Position;
 		int m_Amount = 10;
+		bool m_IsCarried = false;
 
 		static sf::CircleShape s_Mesh;
 	};

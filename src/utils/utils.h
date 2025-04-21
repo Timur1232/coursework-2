@@ -60,4 +60,16 @@ namespace CW {
 
 	} // angle
 
+	template <class T>
+	float distance(sf::Vector2<T> v1, sf::Vector2<T> v2)
+	{
+		return (v1 - v2).length();
+	}
+
+	template <class T>
+	float distance_squared(sf::Vector2<T> v1, sf::Vector2<T> v2)
+	{
+		return (v1 - v2).lengthSquared();
+	}
+
 } // CW

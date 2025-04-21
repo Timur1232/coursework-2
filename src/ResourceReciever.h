@@ -12,17 +12,17 @@ namespace CW {
 	public:
 		ResourceReciever(sf::Vector2f position);
 
-		void debugInterface();
+		void DebugInterface();
 
-		void draw(sf::RenderWindow& render) const override;
+		void Draw(sf::RenderWindow& render) const override;
 
-		int getResources() const;
-		sf::Vector2f getPos() const;
-		float getBroadcastRadius() const;
-		float getRecieveRadius() const;
+		int GetResources() const;
+		sf::Vector2f GetPos() const;
+		float GetBroadcastRadius() const;
+		float GetRecieveRadius() const;
 
-		void addResources(int amount);
-		int takeResources(int amount);
+		void AddResources(int amount);
+		int TakeResources(int amount);
 
 	private:
 		sf::Vector2f m_Position;

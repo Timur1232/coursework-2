@@ -8,13 +8,13 @@ namespace CW {
 	{
 	public:
 		virtual ~OnEvent() = default;
-		virtual bool isAcceptingEvents() const;
+		virtual bool IsAcceptingEvents() const;
 
-		void subscribeOnEvents();
-		void unsubscribeOnEvents() const;
+		void SubscribeOnEvents();
+		void UnsubscribeOnEvents() const;
 
-		size_t getIndex() const;
-		void setIndex(size_t index);
+		size_t GetIndex() const;
+		void SetIndex(size_t index);
 
 	private:
 		size_t m_EventRecieverIndex = 0;

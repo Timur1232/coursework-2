@@ -10,30 +10,30 @@
 namespace CW {
 
 	class Camera2D
-		: public OnMouseButtonPressed,
-		  public OnMouseButtonReleased,
-		  public OnMouseMoved,
-		  public OnMouseWheelScrolled,
-		  public OnResized,
+		: public MouseButtonPressedObs,
+		  public MouseButtonReleasedObs,
+		  public MouseMovedObs,
+		  public MouseWheelScrolledObs,
+		  public ResizedObs,
 		  public IUpdate
 	{
 	public:
 		Camera2D(float x, float y, float width, float height);
 
-		void debugInterface();
+		void DebugInterface();
 
-		void update(sf::Time deltaTime) override;
+		void Update(sf::Time deltaTime) override;
 
-		void onMouseButtonPressed(const sf::Event::MouseButtonPressed* e) override;
-		void onMouseButtonReleased(const sf::Event::MouseButtonReleased* e) override;
-		void onMouseMoved(const sf::Event::MouseMoved* e) override;
-		void onMouseWheelScrolled(const sf::Event::MouseWheelScrolled* e) override;
+		void OnMouseButtonPressed(const sf::Event::MouseButtonPressed* e) override;
+		void OnMouseButtonReleased(const sf::Event::MouseButtonReleased* e) override;
+		void OnMouseMoved(const sf::Event::MouseMoved* e) override;
+		void OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled* e) override;
 
-		void onResized(const sf::Event::Resized* e) override;
+		void OnResized(const sf::Event::Resized* e) override;
 
-		const sf::View& getView() const;
+		const sf::View& GetView() const;
 
-		sf::Vector2f worldPosition(sf::Vector2i mousePos) const;
+		sf::Vector2f WorldPosition(sf::Vector2i mousePos) const;
 
 	private:
 		sf::View m_View;

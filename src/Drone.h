@@ -19,17 +19,19 @@ namespace CW {
 	public:
 		Drone(sf::Vector2f position, sf::Angle directionAngle = sf::Angle::Zero, TargetType target = TargetType::Recource);
 
-		static void staticInit();
+		static void StaticInit();
 
-		static void debugInterface();
-		void infoInterface(size_t index, bool* open) const;
+		static void DebugInterface();
+		void InfoInterface(size_t index, bool* open) const;
 
-		void update(sf::Time deltaTime) override;
-		void draw(sf::RenderWindow& render) const override;
+		void Update(sf::Time deltaTime) override;
+		void Draw(sf::RenderWindow& render) const override;
 
-		void reactToBeacons(const std::vector<Beacon*>& beacons);
-		bool reactToResourceReciver(ResourceReciever& reciever);
-		std::vector<Resource>::const_iterator reactToResources(const std::vector<Resource>& resources);
+		void ReactToBeacons(const std::vector<Beacon*>& beacons);
+		bool ReactToResourceReciver(ResourceReciever& reciever);
+
+		void ReactToResources(std::vector<Resource>& resources);
+		bool CheckResourceColission();
 
 	private:
 		friend DroneDebugInterface;
@@ -48,6 +50,7 @@ namespace CW {
 		sf::Angle m_AttractionAngle;
 
 		TargetType m_TargetType = TargetType::Recource;
+		Resource* m_TargetResource = nullptr;
 
 		int m_CarriedResources = 0;
 

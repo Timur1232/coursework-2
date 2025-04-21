@@ -18,11 +18,11 @@ namespace CW {
 		Application(int width, int height, const char* title);
 		virtual ~Application() = default;
 
-		sf::Vector2u getWindowSize() const;
-		const char* getTitle() const;
+		sf::Vector2u GetWindowSize() const;
+		const char* GetTitle() const;
 
-		bool isRunning() const;
-		void close();
+		bool IsRunning() const;
+		void Close();
 
 	protected:
 		sf::Vector2u m_WindowSize;
