@@ -9,10 +9,12 @@
 #include "debug_utils/Log.h"
 #include "debug_utils/Profiler.h"
 #include "utils/ArenaAllocator.h"
+#include "ObjectPallete.h"
 
 #include "Camera2D.h"
 #include "Beacon.h"
 #include "Drone.h"
+
 
 namespace CW {
 
@@ -57,70 +59,79 @@ namespace CW {
             CW_TRACE("Restarting simulation with {} drones", droneCount);
         }
 
+        void UpdateInterface() override
+        {
+            ImGui::Begin("Debug");
+            if (ImGui::CollapsingHeader("App-statistics"))
+            {
+                ImGui::Text("fps: %.1f", ImGui::GetIO().Framerate);
+                ImGui::Spacing();
+                ImGui::Text("m_Beacons size: %d", m_Beacons.size());
+                ImGui::Text("m_Beacons capasity: %d", m_Beacons.capacity());
+                ImGui::Text("allocator current allocated: %d", m_AllocatorBeacon.CurrentAllocated());
+                ImGui::Text("allocator current capasity: %d", m_AllocatorBeacon.CurrentCapasity());
+                ImGui::Text("allocator total allocated: %d", m_AllocatorBeacon.TotalAllocated());
+                ImGui::Text("allocator total capasity: %d", m_AllocatorBeacon.TotalCapasity());
+                ImGui::Text("allocator blocks count: %d", m_AllocatorBeacon.BlockCount());
+                ImGui::Spacing();
+                ImGui::Text("mouse hovering on any window: %d", ImGui::GetIO().WantCaptureMouse);
+                m_Camera.DebugInterface();
+            }
+
+            if (ImGui::CollapsingHeader("Object-pallete"))
+            {
+                m_ObjPallete.UpdateInterface();
+            }
+
+            if (ImGui::CollapsingHeader("Resources"))
+            {
+                m_ResourceReciever.DebugInterface();
+            }
+
+            if (ImGui::CollapsingHeader("Drones"))
+            {
+                static int droneCount = 100;
+                static sf::Vector2f startPos = { 0.0f, 0.0f };
+                static TargetType target = TargetType::Recource;
+
+                ImGui::InputInt("drone count", &droneCount);
+                ImGui::InputFloat2("starting position", &startPos.x);
+                ImGui::Text("target on start");
+                //ImGui::PushID("Drones");
+                if (ImGui::RadioButton("Recource##Drones", target == TargetType::Recource))
+                    target = TargetType::Recource;
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Navigation##Drones", target == TargetType::Navigation))
+                    target = TargetType::Navigation;
+
+                if (ImGui::Button("restart simulation"))
+                {
+                    RestartSim(droneCount, startPos, target);
+                }
+
+                ImGui::Checkbox("show drones info", &m_DronesInfo);
+                Drone::DebugInterface();
+
+                ImGui::Text("default drones settings");
+                if (ImGui::Button("default drone"))
+                    Drone::StaticInit();
+            }
+
+            if (ImGui::CollapsingHeader("Beacons"))
+            {
+                ImGui::Text("default beacons settings");
+                if (ImGui::Button("default beacon"))
+                    Beacon::StaticInit();
+
+                ImGui::Checkbox("show beacons info", &m_BeaconsInfo);
+                Beacon::DebugInterface();
+            }
+            ImGui::End();
+        }
+
         void Update(sf::Time deltaTime) override
         {
             CW_PROFILE_FUNCTION();
-            ImGui::Begin("Debug");
-                if (ImGui::CollapsingHeader("App statistics"))
-                {
-                    ImGui::Text("fps: %.1f", ImGui::GetIO().Framerate);
-                    ImGui::Spacing();
-                    ImGui::Text("m_Beacons size: %d", m_Beacons.size());
-                    ImGui::Text("m_Beacons capasity: %d", m_Beacons.capacity());
-                    ImGui::Text("allocator current allocated: %d", m_AllocatorBeacon.CurrentAllocated());
-                    ImGui::Text("allocator current capasity: %d", m_AllocatorBeacon.CurrentCapasity());
-                    ImGui::Text("allocator total allocated: %d", m_AllocatorBeacon.TotalAllocated());
-                    ImGui::Text("allocator total capasity: %d", m_AllocatorBeacon.TotalCapasity());
-                    ImGui::Text("allocator blocks count: %d", m_AllocatorBeacon.BlockCount());
-                    ImGui::Spacing();
-                    ImGui::Text("mouse hovering on any window: %d", ImGui::GetIO().WantCaptureMouse);
-                    m_Camera.DebugInterface();
-                }
-
-                if (ImGui::CollapsingHeader("Resources"))
-                {
-                    m_ResourceReciever.DebugInterface();
-                }
-
-                if (ImGui::CollapsingHeader("Drones"))
-                {
-                    static int droneCount = 100;
-                    static sf::Vector2f startPos = { 0.0f, 0.0f };
-                    static TargetType target = TargetType::Recource;
-
-                    ImGui::InputInt("drone count", &droneCount);
-                    ImGui::InputFloat2("starting position", &startPos.x);
-                    ImGui::Text("target on start");
-                    if (ImGui::RadioButton("Recource", target == TargetType::Recource))
-                        target = TargetType::Recource;
-                    ImGui::SameLine();
-                    if (ImGui::RadioButton("Navigation", target == TargetType::Navigation))
-                        target = TargetType::Navigation;
-
-                    if (ImGui::Button("restart simulation"))
-                    {
-                        RestartSim(droneCount, startPos, target);
-                    }
-
-                    ImGui::Checkbox("show drones info", &m_DronesInfo);
-                    Drone::DebugInterface();
-
-                    ImGui::Text("default drones settings");
-                    if (ImGui::Button("default drone"))
-                        Drone::StaticInit();
-                }
-
-                if (ImGui::CollapsingHeader("Beacons"))
-                {
-                    ImGui::Text("default beacons settings");
-                    if (ImGui::Button("default beacon"))
-                        Beacon::StaticInit();
-
-                    ImGui::Checkbox("show beacons info", &m_BeaconsInfo);
-                    Beacon::DebugInterface();
-                }
-            ImGui::End();
-
             m_Camera.Update(deltaTime);
 
             {
@@ -200,7 +211,25 @@ namespace CW {
         {
             if (!m_Hold && !ImGui::GetIO().WantCaptureMouse && e->button == sf::Mouse::Button::Left)
             {
-                createBeacon(m_Camera.WorldPosition(e->position), TargetType::Recource);
+                switch (m_ObjPallete.GetCurrentType())
+                {
+                case ObjectPallete::Beacon:
+                {
+                    createBeacon(m_Camera.WorldPosition(e->position), m_ObjPallete.GetBeaconType());
+                    break;
+                }
+                case ObjectPallete::Drone:
+                {
+                    auto [direction, targetType] = m_ObjPallete.GetDroneComponents();
+                    m_Drones.emplace_back(m_Camera.WorldPosition(e->position), direction, targetType);
+                    break;
+                }
+                case ObjectPallete::Resource:
+                {
+                    m_Resources.emplace_back(m_Camera.WorldPosition(e->position), m_ObjPallete.GetRsourceAmount());
+                    break;
+                }
+                }
                 m_Hold = true;
             }
         }
@@ -248,6 +277,8 @@ namespace CW {
         // Debug
         bool m_BeaconsInfo = false;
         bool m_DronesInfo = false;
+
+        ObjectPalleteBuilder m_ObjPallete;
     };
 
 } // CW

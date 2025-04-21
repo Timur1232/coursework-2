@@ -18,6 +18,8 @@ namespace CW {
 		Application(int width, int height, const char* title);
 		virtual ~Application() = default;
 
+		virtual void UpdateInterface() = 0;
+
 		sf::Vector2u GetWindowSize() const;
 		const char* GetTitle() const;
 

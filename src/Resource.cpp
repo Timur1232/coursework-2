@@ -7,8 +7,8 @@ namespace CW {
 
 	sf::CircleShape Resource::s_Mesh;
 
-	Resource::Resource(sf::Vector2f position)
-		: m_Position(position)
+	Resource::Resource(sf::Vector2f position, int amount)
+		: m_Position(position), m_Amount(amount)
 	{
 	}
 

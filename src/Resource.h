@@ -10,7 +10,7 @@ namespace CW {
 		: public IDrawable
 	{
 	public:
-		Resource(sf::Vector2f position);
+		Resource(sf::Vector2f position, int amount = 10);
 
 		static void StaticInit();
 

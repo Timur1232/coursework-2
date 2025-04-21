@@ -36,6 +36,7 @@ namespace CW {
 
 			ImGui::SFML::Update(m_Window, m_DeltaTime);
 
+			m_App->UpdateInterface();
 			m_App->Update(m_DeltaTime);
 
 			m_Window.clear();

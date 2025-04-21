@@ -224,7 +224,8 @@ namespace CW {
             if (float distSq = distance_squared(reciever.GetPos(), m_Position);
                 distSq <= reciever.GetRecieveRadius() * reciever.GetRecieveRadius())
             {
-                reciever.AddResources(10);
+                reciever.AddResources(m_CarriedResources);
+                m_CarriedResources = 0;
                 m_TargetType = TargetType::Recource;
                 m_AttractionAngle = (m_AttractionAngle - sf::degrees(180.0f)).wrapSigned();
                 m_DirectionAngle = m_AttractionAngle;

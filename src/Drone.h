@@ -10,8 +10,6 @@
 
 namespace CW {
 
-	class DroneDebugInterface;
-
 	class Drone
 		: public IUpdate,
 		  public IDrawable
@@ -20,6 +18,9 @@ namespace CW {
 		Drone(sf::Vector2f position, sf::Angle directionAngle = sf::Angle::Zero, TargetType target = TargetType::Recource);
 
 		static void StaticInit();
+
+		inline sf::Vector2f GetPos() const { return m_Position; }
+		inline void SetPos(sf::Vector2f position) { m_Position = position; }
 
 		static void DebugInterface();
 		void InfoInterface(size_t index, bool* open) const;
