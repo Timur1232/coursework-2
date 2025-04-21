@@ -6,7 +6,7 @@
 #include "UserEvent.h"
 
 template<>
-void CW::UserDispatcher<OnCreateBeacon, CreateBeacon>::operator()()
+void CW::UserDispatcher<CreateBeaconObs, CreateBeacon>::operator()()
 {
-    target->onCreateBeacon(event);
+    m_Target->OnCreateBeacon(m_Event);
 }

@@ -17,20 +17,20 @@ namespace CW {
 		Beacon() = default;
 		Beacon(sf::Vector2f position, TargetType type);
 
-		static void staticInit();
+		static void StaticInit();
 
-		static void debugInterface();
-		void infoInterface(size_t index, bool* open) const;
+		static void DebugInterface();
+		void InfoInterface(size_t index, bool* open) const;
 
-		void update(sf::Time deltaTime) override;
-		void draw(sf::RenderWindow& render) const override;
+		void Update(sf::Time deltaTime) override;
+		void Draw(sf::RenderWindow& render) const override;
 
-		bool isAlive() const;
+		bool IsAlive() const;
 
-		void revive(sf::Vector2f newPosition, TargetType newType);
+		void Revive(sf::Vector2f newPosition, TargetType newType);
 
-		sf::Vector2f getPos() const;
-		TargetType getType() const;
+		sf::Vector2f GetPos() const;
+		TargetType GetType() const;
 
 	private:
 		sf::Color beaconColor() const;

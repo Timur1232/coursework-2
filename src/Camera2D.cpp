@@ -10,32 +10,32 @@ namespace CW {
 	{
 	}
 
-	void Camera2D::debugInterface()
+	void Camera2D::DebugInterface()
 	{
 		ImGui::Text("camera position: (%.2f, %.2f)", m_View.getCenter().x, m_View.getCenter().y);
 		ImGui::Text("camera zoom factor: %.2f", m_ZoomFactor);
 		ImGui::Text("camera is moving: %d", m_IsMoving);
 		ImGui::Text("mouse position: (%d, %d)", m_PrevPos.x, m_PrevPos.y);
-		ImGui::Text("mouse world position: (%f, %f)", worldPosition(m_PrevPos).x, worldPosition(m_PrevPos).y);
+		ImGui::Text("mouse world position: (%f, %f)", WorldPosition(m_PrevPos).x, WorldPosition(m_PrevPos).y);
 	}
 
-	void Camera2D::update(sf::Time deltaTime)
+	void Camera2D::Update(sf::Time deltaTime)
 	{
 		
 	}
 
-	void Camera2D::onMouseButtonPressed(const sf::Event::MouseButtonPressed* e)
+	void Camera2D::OnMouseButtonPressed(const sf::Event::MouseButtonPressed* e)
 	{
 		if (!ImGui::GetIO().WantCaptureMouse)
 			m_IsMoving = e->button == sf::Mouse::Button::Right;
 	}
 
-	void Camera2D::onMouseButtonReleased(const sf::Event::MouseButtonReleased* e)
+	void Camera2D::OnMouseButtonReleased(const sf::Event::MouseButtonReleased* e)
 	{
 		m_IsMoving = m_IsMoving && e->button != sf::Mouse::Button::Right;
 	}
 
-	void Camera2D::onMouseMoved(const sf::Event::MouseMoved* e)
+	void Camera2D::OnMouseMoved(const sf::Event::MouseMoved* e)
 	{
 		if (m_IsMoving)
 		{
@@ -44,7 +44,7 @@ namespace CW {
 		m_PrevPos = e->position;
 	}
 
-	void Camera2D::onMouseWheelScrolled(const sf::Event::MouseWheelScrolled* e)
+	void Camera2D::OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled* e)
 	{
 		if (ImGui::GetIO().WantCaptureMouse)
 			return;
@@ -60,18 +60,18 @@ namespace CW {
 		}
 	}
 
-	void Camera2D::onResized(const sf::Event::Resized* e)
+	void Camera2D::OnResized(const sf::Event::Resized* e)
 	{
 		m_View.setSize((sf::Vector2f)e->size);
 		m_View.zoom(m_ZoomFactor);
 	}
 
-	const sf::View& Camera2D::getView() const
+	const sf::View& Camera2D::GetView() const
 	{
 		return m_View;
 	}
 
-	sf::Vector2f Camera2D::worldPosition(sf::Vector2i mousePos) const
+	sf::Vector2f Camera2D::WorldPosition(sf::Vector2i mousePos) const
 	{
 		return sf::Vector2f(
 			m_View.getCenter().x - m_View.getSize().x / 2 + mousePos.x * m_ZoomFactor,

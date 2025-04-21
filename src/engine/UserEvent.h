@@ -14,7 +14,7 @@ namespace CW {
 		std::variant<CW_USER_EVENTS_LIST> data;
 
 		template<class T>
-		const T* getIf() const
+		const T* GetIf() const
 		{
 			return std::get_if<T>(&data);
 		}
@@ -26,14 +26,14 @@ namespace CW {
 	{
 	public:
 		UserDispatcher(OnEvent* target, const MyEvent& event)
-			: target(dynamic_cast<Target_t*>(target)), event(event.getIf<Event_t>())
+			: m_Target(dynamic_cast<Target_t*>(target)), m_Event(event.GetIf<Event_t>())
 		{
 		}
 
-		bool isValid() const
+		bool IsValid() const
 		{
-			bool valid = target && event;
-			if (valid) valid = target->isAcceptingEvents();
+			bool valid = m_Target && m_Event;
+			if (valid) valid = m_Target->IsAcceptingEvents();
 			return valid;
 		}
 
@@ -43,8 +43,8 @@ namespace CW {
 		}
 
 	private:
-		Target_t* target = nullptr;
-		const Event_t* event = nullptr;
+		Target_t* m_Target = nullptr;
+		const Event_t* m_Event = nullptr;
 	};
 
 #endif

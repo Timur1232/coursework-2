@@ -8,7 +8,7 @@
 namespace CW {
 
 	class ProgramCore
-		: public OnKeyPressed
+		: public KeyPressedObs
 	{
 	public:
 		ProgramCore();
@@ -18,12 +18,13 @@ namespace CW {
 		~ProgramCore();
 
 		// Основной цикл программы
-		void run();
+		void Run();
 
-		void setApplication(std::unique_ptr<Application>&& app);
+		void SetApplication(std::unique_ptr<Application>&& app);
 
-		void onKeyPressed(const sf::Event::KeyPressed* e) override;
+		void OnKeyPressed(const sf::Event::KeyPressed* e) override;
 
+	private:
 		sf::State reverseState();
 
 	private:

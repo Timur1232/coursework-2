@@ -10,22 +10,22 @@ namespace CW {
     {
     }
 
-	sf::Vector2u Application::getWindowSize() const
+	sf::Vector2u Application::GetWindowSize() const
 	{
 		return m_WindowSize;
 	}
 
-	const char* Application::getTitle() const
+	const char* Application::GetTitle() const
 	{
 		return m_WindowTitle;
 	}
 
-	bool Application::isRunning() const
+	bool Application::IsRunning() const
 	{
 		return m_Running;
 	}
 
-	void Application::close()
+	void Application::Close()
 	{
 		m_Running = false;
 	}

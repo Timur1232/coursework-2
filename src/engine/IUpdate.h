@@ -8,7 +8,7 @@ namespace CW {
 	{
 	public:
 		virtual ~IUpdate() = default;
-		virtual void update(sf::Time deltaTime) = 0;
+		virtual void Update(sf::Time deltaTime) = 0;
 	};
 
 

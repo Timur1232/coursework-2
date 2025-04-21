@@ -19,38 +19,38 @@ namespace CW {
 		CW_INFO("Closing program.");
 	}
 
-	void ProgramCore::run()
+	void ProgramCore::Run()
 	{
 		CW_INFO("Starting main loop.");
 		CW_START_PROFILE_SESSION();
 		CW_PROFILE_FUNCTION();
 
-		while (m_App->isRunning())
+		while (m_App->IsRunning())
 		{
 			CW_PROFILE_SCOPE("main loop");
 			m_DeltaTime = m_DeltaClock.restart();
-			EventHandler::get().handleEvents(m_Window);
+			EventHandler::Get().HandleEvents(m_Window);
 #ifdef CW_USER_EVENTS_LIST
-			EventHandler::get().handleUserEvents();
+			EventHandler::Get().HandleUserEvents();
 #endif
 
 			ImGui::SFML::Update(m_Window, m_DeltaTime);
 
-			m_App->update(m_DeltaTime);
+			m_App->Update(m_DeltaTime);
 
 			m_Window.clear();
-			m_App->draw(m_Window);
+			m_App->Draw(m_Window);
 			ImGui::SFML::Render(m_Window);
 			m_Window.display();
 		}
 		CW_END_PROFILE_SESSION();
 	}
 
-	void ProgramCore::setApplication(std::unique_ptr<Application>&& app)
+	void ProgramCore::SetApplication(std::unique_ptr<Application>&& app)
 	{
 		m_App = std::forward<std::unique_ptr<Application>>(app);
 
-		m_Window.create(sf::VideoMode(m_App->getWindowSize()), m_App->getTitle());
+		m_Window.create(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle());
 		m_Window.setVerticalSyncEnabled(true);
 
 		m_Window.setFramerateLimit(60);
@@ -59,14 +59,14 @@ namespace CW {
 			CW_CRITICAL("Failing initializing ImGui::SFML.");
 		}
 
-		m_App->subscribeOnEvents();
+		m_App->SubscribeOnEvents();
 	}
 
-	void ProgramCore::onKeyPressed(const sf::Event::KeyPressed* e)
+	void ProgramCore::OnKeyPressed(const sf::Event::KeyPressed* e)
 	{
 		if (e->code == sf::Keyboard::Key::F11)
 		{
-			m_Window.create(sf::VideoMode(m_App->getWindowSize()), m_App->getTitle(), reverseState());
+			m_Window.create(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle(), reverseState());
 		}
 	}
 

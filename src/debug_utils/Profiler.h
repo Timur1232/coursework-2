@@ -8,9 +8,9 @@ namespace CW {
 
 	struct ProfileResult
 	{
-		std::string name;
-		std::chrono::duration<double, std::micro> start;
-		std::chrono::microseconds duration;
+		std::string Name;
+		std::chrono::duration<double, std::micro> Start;
+		std::chrono::microseconds Duration;
 	};
 
 	class Profiler
@@ -19,7 +19,7 @@ namespace CW {
 		Profiler(const Profiler&) = delete;
 		Profiler(Profiler&&) = delete;
 
-		void startSession(const std::string& filepath = "results.json")
+		void StartSession(const std::string& filepath = "results.json")
 		{
 			m_OutFile.open(filepath);
 			if (!m_OutFile)
@@ -32,7 +32,7 @@ namespace CW {
 			m_OutFile << "{\"otherData\": {},\"traceEvents\":[{}";
 		}
 
-		void endSession()
+		void EndSession()
 		{
 			if (m_OutFile)
 			{
@@ -42,7 +42,7 @@ namespace CW {
 			}
 		}
 		
-		void writeProfile(const ProfileResult& result)
+		void WriteProfile(const ProfileResult& result)
 		{
 			if (!m_OutFile)
 			{
@@ -54,17 +54,17 @@ namespace CW {
 			json << std::setprecision(3) << std::fixed;
 			json << ",{";
 			json << "\"cat\":\"function\",";
-			json << "\"dur\":" << (result.duration.count()) << ',';
-			json << "\"name\":\"" << result.name << "\",";
+			json << "\"dur\":" << (result.Duration.count()) << ',';
+			json << "\"name\":\"" << result.Name << "\",";
 			json << "\"ph\":\"X\",";
 			json << "\"pid\":0,";
-			json << "\"ts\":" << result.start.count();
+			json << "\"ts\":" << result.Start.count();
 			json << "}";
 
 			m_OutFile << json.str();
 		}
 		
-		static Profiler& get()
+		static Profiler& Get()
 		{
 			static Profiler instance;
 			return instance;
@@ -74,7 +74,7 @@ namespace CW {
 		Profiler() = default;
 		~Profiler()
 		{
-			endSession();
+			EndSession();
 		}
 
 	private:
@@ -92,10 +92,10 @@ namespace CW {
 
 		~ScopeTimer()
 		{
-			stop();
+			Stop();
 		}
 
-		void stop()
+		void Stop()
 		{
 			if (!m_Stopped)
 			{
@@ -103,7 +103,7 @@ namespace CW {
 				auto endPoint = std::chrono::steady_clock::now();
 				auto duration = std::chrono::time_point_cast<std::chrono::microseconds>(endPoint).time_since_epoch() - std::chrono::time_point_cast<std::chrono::microseconds>(m_StartPoint).time_since_epoch();;
 
-				Profiler::get().writeProfile({m_Name, startPoint, duration});
+				Profiler::Get().WriteProfile({m_Name, startPoint, duration});
 
 				m_Stopped = true;
 			}
@@ -119,8 +119,8 @@ namespace CW {
 
 #define CW_PROFILING 0
 #if CW_PROFILING
-	#define CW_START_PROFILE_SESSION(name) ::CW::Profiler::get().startSession(name);
-	#define CW_END_PROFILE_SESSION() ::CW::Profiler::get().endSession();
+	#define CW_START_PROFILE_SESSION(name) ::CW::Profiler::Get().StartSession(name);
+	#define CW_END_PROFILE_SESSION() ::CW::Profiler::Get().EndSession();
 	#define CW_PROFILE_SCOPE(name) ::CW::ScopeTimer timer(name)
 	#define CW_PROFILE_FUNCTION() CW_PROFILE_SCOPE(__FUNCTION__)
 #else

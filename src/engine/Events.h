@@ -12,68 +12,68 @@
 
 namespace CW {
 
-	class OnKeyPressed
+	class KeyPressedObs
 		: virtual public OnEvent
 	{
 	public:
-		~OnKeyPressed() = default;
-		virtual void onKeyPressed(const sf::Event::KeyPressed*) = 0;
+		~KeyPressedObs() = default;
+		virtual void OnKeyPressed(const sf::Event::KeyPressed*) = 0;
 	};
 
-	class OnKeyReleased
+	class KeyReleasedObs
 		: virtual public OnEvent
 	{
 	public:
-		virtual ~OnKeyReleased() = default;
-		virtual void onKeyReleased(const sf::Event::KeyReleased*) = 0;
+		virtual ~KeyReleasedObs() = default;
+		virtual void OnKeyReleased(const sf::Event::KeyReleased*) = 0;
 	};
 
-	class OnMouseButtonPressed
+	class MouseButtonPressedObs
 		: virtual public OnEvent
 	{
 	public:
-		virtual ~OnMouseButtonPressed() = default;
-		virtual void onMouseButtonPressed(const sf::Event::MouseButtonPressed*) = 0;
+		virtual ~MouseButtonPressedObs() = default;
+		virtual void OnMouseButtonPressed(const sf::Event::MouseButtonPressed*) = 0;
 	};
 
-	class OnMouseButtonReleased
+	class MouseButtonReleasedObs
 		: virtual public OnEvent
 	{
 	public:
-		virtual ~OnMouseButtonReleased() = default;
-		virtual void onMouseButtonReleased(const sf::Event::MouseButtonReleased*) = 0;
+		virtual ~MouseButtonReleasedObs() = default;
+		virtual void OnMouseButtonReleased(const sf::Event::MouseButtonReleased*) = 0;
 	};
 
-	class OnMouseMoved
+	class MouseMovedObs
 		: virtual public OnEvent
 	{
 	public:
-		virtual ~OnMouseMoved() = default;
-		virtual void onMouseMoved(const sf::Event::MouseMoved*) = 0;
+		virtual ~MouseMovedObs() = default;
+		virtual void OnMouseMoved(const sf::Event::MouseMoved*) = 0;
 	};
 
-	class OnMouseWheelScrolled
+	class MouseWheelScrolledObs
 		: virtual public OnEvent
 	{
 	public:
-		virtual ~OnMouseWheelScrolled() = default;
-		virtual void onMouseWheelScrolled(const sf::Event::MouseWheelScrolled*) = 0;
+		virtual ~MouseWheelScrolledObs() = default;
+		virtual void OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled*) = 0;
 	};
 
-	class OnClosed
+	class ClosedObs
 		: virtual public OnEvent
 	{
 	public:
-		virtual ~OnClosed() = default;
-		virtual void onClosed() = 0;
+		virtual ~ClosedObs() = default;
+		virtual void OnClosed() = 0;
 	};
 
-	class OnResized
+	class ResizedObs
 		: virtual public OnEvent
 	{
 	public:
-		virtual ~OnResized() = default;
-		virtual void onResized(const sf::Event::Resized*) = 0;
+		virtual ~ResizedObs() = default;
+		virtual void OnResized(const sf::Event::Resized*) = 0;
 	};
 
 
@@ -82,13 +82,13 @@ namespace CW {
 	{
 	public:
 		CoreDispatcher(OnEvent* target, const sf::Event& event)
-			: target(dynamic_cast<Target_t*>(target)), event(event.getIf<Event_t>())
+			: m_Target(dynamic_cast<Target_t*>(target)), m_Event(event.getIf<Event_t>())
 		{
 		}
 
-		bool isValid() const
+		bool IsValid() const
 		{
-			bool valid = target && event;
+			bool valid = m_Target && m_Event;
 			return valid;
 		}
 
@@ -98,8 +98,8 @@ namespace CW {
 		}
 
 	private:
-		Target_t* target = nullptr;
-		const Event_t* event = nullptr;
+		Target_t* m_Target = nullptr;
+		const Event_t* m_Event = nullptr;
 	};
 
 	class ProgramCore;
@@ -110,20 +110,20 @@ namespace CW {
 		EventHandler(const EventHandler&) = delete;
 		EventHandler(EventHandler&&) = delete;
 
-		static EventHandler& get();
+		static EventHandler& Get();
 
-		void reserve(size_t targetReserve, size_t eventReserve);
+		void Reserve(size_t targetReserve, size_t eventReserve);
 
-		size_t subscribe(OnEvent* target);
-		void unsubscribe(size_t index);
-		void handleEvents(sf::RenderWindow& window);
+		size_t Subscribe(OnEvent* target);
+		void Unsubscribe(size_t index);
+		void HandleEvents(sf::RenderWindow& window);
 
 #ifdef CW_USER_EVENTS_LIST
 
-		void handleUserEvents();
+		void HandleUserEvents();
 
 		template<class T>
-		void addEvent(T&& event)
+		void AddEvent(T&& event)
 		{
 			m_UserEvents.push_back(MyEvent{ std::move(event) });
 		}

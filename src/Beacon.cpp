@@ -17,20 +17,20 @@ namespace CW {
 		s_Mesh.setPosition(m_Position);
 	}
 
-	void Beacon::staticInit()
+	void Beacon::StaticInit()
 	{
 		s_Mesh.setRadius(10.0f);
 		s_Mesh.setOrigin({ s_Mesh.getRadius(), s_Mesh.getRadius() });
 		s_Mesh.setPointCount(4);
 	}
 
-	void Beacon::debugInterface()
+	void Beacon::DebugInterface()
 	{
 		ImGui::SliderFloat("charge threshold", &s_ChargeThreshold, 0.0f, 1.0f);
 		ImGui::SliderFloat("discharge rate", &s_DischargeRate, 0.0f, 1.0f);
 	}
 
-	void Beacon::infoInterface(size_t index, bool* open) const
+	void Beacon::InfoInterface(size_t index, bool* open) const
 	{
 		ImGui::Begin("Beacons", open);
 		ImGui::Separator();
@@ -41,9 +41,9 @@ namespace CW {
 		ImGui::End();
 	}
 
-	void Beacon::update(sf::Time deltaTime)
+	void Beacon::Update(sf::Time deltaTime)
 	{
-		if (!isAlive())
+		if (!IsAlive())
 			return;
 
 		if (m_Charge <= s_ChargeThreshold)
@@ -57,9 +57,9 @@ namespace CW {
 		}
 	}
 
-	void Beacon::draw(sf::RenderWindow& render) const
+	void Beacon::Draw(sf::RenderWindow& render) const
 	{
-		if (isAlive())
+		if (IsAlive())
 		{
 			s_Mesh.setPosition(m_Position);
 			s_Mesh.setFillColor(beaconColor());
@@ -67,12 +67,12 @@ namespace CW {
 		}
 	}
 
-	bool Beacon::isAlive() const
+	bool Beacon::IsAlive() const
 	{
 		return m_Alive;
 	}
 
-	void Beacon::revive(sf::Vector2f newPosition, TargetType newType)
+	void Beacon::Revive(sf::Vector2f newPosition, TargetType newType)
 	{
 		m_Charge = 1.0f;
 		m_Position = newPosition;
@@ -80,12 +80,12 @@ namespace CW {
 		m_Alive = true;
 	}
 
-	sf::Vector2f Beacon::getPos() const
+	sf::Vector2f Beacon::GetPos() const
 	{
 		return m_Position;
 	}
 
-	TargetType Beacon::getType() const
+	TargetType Beacon::GetType() const
 	{
 		return m_Type;
 	}
