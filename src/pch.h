@@ -8,12 +8,13 @@
 #include <exception>
 #include <cstdint>
 #include <ranges>
+#include <functional>
 #include <algorithm>
 #include <random>
 #include <utility>
-#include <functional>
 #include <format>
 #include <chrono>
+#include <cmath>
 
 #include <fstream>
 #include <sstream>
@@ -35,3 +36,7 @@
 
 #include <imgui.h>
 #include <imgui-sfml/imgui-SFML.h>
+
+//========================[glm]========================//
+
+//#include <glm/glm.hpp>

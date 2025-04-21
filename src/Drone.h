@@ -7,6 +7,7 @@
 #include "Beacon.h"
 #include "ResourceReciever.h"
 #include "Resource.h"
+#include "debug_utils/LineShape.h"
 
 namespace CW {
 
@@ -74,6 +75,7 @@ namespace CW {
 		static sf::CircleShape s_MeshViewDistance;
 		static sf::CircleShape s_DirectionVisual;
 		static sf::CircleShape s_AttractionAngleVisual;
+		static std::array<LineShape, 2> s_FOVVisual;
 
 		static bool s_DrawViewDistance;
 		static bool s_DrawDirection;

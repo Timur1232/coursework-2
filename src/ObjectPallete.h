@@ -1,7 +1,6 @@
 #pragma once
 
-#include <array>
-#include <tuple>
+#include "pch.h"
 
 #include "Drone.h"
 #include "Beacon.h"

@@ -75,7 +75,7 @@
       <PreprocessorDefinitions>SFML_STATIC;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies/SFML-3.0.0/include;$(SolutionDir)src;$(SolutionDir)dependencies/imgui;$(SolutionDir)dependencies/imgui-sfml</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies/SFML-3.0.0/include;$(SolutionDir)src;$(SolutionDir)dependencies/imgui;$(SolutionDir)dependencies/imgui-sfml;$(SolutionDir)dependencies/include</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -128,6 +128,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Beacon.cpp" />
+    <ClCompile Include="src\debug_utils\LineShape.cpp" />
     <ClCompile Include="src\ObjectPallete.cpp" />
     <ClCompile Include="src\Drone.cpp" />
     <ClCompile Include="src\Camera2D.cpp" />
@@ -151,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Beacon.h" />
+    <ClInclude Include="src\debug_utils\LineShape.h" />
     <ClInclude Include="src\ObjectPallete.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Resource.h" />

@@ -13,6 +13,7 @@ namespace CW {
     sf::CircleShape Drone::s_MeshViewDistance;
     sf::CircleShape Drone::s_DirectionVisual;
     sf::CircleShape Drone::s_AttractionAngleVisual;
+    std::array<LineShape, 2> Drone::s_FOVVisual;
 
     float Drone::s_Speed;
     sf::Angle Drone::s_TurningSpeed;
@@ -63,6 +64,10 @@ namespace CW {
         s_MeshViewDistance.setOutlineColor(sf::Color::White);
         s_MeshViewDistance.setOutlineThickness(1.0f);
 
+        s_ViewDistanse = { 70.0f, 250.0f };
+        s_FOVVisual[0].setLength(s_ViewDistanse.y);
+        s_FOVVisual[1].setLength(s_ViewDistanse.y);
+
         s_Speed = 50.0f;
         s_TurningSpeed = sf::degrees(5.0f);
 
@@ -76,8 +81,6 @@ namespace CW {
         s_RandomWanderAngle = sf::degrees(25.0f);
         s_WanderAngleThreshold = sf::degrees(0.5f);
         s_MaxTurningDelta = sf::degrees(30.0f);
-
-        s_ViewDistanse = { 70.0f, 250.0f };
 
         s_DrawViewDistance = false;
         s_DrawDirection = false;
@@ -174,6 +177,9 @@ namespace CW {
             s_MeshViewDistance.setOrigin({ s_ViewDistanse.y, s_ViewDistanse.y });
 
             render.draw(s_MeshViewDistance);
+
+            render.draw(s_FOVVisual[0]);
+            render.draw(s_FOVVisual[1]);
         }
 
         render.draw(s_Mesh);
@@ -344,6 +350,18 @@ namespace CW {
             s_DirectionVisual.setRotation(m_DirectionAngle + sf::degrees(90.0f));
             s_AttractionAngleVisual.setPosition(m_Position + ONE_LENGTH_VEC.rotatedBy(m_AttractionAngle) * 100.0f);
             s_AttractionAngleVisual.setRotation(m_AttractionAngle + sf::degrees(90.0f));
+        }
+        if (s_DrawViewDistance)
+        {
+            s_FOVVisual[0].setPosition(m_Position);
+            s_FOVVisual[1].setPosition(m_Position);
+
+            s_FOVVisual[0].setRotation(m_DirectionAngle);
+            s_FOVVisual[1].setRotation(m_DirectionAngle);
+
+            float deltaAngle = std::acos(s_FOV);
+            s_FOVVisual[0].rotateByPoint1(sf::radians(deltaAngle));
+            s_FOVVisual[1].rotateByPoint1(sf::radians(-deltaAngle));
         }
     }
 
