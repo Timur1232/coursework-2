@@ -81,6 +81,11 @@ namespace CW {
             }
         }
 
+        void PauseUpdate(sf::Time deltaTime) override
+        {
+            m_Camera.Update(deltaTime);
+        }
+
         void Draw(sf::RenderWindow& render) const override
         {
             CW_PROFILE_FUNCTION();
@@ -117,6 +122,10 @@ namespace CW {
 
         void OnKeyPressed(const sf::Event::KeyPressed* event) override
         {
+            if (event->code == sf::Keyboard::Key::Space)
+            {
+                SwitchPause();
+            }
         }
 
         void OnMouseButtonPressed(const sf::Event::MouseButtonPressed* e) override
@@ -180,6 +189,7 @@ namespace CW {
             if (ImGui::CollapsingHeader("App-statistics"))
             {
                 ImGui::Text("fps: %.1f", ImGui::GetIO().Framerate);
+                ImGui::Text("paused: %d", IsPaused());
                 ImGui::Spacing();
                 ImGui::Text("m_Beacons size: %d", m_Beacons.size());
                 ImGui::Text("m_Beacons capasity: %d", m_Beacons.capacity());

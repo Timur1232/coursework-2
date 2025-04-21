@@ -19,6 +19,7 @@ namespace CW {
 		virtual ~Application() = default;
 
 		virtual void UpdateInterface() = 0;
+		virtual void PauseUpdate(sf::Time deltaTime) = 0;
 
 		sf::Vector2u GetWindowSize() const;
 		const char* GetTitle() const;
@@ -26,11 +27,15 @@ namespace CW {
 		bool IsRunning() const;
 		void Close();
 
+		bool IsPaused() const;
+		void SwitchPause();
+
 	protected:
 		sf::Vector2u m_WindowSize;
 		const char* m_WindowTitle;
 
 		bool m_Running = true;
+		bool m_Pause = false;
 	};
 
 } // CW

@@ -30,4 +30,14 @@ namespace CW {
 		m_Running = false;
 	}
 
+	bool Application::IsPaused() const
+	{
+		return m_Pause;
+	}
+
+	void Application::SwitchPause()
+	{
+		m_Pause = !m_Pause;
+	}
+
 } // CW
