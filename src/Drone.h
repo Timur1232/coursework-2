@@ -34,8 +34,6 @@ namespace CW {
 		bool CheckResourceColission();
 
 	private:
-		friend DroneDebugInterface;
-
 		inline void turn(sf::Time deltaTime);
 		inline void wander(sf::Time deltaTime);
 

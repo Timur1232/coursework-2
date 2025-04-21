@@ -36,6 +36,7 @@ namespace CW {
 
             Drone::StaticInit();
             Beacon::StaticInit();
+            Resource::StaticInit();
         }
 
         void RestartSim(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource)
@@ -144,9 +145,12 @@ namespace CW {
                 for (auto& drone : m_Drones)
                 {
                     drone.Update(deltaTime);
+                    
                     if (!drone.ReactToResourceReciver(m_ResourceReciever))
                         drone.ReactToBeacons(m_Beacons);
+
                     drone.ReactToResources(m_Resources);
+                    
                     if (m_DronesInfo)
                         drone.InfoInterface(index, &m_DronesInfo);
                     ++index;
@@ -168,9 +172,9 @@ namespace CW {
 
             {
                 CW_PROFILE_SCOPE("beacons draw");
-                for (const auto& b : m_Beacons)
+                for (const auto& beacon : m_Beacons)
                 {
-                    b->Draw(render);
+                    beacon->Draw(render);
                 }
             }
 

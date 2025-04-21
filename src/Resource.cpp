@@ -30,8 +30,11 @@ namespace CW {
 
 	void Resource::Draw(sf::RenderWindow& render) const
 	{
-		s_Mesh.setPosition(m_Position);
-		render.draw(s_Mesh);
+		if (!IsCarried())
+		{
+			s_Mesh.setPosition(m_Position);
+			render.draw(s_Mesh);
+		}
 	}
 
 } // CW

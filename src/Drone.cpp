@@ -123,6 +123,10 @@ namespace CW {
         ImGui::Text("attraction angle: %.2f", m_AttractionAngle.asDegrees());
         ImGui::Text("beacon timer: %.1f s", m_BeaconTimerSec);
         ImGui::Text("carried resources: %d", m_CarriedResources);
+        if (m_TargetResource)
+            ImGui::Text("target position: (%.2f, %.2f)", m_TargetResource->GetPos().x, m_TargetResource->GetPos().y);
+        else
+            ImGui::Text("no target");
         ImGui::End();
     }
 
@@ -149,6 +153,7 @@ namespace CW {
             m_DirectionAngle = m_AttractionAngle;
             m_CarriedResources = m_TargetResource->GetResources();
             m_TargetResource->PickUp();
+            m_TargetResource = nullptr;
         }
     }
 
@@ -184,7 +189,7 @@ namespace CW {
     {
         //CW_PROFILE_FUNCTION();
         const Beacon* furthestBeacon = nullptr;
-        float furthestDist = -1.0f;
+        float furthestDistSq = -1.0f;
 
         auto filteredBeacons = beacons
             | std::views::filter([&](const Beacon* b) { return b->IsAlive() && b->GetType() == m_TargetType; });
@@ -195,10 +200,11 @@ namespace CW {
                 (positionDelta.x != 0.0f || positionDelta.y != 0.0f)
                 && ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle).dot(positionDelta.normalized()) >= s_FOV)
             {
-                if (float distSq = (beacon->GetPos() - m_Position).length();
-                    distSq <= s_ViewDistanse.y && distSq >= s_ViewDistanse.x && distSq > furthestDist)
+                if (float distSq = distance_squared(beacon->GetPos(), m_Position);
+                    distSq <= s_ViewDistanse.y * s_ViewDistanse.y 
+                    && distSq >= s_ViewDistanse.x * s_ViewDistanse.x && distSq > furthestDistSq)
                 {
-                    furthestDist = distSq;
+                    furthestDistSq = distSq;
                     furthestBeacon = beacon;
                 }
             }
@@ -238,45 +244,44 @@ namespace CW {
     {
         if (m_TargetType == TargetType::Recource && !resources.empty() && !m_TargetResource)
         {
-            // TODO: переделать - дрон должен выбрать ресурс один раз и плыть к нему, чтобы поднять 
-            auto found = resources.begin();
-            float minDist = distance_squared(found->GetPos(), m_Position);
+            auto closestResource = resources.begin();
+            float minDistSq = distance_squared(closestResource->GetPos(), m_Position);
             auto iter = resources.begin() + 1;
             while (iter != resources.end())
             {
                 if (!iter->IsCarried())
                 {
                     if (float otherDist = distance_squared(iter->GetPos(), m_Position);
-                        otherDist < minDist)
+                        otherDist < minDistSq)
                     {
-                        minDist = otherDist;
-                        found = iter;
+                        minDistSq = otherDist;
+                        closestResource = iter;
                     }
                 }
                 ++iter;
             }
-            if (found->IsCarried())
-            {
-                return;
-            }
-            m_TargetResource = &(*found);
-            m_AttractionAngle = (m_TargetResource->GetPos() - m_Position).angle().wrapSigned();
 
-            // TODO: сначала дрон должен двигаться к ресурсу
-            
+            if (!closestResource->IsCarried()
+                && ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle).dot((closestResource->GetPos() - m_Position).normalized()) >= s_FOV
+                && minDistSq >= s_ViewDistanse.x * s_ViewDistanse.x
+                && minDistSq <= s_ViewDistanse.y * s_ViewDistanse.y)
+            {
+                m_TargetResource = &(*closestResource);
+                m_AttractionAngle = (m_TargetResource->GetPos() - m_Position).angle();
+            }
         }
-        return;
     }
 
     bool Drone::CheckResourceColission()
     {
-        return !m_TargetResource 
-            && distance_squared(m_TargetResource->GetPos(), m_Position) <= s_PickupDist * s_PickupDist;
+        if (!m_TargetResource)
+            return false;
+        return distance_squared(m_TargetResource->GetPos(), m_Position) <= s_PickupDist * s_PickupDist;
     }
 
     void Drone::turn(sf::Time deltaTime)
     {
-        sf::Angle delta;
+        sf::Angle deltaAngle;
         auto quarter = angle::quarter(m_AttractionAngle);
 
         if ((quarter == angle::Quarter::Second || quarter == angle::Quarter::Third)
@@ -284,24 +289,24 @@ namespace CW {
         {
             if (quarter == angle::Quarter::Second)
             {
-                delta = m_AttractionAngle - sf::degrees(360.0f) + m_DirectionAngle;
+                deltaAngle = m_AttractionAngle - sf::degrees(360.0f) + m_DirectionAngle;
             }
             else
             {
-                delta = sf::degrees(360.0f) + m_AttractionAngle - m_DirectionAngle;
+                deltaAngle = sf::degrees(360.0f) + m_AttractionAngle - m_DirectionAngle;
             }
         }
         else
         {
-            delta = m_AttractionAngle - m_DirectionAngle;
+            deltaAngle = m_AttractionAngle - m_DirectionAngle;
         }
 
-        delta = (std::clamp(
-                delta + ((delta.asRadians() > 0) ? s_TurningSpeed : ((delta.asRadians() < 0) ? -s_TurningSpeed : sf::Angle::Zero)),
+        deltaAngle = (std::clamp(
+                deltaAngle + ((deltaAngle.asRadians() > 0) ? s_TurningSpeed : ((deltaAngle.asRadians() < 0) ? -s_TurningSpeed : sf::Angle::Zero)),
                 -s_MaxTurningDelta, s_MaxTurningDelta
             ) * deltaTime.asSeconds());
 
-        m_DirectionAngle = loop(m_DirectionAngle, sf::degrees(-180.0f), sf::degrees(180.0f), delta);
+        m_DirectionAngle = loop(m_DirectionAngle, sf::degrees(-180.0f), sf::degrees(180.0f), deltaAngle);
     }
 
     void Drone::wander(sf::Time deltaTime)
@@ -312,6 +317,12 @@ namespace CW {
         if (m_WanderTimer > 0.0f)
         {
             m_WanderTimer -= deltaTime.asSeconds();
+            return;
+        }
+
+        if (m_TargetResource)
+        {
+            m_AttractionAngle = (m_TargetResource->GetPos() - m_Position).angle();
         }
         else if (std::abs((m_DirectionAngle - m_AttractionAngle).asRadians()) <= s_WanderAngleThreshold.asRadians())
         {
