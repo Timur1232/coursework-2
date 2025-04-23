@@ -19,6 +19,7 @@ namespace CW {
     sf::Angle Drone::s_TurningSpeed;
 
     float Drone::s_FOV;
+    float Drone::s_FOVRad;
 
     float Drone::s_PickupDist;
 
@@ -35,7 +36,7 @@ namespace CW {
     bool Drone::s_DrawDirection;
 
     Drone::Drone(sf::Vector2f position, sf::Angle directionAngle, TargetType target)
-        : m_Position(position), m_DirectionAngle(directionAngle.wrapSigned()),
+        : Object(position), m_DirectionAngle(directionAngle.wrapSigned()),
           m_AttractionAngle(directionAngle.wrapSigned()),
           m_TargetType(target)
     {
@@ -72,6 +73,7 @@ namespace CW {
         s_TurningSpeed = sf::degrees(5.0f);
 
         s_FOV = 0.5f;
+        s_FOVRad = std::acos(s_FOV);
 
         s_PickupDist = 70.0f;
 
@@ -90,7 +92,8 @@ namespace CW {
     {
         ImGui::Checkbox("show view distance", &s_DrawViewDistance);
         ImGui::Checkbox("show direction", &s_DrawDirection);
-        ImGui::SliderFloat("fov", &s_FOV, 0.0f, 1.0f);
+        if (ImGui::SliderFloat("fov", &s_FOV, 0.0f, 1.0f))
+            s_FOVRad = std::acos(s_FOV);
         ImGui::SliderFloat("speed", &s_Speed, 10.0f, 100.0f);
         
         static float tmp;
@@ -359,9 +362,8 @@ namespace CW {
             s_FOVVisual[0].setRotation(m_DirectionAngle);
             s_FOVVisual[1].setRotation(m_DirectionAngle);
 
-            float deltaAngle = std::acos(s_FOV);
-            s_FOVVisual[0].rotateByPoint1(sf::radians(deltaAngle));
-            s_FOVVisual[1].rotateByPoint1(sf::radians(-deltaAngle));
+            s_FOVVisual[0].rotateByPoint1(sf::radians(s_FOVRad));
+            s_FOVVisual[1].rotateByPoint1(sf::radians(-s_FOVRad));
         }
     }
 

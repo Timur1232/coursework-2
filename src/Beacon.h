@@ -4,13 +4,15 @@
 
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"
+#include "engine/Object.h"
 
 #include "TargetType.h"
 
 namespace CW {
 
 	class Beacon
-		: public IUpdate,
+		: public Object,
+		  public IUpdate,
 		  public IDrawable
 	{
 	public:
@@ -25,21 +27,19 @@ namespace CW {
 		void Update(sf::Time deltaTime) override;
 		void Draw(sf::RenderWindow& render) const override;
 
-		bool IsAlive() const;
+		[[nodiscard]] inline bool IsAlive() const { return m_Alive; }
 
 		void Revive(sf::Vector2f newPosition, TargetType newType);
 
-		sf::Vector2f GetPos() const;
-		TargetType GetType() const;
+		[[nodiscard]] inline TargetType GetType() const { return m_Type; }
 
 	private:
-		sf::Color beaconColor() const;
+		[[nodiscard]] sf::Color beaconColor() const;
 
 	private:
 		TargetType m_Type = TargetType::None;
 		bool m_Alive = true;
 
-		sf::Vector2f m_Position;
 		float m_Charge = 1.0f;
 		static float s_ChargeThreshold;
 		static float s_DischargeRate;

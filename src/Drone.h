@@ -4,6 +4,8 @@
 
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"
+#include "engine/Object.h"
+
 #include "Beacon.h"
 #include "ResourceReciever.h"
 #include "Resource.h"
@@ -12,16 +14,14 @@
 namespace CW {
 
 	class Drone
-		: public IUpdate,
+		: public Object,
+		  public IUpdate,
 		  public IDrawable
 	{
 	public:
 		Drone(sf::Vector2f position, sf::Angle directionAngle = sf::Angle::Zero, TargetType target = TargetType::Recource);
 
 		static void StaticInit();
-
-		inline sf::Vector2f GetPos() const { return m_Position; }
-		inline void SetPos(sf::Vector2f position) { m_Position = position; }
 
 		static void DebugInterface();
 		void InfoInterface(size_t index, bool* open) const;
@@ -43,9 +43,6 @@ namespace CW {
 		inline void setMeshPos(sf::Vector2f position) const;
 
 	private:
-		static constexpr sf::Vector2f ONE_LENGTH_VEC = { 1.0f, 0.0f };
-
-		sf::Vector2f m_Position;
 		sf::Angle m_DirectionAngle = sf::Angle::Zero;
 		sf::Angle m_AttractionAngle;
 
@@ -54,9 +51,15 @@ namespace CW {
 
 		int m_CarriedResources = 0;
 
+		//=================[static]=================//
+		static constexpr sf::Vector2f ONE_LENGTH_VEC = { 1.0f, 0.0f };
+		
 		static float s_Speed;
 		static sf::Angle s_TurningSpeed;
+		
 		static float s_FOV;
+		static float s_FOVRad;
+
 		static sf::Vector2f s_ViewDistanse;
 		static float s_PickupDist;
 

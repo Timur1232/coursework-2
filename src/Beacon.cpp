@@ -12,7 +12,7 @@ namespace CW {
 	float Beacon::s_DischargeRate = 0.02f;
 
 	Beacon::Beacon(sf::Vector2f position, TargetType type)
-		: m_Position(position), m_Type(type)
+		: Object(position), m_Type(type)
 	{
 		s_Mesh.setPosition(m_Position);
 	}
@@ -67,27 +67,12 @@ namespace CW {
 		}
 	}
 
-	bool Beacon::IsAlive() const
-	{
-		return m_Alive;
-	}
-
 	void Beacon::Revive(sf::Vector2f newPosition, TargetType newType)
 	{
 		m_Charge = 1.0f;
 		m_Position = newPosition;
 		m_Type = newType;
 		m_Alive = true;
-	}
-
-	sf::Vector2f Beacon::GetPos() const
-	{
-		return m_Position;
-	}
-
-	TargetType Beacon::GetType() const
-	{
-		return m_Type;
 	}
 
 	sf::Color Beacon::beaconColor() const

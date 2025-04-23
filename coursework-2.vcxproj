@@ -148,11 +148,13 @@
     <ClCompile Include="src\ResourceReciever.cpp" />
     <ClCompile Include="src\TargetType.cpp" />
     <ClCompile Include="src\test.cpp" />
+    <ClCompile Include="src\utils\Chunks.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Beacon.h" />
     <ClInclude Include="src\debug_utils\LineShape.h" />
+    <ClInclude Include="src\engine\Object.h" />
     <ClInclude Include="src\ObjectPallete.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Resource.h" />
@@ -274,6 +276,7 @@
     <ClInclude Include="src\engine\IUpdate.h" />
     <ClInclude Include="src\engine\UserEvent.h" />
     <ClInclude Include="src\utils\ArenaAllocator.h" />
+    <ClInclude Include="src\utils\Chunks.h" />
     <ClInclude Include="src\utils\utils.h" />
   </ItemGroup>
   <ItemGroup>

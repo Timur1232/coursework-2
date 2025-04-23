@@ -3,11 +3,13 @@
 #include "pch.h"
 
 #include "engine/IDrawable.h"
+#include "engine/Object.h"
 
 namespace CW {
 
 	class ResourceReciever
-		: public IDrawable
+		: public Object,
+		  public IDrawable
 	{
 	public:
 		ResourceReciever(sf::Vector2f position);
@@ -16,16 +18,14 @@ namespace CW {
 
 		void Draw(sf::RenderWindow& render) const override;
 
-		int GetResources() const;
-		sf::Vector2f GetPos() const;
-		float GetBroadcastRadius() const;
-		float GetRecieveRadius() const;
+		[[nodiscard]] int GetResources() const;
+		[[nodiscard]] float GetBroadcastRadius() const;
+		[[nodiscard]] float GetRecieveRadius() const;
 
 		void AddResources(int amount);
-		int TakeResources(int amount);
+		[[nodiscard]] int TakeResources(int amount);
 
 	private:
-		sf::Vector2f m_Position;
 		int m_ResourceCount = 0;
 		float m_RecieveRadius;
 		float m_BroadcastRadius;

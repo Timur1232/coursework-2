@@ -6,7 +6,7 @@
 namespace CW {
 
 	ResourceReciever::ResourceReciever(sf::Vector2f position)
-		: m_Position(position), m_RecieveRadius(300.f), m_BroadcastRadius(1000.f),
+		: Object(position), m_RecieveRadius(300.f), m_BroadcastRadius(1000.f),
 		  m_Mesh(100.f)
 	{
 		m_Mesh.setOrigin({ m_Mesh.getRadius(), m_Mesh.getRadius() });
@@ -43,11 +43,6 @@ namespace CW {
 	int ResourceReciever::GetResources() const
 	{
 		return m_ResourceCount;
-	}
-
-	sf::Vector2f ResourceReciever::GetPos() const
-	{
-		return m_Position;
 	}
 
 	float ResourceReciever::GetBroadcastRadius() const
