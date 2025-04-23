@@ -151,7 +151,11 @@ namespace CW {
 
         wander(deltaTime);
 
-        if (CheckResourceColission())
+        if (m_TargetResource && m_TargetResource->IsCarried())
+        {
+            m_TargetResource = nullptr;
+        }
+        else if (CheckResourceColission())
         {
             CW_TRACE("Drone picked {} resources on ({}, {})", m_TargetResource->GetResources(), m_TargetResource->GetPos().x, m_TargetResource->GetPos().y);
             m_TargetType = TargetType::Navigation;
@@ -197,6 +201,9 @@ namespace CW {
     void Drone::ReactToBeacons(const std::vector<Beacon*>& beacons)
     {
         //CW_PROFILE_FUNCTION();
+        if (m_TargetResource)
+            return;
+
         const Beacon* furthestBeacon = nullptr;
         float furthestDistSq = -1.0f;
 
@@ -278,6 +285,7 @@ namespace CW {
             {
                 m_TargetResource = &(*closestResource);
                 m_AttractionAngle = (m_TargetResource->GetPos() - m_Position).angle();
+                m_WanderTimer = 0.0f;
             }
         }
     }
@@ -333,6 +341,7 @@ namespace CW {
         if (m_TargetResource)
         {
             m_AttractionAngle = (m_TargetResource->GetPos() - m_Position).angle();
+            return;
         }
         else if (std::abs((m_DirectionAngle - m_AttractionAngle).asRadians()) <= s_WanderAngleThreshold.asRadians())
         {

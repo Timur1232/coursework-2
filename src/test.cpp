@@ -69,10 +69,10 @@ namespace CW {
                 {
                     drone.Update(deltaTime);
                     
+                    drone.ReactToResources(m_Resources);
+
                     if (!drone.ReactToResourceReciver(m_ResourceReciever))
                         drone.ReactToBeacons(m_Beacons);
-
-                    drone.ReactToResources(m_Resources);
                     
                     if (m_DronesInfo)
                         drone.InfoInterface(index, &m_DronesInfo);
