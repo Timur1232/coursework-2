@@ -329,9 +329,6 @@ namespace CW {
 
     void Drone::wander(sf::Time deltaTime)
     {
-        /*static std::default_random_engine gen((unsigned int)std::time(0));
-        static std::normal_distribution<float> normal(0.0f);*/
-
         if (m_WanderTimer > 0.0f)
         {
             m_WanderTimer -= deltaTime.asSeconds();
@@ -345,7 +342,6 @@ namespace CW {
         }
         else if (std::abs((m_DirectionAngle - m_AttractionAngle).asRadians()) <= s_WanderAngleThreshold.asRadians())
         {
-            //m_AttractionAngle += s_RandomWanderAngle * normal(gen);
             m_AttractionAngle += s_RandomWanderAngle * ((float)std::rand() / RAND_MAX * 2.0f - 1.0f);
             m_AttractionAngle = m_AttractionAngle.wrapSigned();
             m_WanderTimer = 0.0f;
@@ -375,29 +371,5 @@ namespace CW {
             s_FOVVisual[1].rotateByPoint1(sf::radians(-s_FOVRad));
         }
     }
-
-
-    //void DroneDebugInterface::updateInterface() const
-    //{
-    //    ImGui::Begin("Drone");
-    //    ImGui::SliderFloat("fov", &Drone::s_FOV, 0.0f, 1.0f);
-    //    ImGui::SliderFloat("speed", &Drone::s_Speed, 10.0f, 100.0f);
-
-    //    {
-    //        //float tmp = Drone::s_TurningSpeed.asDegrees();
-    //        ImGui::SliderAngle("turning speed", (float*)(&Drone::s_TurningSpeed), 0.5f, 180.0f);
-    //        //Drone::s_TurningSpeed = sf::degrees(tmp);
-
-    //        ImGui::SliderAngle("random wander angle", (float*)(&Drone::s_RandomWanderAngle), 0.0f, 180.0f);
-    //        ImGui::SliderAngle("wander angle threshold", (float*)(&Drone::s_WanderAngleThreshold), 0.01f, 10.0f);
-    //        ImGui::SliderAngle("max turning delta", (float*)(&Drone::s_MaxTurningDelta), 1.0f, 180.0f);
-    //    }
-
-    //    ImGui::SliderFloat2("view distanse", &Drone::s_ViewDistanse.x, 0.0f, 1000.0f);
-
-    //    ImGui::SliderFloat("beacon spawn cooldown", &Drone::s_BeaconCooldownSec, 0.1f, 50.0f);
-    //    ImGui::SliderFloat("wander cooldown", &Drone::s_WanderCooldownSec, 0.1f, 50.0f);
-    //    ImGui::End();
-    //}
 
 } // CW

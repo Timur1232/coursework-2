@@ -38,9 +38,9 @@ namespace CW {
 
 	private:
 		TargetType m_Type = TargetType::None;
+		float m_Charge = 1.0f;
 		bool m_Alive = true;
 
-		float m_Charge = 1.0f;
 		static float s_ChargeThreshold;
 		static float s_DischargeRate;
 

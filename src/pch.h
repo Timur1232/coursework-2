@@ -10,6 +10,7 @@
 #include <ranges>
 #include <functional>
 #include <algorithm>
+#include <numeric>
 #include <random>
 #include <utility>
 #include <format>

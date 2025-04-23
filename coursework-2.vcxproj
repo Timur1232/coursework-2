@@ -129,6 +129,7 @@
   <ItemGroup>
     <ClCompile Include="src\Beacon.cpp" />
     <ClCompile Include="src\debug_utils\LineShape.cpp" />
+    <ClCompile Include="src\engine\Chunks.cpp" />
     <ClCompile Include="src\ObjectPallete.cpp" />
     <ClCompile Include="src\Drone.cpp" />
     <ClCompile Include="src\Camera2D.cpp" />
