@@ -5,6 +5,7 @@
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"
 #include "engine/Object.h"
+#include "engine/Chunks.h"
 
 #include "Beacon.h"
 #include "ResourceReciever.h"
@@ -29,7 +30,7 @@ namespace CW {
 		void Update(sf::Time deltaTime) override;
 		void Draw(sf::RenderWindow& render) const override;
 
-		void ReactToBeacons(const std::vector<Beacon*>& beacons);
+		void ReactToBeacons(const ChunkHandler<Beacon>& beacons);
 		bool ReactToResourceReciver(ResourceReciever& reciever);
 
 		void ReactToResources(std::vector<Resource>& resources);
@@ -38,6 +39,7 @@ namespace CW {
 	private:
 		inline void turn(sf::Time deltaTime);
 		inline void wander(sf::Time deltaTime);
+		std::pair<const Beacon*, float> findFurthestInChunk(const Chunk<Beacon>* chunk);
 
 		// Debug
 		inline void setMeshPos(sf::Vector2f position) const;

@@ -1,7 +1,5 @@
-//#ifdef CW_TEST
 #include "pch.h"
 
-#if 1
 #include <engine/EntryPoint.h>
 
 #include <engine/ProgramCore.h>
@@ -35,7 +33,7 @@ namespace CW {
               m_Camera(0, 0, 800, 600)
         {
             m_Camera.SubscribeOnEvents();
-            m_Resources.emplace_back(sf::Vector2f{ 0.0f, 0.0f });
+            m_Resources.reserve(128);
 
             Drone::StaticInit();
             Beacon::StaticInit();
@@ -51,12 +49,13 @@ namespace CW {
                 CW_PROFILE_SCOPE("beacons update");
                 for (size_t i = 0; i < m_Beacons.size() - m_DeadBeacons; ++i)
                 {
-                    m_Beacons[i]->Update(deltaTime);
+                    m_Beacons[i].first->Update(deltaTime);
                     if (m_BeaconsInfo)
-                        m_Beacons[i]->InfoInterface(i, &m_BeaconsInfo);
+                        m_Beacons[i].first->InfoInterface(i, &m_BeaconsInfo);
 
-                    if (!m_Beacons[i]->IsAlive())
+                    if (!m_Beacons[i].first->IsAlive())
                     {
+                        m_BeaconChunks.EraseObject(m_Beacons[i].first->GetPos(), m_Beacons[i].second);
                         ++m_DeadBeacons;
                         std::swap(m_Beacons[i], m_Beacons[m_Beacons.size() - m_DeadBeacons]);
                     }
@@ -73,7 +72,7 @@ namespace CW {
                     drone.ReactToResources(m_Resources);
 
                     if (!drone.ReactToResourceReciver(m_ResourceReciever))
-                        drone.ReactToBeacons(m_Beacons);
+                        drone.ReactToBeacons(m_BeaconChunks);
                     
                     if (m_DronesInfo)
                         drone.InfoInterface(index, &m_DronesInfo);
@@ -99,11 +98,12 @@ namespace CW {
                 resource.Draw(render);
             }
 
+            if (m_DrawBeacons)
             {
                 CW_PROFILE_SCOPE("beacons draw");
-                for (const auto& beacon : m_Beacons)
+                for (const auto& beaconPair : m_Beacons)
                 {
-                    beacon->Draw(render);
+                    beaconPair.first->Draw(render);
                 }
             }
 
@@ -181,6 +181,8 @@ namespace CW {
             {
                 m_Drones.emplace_back(startPosition, sf::radians(angle), target);
             }
+
+            m_Resources.clear();
             CW_TRACE("Restarting simulation with {} drones", droneCount);
         }
 
@@ -248,6 +250,7 @@ namespace CW {
                 if (ImGui::Button("default beacon"))
                     Beacon::StaticInit();
 
+                ImGui::Checkbox("draw beacons", &m_DrawBeacons);
                 ImGui::Checkbox("show beacons info", &m_BeaconsInfo);
                 Beacon::DebugInterface();
             }
@@ -260,14 +263,17 @@ namespace CW {
             CW_PROFILE_FUNCTION();
             if (m_DeadBeacons)
             {
-                m_Beacons[m_Beacons.size() - m_DeadBeacons]->Revive(position, type);
+                auto& [beacon, index] = m_Beacons[m_Beacons.size() - m_DeadBeacons];
+                beacon->Revive(position, type);
+                index = m_BeaconChunks.AddObject(beacon);
                 --m_DeadBeacons;
             }
             else
             {
                 Beacon* newBeacon = m_AllocatorBeacon.Allocate();
                 newBeacon->Revive(position, type);
-                m_Beacons.push_back(newBeacon);
+                size_t index = m_BeaconChunks.AddObject(newBeacon);
+                m_Beacons.emplace_back(newBeacon, index);
             }
         }
 
@@ -275,18 +281,20 @@ namespace CW {
         Camera2D m_Camera;
         bool m_Hold = false;
 
-        std::vector<Beacon*> m_Beacons;
+        std::vector<std::pair<Beacon*, size_t>> m_Beacons;
         size_t m_DeadBeacons = 0;
-        ArenaAllocator<Beacon> m_AllocatorBeacon{1024};
+        ArenaAllocator<Beacon> m_AllocatorBeacon{ 1024 };
+        ChunkHandler<Beacon> m_BeaconChunks{ 500.0f };
 
         std::vector<Drone> m_Drones;
 
-        ResourceReciever m_ResourceReciever{ {1000.0f, 1000.0f} };
+        ResourceReciever m_ResourceReciever{ {0.0f, 0.0f} };
         std::vector<Resource> m_Resources;
 
         // Debug
         bool m_BeaconsInfo = false;
         bool m_DronesInfo = false;
+        bool m_DrawBeacons = true;
 
         ObjectPalleteBuilder m_ObjPallete;
     };
@@ -297,123 +305,3 @@ std::unique_ptr<CW::Application> create_program(int argc, const char** argv)
 {
     return std::make_unique<CW::MyApp>();
 }
-
-#else
-
-#include <SFML/Graphics.hpp>
-#include <imgui.h>
-#include <imgui-SFML.h>
-
-#include "debug_utils/Log.h"
-
-#include <ranges>
-
-int main() {
-    sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "hui");
-
-
-
-    window.setFramerateLimit(60);
-
-    float radius = 10.0f;
-    sf::CircleShape shape(radius);
-    shape.setFillColor(sf::Color::Green);
-
-    if (!ImGui::SFML::Init(window))
-    {
-        return -1;
-    }
-
-    bool showShape = true;
-    int counter = 0;
-    sf::Clock deltaClock;
-    auto& io = ImGui::GetIO();
-
-    sf::View camera{ {400, 300}, {800, 600} };
-    bool cameraMoving = false;
-    sf::Vector2i prevMousePos{ 0, 0 };
-    float zoomFactor = 1.0f;
-
-    while (window.isOpen()) {
-        while (const std::optional event = window.pollEvent()) {
-            ImGui::SFML::ProcessEvent(window, *event);
-
-            if (event->is<sf::Event::Closed>()) {
-                window.close();
-                break;
-            }
-
-            else if (auto e = event->getIf<sf::Event::MouseButtonPressed>())
-            {
-                cameraMoving = e->button == sf::Mouse::Button::Right;
-            }
-
-            else if (auto e = event->getIf<sf::Event::MouseButtonReleased>())
-            {
-                cameraMoving = e->button != sf::Mouse::Button::Right && cameraMoving;
-            }
-
-            else if (auto e = event->getIf<sf::Event::MouseMoved>())
-            {
-                if (cameraMoving)
-                    camera.move((sf::Vector2f)(prevMousePos - e->Position) * zoomFactor);
-
-                prevMousePos = e->Position;
-            }
-
-            else if (auto e = event->getIf<sf::Event::MouseWheelScrolled>())
-            {
-                if (e->delta < 0)
-                {
-                    camera.zoom(1.1f);
-                    zoomFactor *= 1.1f;
-                }
-
-                else if (e->delta > 0)
-                {
-                    camera.zoom(0.9f);
-                    zoomFactor *= 0.9f;
-                }
-            }
-        }
-
-        ImGui::SFML::Update(window, deltaClock.restart());
-
-        ImGui::Begin("Debug");
-        ImGui::Checkbox("Show shape", &showShape);
-        if (showShape)
-        {
-            ImGui::SliderFloat("radius", &radius, 10.0f, 200.0f);
-            shape.setRadius(radius);
-        }
-
-        ImGui::Text("camera position: (%.2f, %.2f)", camera.getCenter().x, camera.getCenter().y);
-        ImGui::Text("camera size: (%.2f, %.2f)", camera.getSize().x, camera.getSize().y);
-        ImGui::Text("zoom factor: %.2f", zoomFactor);
-
-        ImGui::End();
-
-        window.clear();
-
-        window.setView(camera);
-
-        shape.setPosition({ 0.0f, 0.0f });
-        if (showShape)
-            window.draw(shape);
-
-        shape.setPosition({10.0f, 100.0f});
-        if (showShape)
-            window.draw(shape);
-
-        ImGui::SFML::Render(window);
-        window.display();
-    }
-
-    ImGui::SFML::Shutdown();
-
-    return 0;
-}
-
-#endif
-
-//#endif

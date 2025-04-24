@@ -3,7 +3,7 @@
 
 namespace CW {
 
-	Chunk::Chunk(sf::Vector2i position, size_t reserve)
+	/*Chunk::Chunk(sf::Vector2i position, size_t reserve)
 	{
 		m_Objects.reserve(reserve);
 		m_AdjacentChunks.fill(nullptr);
@@ -11,7 +11,7 @@ namespace CW {
 
 	Chunk::Chunk(sf::Vector2i position, Chunk&& other) noexcept
 		: m_Objects(std::move(other.m_Objects)),
-		  m_Position(position)
+		  m_Index2D(position)
 	{
 	}
 
@@ -45,7 +45,7 @@ namespace CW {
 	{
 		std::swap(m_Objects[index], m_Objects.back());
 		m_Objects.pop_back();
-	}
+	}*/
 
 	/*ChunkPackage::ChunkIterator::ChunkIterator(Chunk* chunk)
 		: m_ChunkPtr(chunk)
@@ -72,27 +72,30 @@ namespace CW {
 		return nullptr;
 	}*/
 
+	/*ChunkHandler::ChunkHandler(float chunckSize)
+		: m_ChunkSize(chunckSize)
+	{
+	}
+
 	const Chunk* ChunkHandler::GetChunk(sf::Vector2f requaredPosition)
 	{
-		sf::Vector2i flooredPosition = static_cast<sf::Vector2i>(requaredPosition);
-		if (m_Chunks.contains(flooredPosition))
+		sf::Vector2i chunkIndex = positionToChunkIndex(requaredPosition);
+		if (m_Chunks.contains(chunkIndex))
 		{
-			return &m_Chunks.at(flooredPosition);
+			return &m_Chunks.at(chunkIndex);
 		}
 		return nullptr;
 	}
 
-	void ChunkHandler::AddObject(Object* object)
+	size_t ChunkHandler::AddObject(Object* object)
 	{
-		sf::Vector2i flooredPosition = static_cast<sf::Vector2i>(object->GetPos());
-		m_Chunks[flooredPosition].PushBack(object);
-		m_Size++;
+		sf::Vector2i chunkIndex = positionToChunkIndex(object->GetPos());
+		return m_Chunks[chunkIndex].PushBack(object);
 	}
 
-	size_t ChunkHandler::Size() const
+	sf::Vector2i ChunkHandler::positionToChunkIndex(sf::Vector2f position) const
 	{
-		return std::accumulate(m_Chunks.begin(), m_Chunks.end(), 0,
-			[](const Chunk& chunk) { return chunk.Size(); });
-	}
+		return sf::Vector2i(static_cast<int>(position.x / m_ChunkSize), static_cast<int>(position.y / m_ChunkSize));
+	}*/
 
 } // CW

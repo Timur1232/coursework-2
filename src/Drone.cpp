@@ -113,7 +113,7 @@ namespace CW {
         if (ImGui::SliderAngle("max turning delta", &tmp, 1.0f, 180.0f))
             s_MaxTurningDelta = sf::radians(tmp);
         
-        ImGui::SliderFloat2("view distanse", &s_ViewDistanse.x, 0.0f, 1000.0f);
+        ImGui::SliderFloat2("view distanse", &s_ViewDistanse.x, 0.0f, 500.0f);
         
         ImGui::SliderFloat("beacon spawn cooldown", &s_BeaconCooldownSec, 0.1f, 50.0f);
         ImGui::SliderFloat("wander cooldown", &s_WanderCooldownSec, 0.1f, 50.0f);
@@ -198,31 +198,22 @@ namespace CW {
         }
     }
 
-    void Drone::ReactToBeacons(const std::vector<Beacon*>& beacons)
+    void Drone::ReactToBeacons(const ChunkHandler<Beacon>& chunks)
     {
         //CW_PROFILE_FUNCTION();
         if (m_TargetResource)
             return;
 
-        const Beacon* furthestBeacon = nullptr;
-        float furthestDistSq = -1.0f;
+        ChunkPtr<Beacon> chunk = chunks.GetChunk(m_Position);
 
-        auto filteredBeacons = beacons
-            | std::views::filter([&](const Beacon* b) { return b->IsAlive() && b->GetType() == m_TargetType; });
-
-        for (const auto& beacon : filteredBeacons)
+        auto [furthestBeacon, furthestDistSq] = findFurthestInChunk(chunk.CenterChunk);
+        for (const Chunk<Beacon>* adjChunk : chunk.AdjacentChunks)
         {
-            if (auto positionDelta = beacon->GetPos() - m_Position;
-                (positionDelta.x != 0.0f || positionDelta.y != 0.0f)
-                && ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle).dot(positionDelta.normalized()) >= s_FOV)
+            auto [furthestInChunk, furthestDistSqInChunk] = findFurthestInChunk(adjChunk);
+            if (furthestInChunk && (!furthestBeacon || furthestDistSqInChunk < furthestDistSq))
             {
-                if (float distSq = distance_squared(beacon->GetPos(), m_Position);
-                    distSq <= s_ViewDistanse.y * s_ViewDistanse.y 
-                    && distSq >= s_ViewDistanse.x * s_ViewDistanse.x && distSq > furthestDistSq)
-                {
-                    furthestDistSq = distSq;
-                    furthestBeacon = beacon;
-                }
+                furthestBeacon = furthestInChunk;
+                furthestDistSq = furthestDistSqInChunk;
             }
         }
 
@@ -346,6 +337,35 @@ namespace CW {
             m_AttractionAngle = m_AttractionAngle.wrapSigned();
             m_WanderTimer = 0.0f;
         }
+    }
+
+    std::pair<const Beacon*, float> Drone::findFurthestInChunk(const Chunk<Beacon>* chunk)
+    {
+        if (!chunk)
+            return { nullptr, -1.0f };
+
+        const Beacon* furthestBeacon = nullptr;
+        float furthestDistSq = -1.0f;
+
+        auto filteredBeacons = *chunk
+            | std::views::filter([&](const Beacon* b) { return b && b->IsAlive() && b->GetType() == m_TargetType; });
+
+        for (const auto& beacon : filteredBeacons)
+        {
+            if (auto positionDelta = beacon->GetPos() - m_Position;
+                (positionDelta.x != 0.0f || positionDelta.y != 0.0f)
+                && ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle).dot(positionDelta.normalized()) >= s_FOV)
+            {
+                if (float distSq = distance_squared(beacon->GetPos(), m_Position);
+                    distSq <= s_ViewDistanse.y * s_ViewDistanse.y
+                    && distSq >= s_ViewDistanse.x * s_ViewDistanse.x && distSq > furthestDistSq)
+                {
+                    furthestDistSq = distSq;
+                    furthestBeacon = beacon;
+                }
+            }
+        }
+        return { furthestBeacon, furthestDistSq };
     }
 
     void Drone::setMeshPos(sf::Vector2f position) const

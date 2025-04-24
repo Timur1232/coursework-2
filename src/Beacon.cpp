@@ -9,7 +9,7 @@ namespace CW {
 	sf::CircleShape Beacon::s_Mesh;
 
 	float Beacon::s_ChargeThreshold = 0.05f;
-	float Beacon::s_DischargeRate = 0.02f;
+	float Beacon::s_DischargeRate = 0.2f;
 
 	Beacon::Beacon(sf::Vector2f position, TargetType type)
 		: Object(position), m_Type(type)
@@ -27,7 +27,7 @@ namespace CW {
 	void Beacon::DebugInterface()
 	{
 		ImGui::SliderFloat("charge threshold", &s_ChargeThreshold, 0.0f, 1.0f);
-		ImGui::SliderFloat("discharge rate", &s_DischargeRate, 0.0f, 1.0f);
+		ImGui::SliderFloat("discharge rate", &s_DischargeRate, 0.1f, 100.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
 	}
 
 	void Beacon::InfoInterface(size_t index, bool* open) const
@@ -53,7 +53,7 @@ namespace CW {
 		}
 		else
 		{
-			m_Charge -= s_DischargeRate * deltaTime.asSeconds();
+			m_Charge -= s_DischargeRate / 100.0f * deltaTime.asSeconds();
 		}
 	}
 
