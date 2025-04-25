@@ -68,8 +68,8 @@ namespace CW {
 		const Chunk* const m_CenterChunk;
 	};*/
 
-
-	template <class T>
+	// TODO: сделать что-то с RESERVE
+	template <std::derived_from<Object> T, size_t RESERVE = 32>
 	class Chunk
 	{
 	public:
@@ -77,25 +77,20 @@ namespace CW {
 		using const_ObjectIterator = std::vector<T*>::const_iterator;
 
 	public:
-		Chunk() = default;
-		Chunk(sf::Vector2i position, size_t reserve = 32)
+		Chunk()
 		{
-			m_Objects.reserve(reserve);
+			m_Objects.reserve(RESERVE);
 		}
 
-		explicit Chunk(sf::Vector2i position, Chunk&& other) noexcept
-			: m_Objects(std::move(other.m_Objects)),
-		  	  m_Index2D(position)
+		explicit Chunk(Chunk<T>&& other) noexcept
+			: m_Objects(std::move(other.m_Objects))
 		{
 		}
 
-		[[nodiscard]] const Chunk& operator=(Chunk&& other) noexcept
+		[[nodiscard]] const Chunk<T>& operator=(Chunk<T>&& other) noexcept
 		{
 			m_Objects = std::move(other.m_Objects);
 		}
-
-		[[nodiscard]] inline sf::Vector2i GetIndex2D() const { return m_Index2D; }
-		[[nodiscard]] inline void SetIndex2D(sf::Vector2i position) { m_Index2D = position; }
 
 		[[nodiscard]] inline bool Empty() const { return m_Objects.empty(); }
 		[[nodiscard]] inline bool Size() const { return m_Objects.size(); }
@@ -149,26 +144,27 @@ namespace CW {
 			m_Objects.pop_back();
 		}
 
-		inline void Erase(size_t index)
+		inline void ForgetObject(size_t index)
 		{
 			m_Objects[index] = nullptr;
 			++m_DeadPtrs;
 		}
 
 	private:
-		sf::Vector2i m_Index2D;
 		std::vector<T*> m_Objects;
 		size_t m_DeadPtrs = 0;
 	};
 
-	template <class T>
+
+	template <std::derived_from<Object> T>
 	struct ChunkPtr
 	{
 		const Chunk<T>* CenterChunk = nullptr;
 		std::array<const Chunk<T>*, 8> AdjacentChunks = nullptr;
 	};
 
-	template <class T>
+
+	template <std::derived_from<Object> T>
 	class ChunkHandler
 	{
 	public:
@@ -212,10 +208,10 @@ namespace CW {
 			return m_Chunks[chunkKey].PushBack(object);
 		}
 
-		void EraseObject(sf::Vector2f objectPosition, size_t index)
+		void ForgetObject(sf::Vector2f objectPosition, size_t index)
 		{
 			sf::Vector2i chunkKey = positionToChunkKey(objectPosition);
-			m_Chunks[chunkKey].Erase(index);
+			m_Chunks[chunkKey].ForgetObject(index);
 		}
 
 		[[nodiscard]] inline const std::unordered_map<sf::Vector2i, Chunk<T>>& GetAllChunks() const { return m_Chunks; }

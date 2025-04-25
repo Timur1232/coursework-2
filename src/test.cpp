@@ -61,7 +61,7 @@ namespace CW {
 
                     if (!m_Beacons[i].first->IsAlive())
                     {
-                        m_BeaconChunks.EraseObject(m_Beacons[i].first->GetPos(), m_Beacons[i].second);
+                        m_BeaconChunks.ForgetObject(m_Beacons[i].first->GetPos(), m_Beacons[i].second);
                         ++m_DeadBeacons;
                         std::swap(m_Beacons[i], m_Beacons[m_Beacons.size() - m_DeadBeacons]);
                     }
