@@ -128,6 +128,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Beacon.cpp" />
+    <ClCompile Include="src\BitDirection.cpp" />
     <ClCompile Include="src\debug_utils\LineShape.cpp" />
     <ClCompile Include="src\engine\Chunks.cpp" />
     <ClCompile Include="src\ObjectPallete.cpp" />
@@ -153,6 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Beacon.h" />
+    <ClInclude Include="src\BitDirection.h" />
     <ClInclude Include="src\debug_utils\LineShape.h" />
     <ClInclude Include="src\engine\Object.h" />
     <ClInclude Include="src\ObjectPallete.h" />

@@ -3,6 +3,7 @@
 
 #include "utils/utils.h"
 #include "debug_utils/Profiler.h"
+#include "BitDirection.h"
 
 namespace CW {
 
@@ -11,8 +12,8 @@ namespace CW {
 	float Beacon::s_ChargeThreshold = 0.05f;
 	float Beacon::s_DischargeRate = 0.2f;
 
-	Beacon::Beacon(sf::Vector2f position, TargetType type)
-		: Object(position), m_Type(type)
+	Beacon::Beacon(sf::Vector2f position, TargetType type, uint8_t bitDirection)
+		: Object(position), m_Type(type), m_BitDirection(bitDirection)
 	{
 		s_Mesh.setPosition(m_Position);
 	}
@@ -67,12 +68,22 @@ namespace CW {
 		}
 	}
 
-	void Beacon::Revive(sf::Vector2f newPosition, TargetType newType)
+	void Beacon::Revive(sf::Vector2f newPosition, TargetType newType, uint8_t bitDirection)
 	{
 		m_Charge = 1.0f;
 		m_Position = newPosition;
 		m_Type = newType;
 		m_Alive = true;
+		m_BitDirection = bitDirection;
+	}
+
+	sf::Angle Beacon::GetDirectionAngle() const
+	{
+		if (m_BitDirection == None)
+		{
+			return sf::Angle::Zero;
+		}
+		return DIRECTION_ANGLE_TABLE.at(m_BitDirection);
 	}
 
 	sf::Color Beacon::beaconColor() const

@@ -9,6 +9,8 @@ struct CreateBeacon
 {
 	sf::Vector2f Position;
 	CW::TargetType Type;
+	uint8_t BitDirection;
+
 };
 
 class CreateBeaconObs

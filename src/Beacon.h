@@ -17,7 +17,7 @@ namespace CW {
 	{
 	public:
 		Beacon() = default;
-		Beacon(sf::Vector2f position, TargetType type);
+		Beacon(sf::Vector2f position, TargetType type, uint8_t bitDirection);
 
 		static void StaticInit();
 
@@ -29,15 +29,18 @@ namespace CW {
 
 		[[nodiscard]] inline bool IsAlive() const { return m_Alive; }
 
-		void Revive(sf::Vector2f newPosition, TargetType newType);
+		void Revive(sf::Vector2f newPosition, TargetType newType, uint8_t bitDirection);
 
 		[[nodiscard]] inline TargetType GetType() const { return m_Type; }
+		[[nodiscard]] inline uint8_t GetBitDirection() const { return m_BitDirection; }
+		[[nodiscard]] sf::Angle GetDirectionAngle() const;
 
 	private:
 		[[nodiscard]] sf::Color beaconColor() const;
 
 	private:
 		TargetType m_Type = TargetType::None;
+		uint8_t m_BitDirection = 0;
 		float m_Charge = 1.0f;
 		bool m_Alive = true;
 

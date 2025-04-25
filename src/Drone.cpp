@@ -7,6 +7,8 @@
 #include "debug_utils/Profiler.h"
 #include "debug_utils/Log.h"
 
+#include "BitDirection.h"
+
 namespace CW {
 
     sf::CircleShape Drone::s_Mesh;
@@ -145,7 +147,9 @@ namespace CW {
         m_BeaconTimerSec -= deltaTime.asSeconds();
         if (m_BeaconTimerSec <= 0)
         {
-            EventHandler::Get().AddEvent(CreateBeacon{ m_Position, opposite_target_type(m_TargetType)});
+            EventHandler::Get()
+                .AddEvent(CreateBeacon{ m_Position, opposite_target_type(m_TargetType),
+                    angle_to_bit_direction((m_DirectionAngle + sf::degrees(180.0f)).wrapSigned()) });
             m_BeaconTimerSec = s_BeaconCooldownSec;
         }
 
@@ -219,7 +223,8 @@ namespace CW {
 
         if (furthestBeacon)
         {
-            m_AttractionAngle = (furthestBeacon->GetPos() - m_Position).angle();
+            //m_AttractionAngle = (furthestBeacon->GetPos() - m_Position).angle();
+            m_AttractionAngle = furthestBeacon->GetDirectionAngle();
             m_WanderTimer = s_WanderCooldownSec;
         }
     }

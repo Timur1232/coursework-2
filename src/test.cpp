@@ -14,6 +14,7 @@
 #include "Beacon.h"
 #include "Drone.h"
 
+#include "BitDirection.h"
 
 namespace CW {
 
@@ -38,6 +39,13 @@ namespace CW {
             Drone::StaticInit();
             Beacon::StaticInit();
             Resource::StaticInit();
+
+            sf::Angle a = sf::Angle::Zero;
+            for (int i = 0; i < 36; ++i)
+            {
+                CW_MSG("{:.2f} => {:0b}", a.asDegrees(), angle_to_bit_direction(a));
+                a += sf::degrees(10);
+            }
         }
 
         void Update(sf::Time deltaTime) override
@@ -137,7 +145,7 @@ namespace CW {
                 {
                 case ObjectPallete::Beacon:
                 {
-                    createBeacon(m_Camera.WorldPosition(e->position), m_ObjPallete.GetBeaconType());
+                    createBeacon(m_Camera.WorldPosition(e->position), m_ObjPallete.GetBeaconType(), 0);
                     break;
                 }
                 case ObjectPallete::Drone:
@@ -163,7 +171,7 @@ namespace CW {
 
         void OnCreateBeacon(const CreateBeacon* e) override
         {
-            createBeacon(e->Position, e->Type);
+            createBeacon(e->Position, e->Type, e->BitDirection);
         }
 
         void RestartSim(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource)
@@ -258,20 +266,20 @@ namespace CW {
         }
 
     private:
-        void createBeacon(sf::Vector2f position, TargetType type)
+        void createBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection)
         {
             CW_PROFILE_FUNCTION();
             if (m_DeadBeacons)
             {
                 auto& [beacon, index] = m_Beacons[m_Beacons.size() - m_DeadBeacons];
-                beacon->Revive(position, type);
+                beacon->Revive(position, type, 0);
                 index = m_BeaconChunks.AddObject(beacon);
                 --m_DeadBeacons;
             }
             else
             {
                 Beacon* newBeacon = m_AllocatorBeacon.Allocate();
-                newBeacon->Revive(position, type);
+                newBeacon->Revive(position, type, 0);
                 size_t index = m_BeaconChunks.AddObject(newBeacon);
                 m_Beacons.emplace_back(newBeacon, index);
             }

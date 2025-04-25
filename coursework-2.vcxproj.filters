@@ -63,6 +63,9 @@
     <ClCompile Include="src\engine\Chunks.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="src\BitDirection.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dependencies\SFML-3.0.0\include\SFML\Audio\AudioResource.hpp">
@@ -441,6 +444,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\Object.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BitDirection.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
