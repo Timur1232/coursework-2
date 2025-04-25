@@ -42,11 +42,31 @@ namespace CW {
 		return a > 0 && b < 0 || a < 0 && b > 0;
 	}
 
+	template <class T>
+	constexpr inline T abs(T a)
+	{
+		return (a < 0) ? -a : a;
+	}
+
+	template <class T>
+	constexpr inline bool in_between(const T& a, const T& alpha, const T& epsilon)
+	{
+		return a <= alpha + epsilon && a > alpha - epsilon;
+	}
+
+	template <class T>
+	constexpr inline bool in_between_abs(const T& a, const T& alpha, const T& epsilon)
+	{
+		return abs(a) <= alpha + epsilon && abs(a) > alpha - epsilon;
+	}
+
 
 	namespace angle {
 
 		constexpr inline float PI = sf::priv::pi;
-		constexpr inline float HALF_PI = sf::priv::pi / 2.0f;
+		constexpr inline float PI_2 = sf::priv::pi / 2.0f;
+		constexpr inline float PI_4 = sf::priv::pi / 4.0f;
+		constexpr inline float PI_6 = sf::priv::pi / 6.0f;
 
 		enum class Quarter
 		{

@@ -7,6 +7,7 @@
 #include "engine/Object.h"
 
 #include "TargetType.h"
+#include "BitDirection.h"
 
 namespace CW {
 
@@ -40,7 +41,7 @@ namespace CW {
 
 	private:
 		TargetType m_Type = TargetType::None;
-		uint8_t m_BitDirection = 0;
+		uint8_t m_BitDirection = DirectionBit::None;
 		float m_Charge = 1.0f;
 		bool m_Alive = true;
 

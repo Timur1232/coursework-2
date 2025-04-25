@@ -39,6 +39,7 @@ namespace CW {
 		ImGui::Text("alive: %d", m_Alive);
 		ImGui::Text("beacon position: (%.2f, %.2f)", m_Position.x, m_Position.y);
 		ImGui::Text("beacon charge: %.3f", m_Charge);
+		ImGui::Text("beacon direction: %d", m_BitDirection);
 		ImGui::End();
 	}
 
@@ -79,7 +80,7 @@ namespace CW {
 
 	sf::Angle Beacon::GetDirectionAngle() const
 	{
-		if (m_BitDirection == None)
+		if (m_BitDirection == DirectionBit::None)
 		{
 			return sf::Angle::Zero;
 		}

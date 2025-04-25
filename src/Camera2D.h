@@ -32,6 +32,7 @@ namespace CW {
 		void OnResized(const sf::Event::Resized* e) override;
 
 		const sf::View& GetView() const;
+		const float GetZoomFactor() const;
 
 		sf::Vector2f WorldPosition(sf::Vector2i mousePos) const;
 

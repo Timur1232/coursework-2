@@ -100,6 +100,7 @@ namespace CW {
 		[[nodiscard]] inline bool Empty() const { return m_Objects.empty(); }
 		[[nodiscard]] inline bool Size() const { return m_Objects.size(); }
 		[[nodiscard]] inline bool Capacity() const { return m_Objects.capacity(); }
+		inline void Clear() { m_Objects.clear(); }
 
 		[[nodiscard]] ObjectIterator begin()
 		{
@@ -150,8 +151,6 @@ namespace CW {
 
 		inline void Erase(size_t index)
 		{
-			/*std::swap(m_Objects[index], m_Objects.back());
-			m_Objects.pop_back();*/
 			m_Objects[index] = nullptr;
 			++m_DeadPtrs;
 		}
@@ -182,10 +181,10 @@ namespace CW {
 		[[nodiscard]] ChunkPtr<T> GetChunk(sf::Vector2f requaredPosition) const
 		{
 			ChunkPtr<T> chunk;
-			sf::Vector2i chunkIndex = positionToChunkIndex(requaredPosition);
-			if (m_Chunks.contains(chunkIndex))
+			sf::Vector2i chunkKey = positionToChunkKey(requaredPosition);
+			if (m_Chunks.contains(chunkKey))
 			{
-				chunk.CenterChunk = &m_Chunks.at(chunkIndex);
+				chunk.CenterChunk = &m_Chunks.at(chunkKey);
 			}
 
 			size_t i = 0;
@@ -195,7 +194,7 @@ namespace CW {
 				{
 					if (offsetX == 0 && offsetY == 0)
 						continue;
-					sf::Vector2i offset = chunkIndex + sf::Vector2i(offsetX, offsetY);
+					sf::Vector2i offset = chunkKey + sf::Vector2i(offsetX, offsetY);
 					if (m_Chunks.contains(offset))
 					{
 						chunk.AdjacentChunks[i] = &m_Chunks.at(offset);
@@ -207,29 +206,43 @@ namespace CW {
 			return chunk;
 		}
 
-		size_t AddObject(T* object)
+		[[nodiscard]] size_t AddObject(T* object)
 		{
-			sf::Vector2i chunkIndex = positionToChunkIndex(object->GetPos());
-			//CW_TRACE("Beacon added to chunk: ({}, {})", chunkIndex.x, chunkIndex.y);
-			return m_Chunks[chunkIndex].PushBack(object);
+			sf::Vector2i chunkKey = positionToChunkKey(object->GetPos());
+			return m_Chunks[chunkKey].PushBack(object);
 		}
 
 		void EraseObject(sf::Vector2f objectPosition, size_t index)
 		{
-			sf::Vector2i chunkIndex = positionToChunkIndex(objectPosition);
-			m_Chunks[chunkIndex].Erase(index);
-			//CW_TRACE("Beacon erased from chunk: ({}, {})", chunkIndex.x, chunkIndex.y);
+			sf::Vector2i chunkKey = positionToChunkKey(objectPosition);
+			m_Chunks[chunkKey].Erase(index);
+		}
+
+		[[nodiscard]] inline const std::unordered_map<sf::Vector2i, Chunk<T>>& GetAllChunks() const { return m_Chunks; }
+		[[nodiscard]] inline size_t Size() const { return m_Chunks.size(); }
+
+		void Clear()
+		{
+			for (auto& [key, chunk] : m_Chunks)
+			{
+				chunk.Clear();
+			}
 		}
 
 	private:
-		sf::Vector2i positionToChunkIndex(sf::Vector2f position) const
+		sf::Vector2i positionToChunkKey(sf::Vector2f position) const
 		{
-			return sf::Vector2i(static_cast<int>(position.x / m_ChunkSize), static_cast<int>(position.y / m_ChunkSize));
+			sf::Vector2i key(static_cast<int>(position.x / m_ChunkSize), static_cast<int>(position.y / m_ChunkSize));
+			if (position.x < 0)
+				key.x--;
+			if (position.y < 0)
+				key.y--;
+			return key;
 		}
 
 	private:
 		std::unordered_map<sf::Vector2i, Chunk<T>> m_Chunks;
-		float m_ChunkSize = 10.0f;
+		float m_ChunkSize = 500.0f;
 	};
 
 } // CW

@@ -71,6 +71,11 @@ namespace CW {
 		return m_View;
 	}
 
+	const float Camera2D::GetZoomFactor() const
+	{
+		return m_ZoomFactor;
+	}
+
 	sf::Vector2f Camera2D::WorldPosition(sf::Vector2i mousePos) const
 	{
 		return sf::Vector2f(

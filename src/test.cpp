@@ -40,12 +40,10 @@ namespace CW {
             Beacon::StaticInit();
             Resource::StaticInit();
 
-            sf::Angle a = sf::Angle::Zero;
-            for (int i = 0; i < 36; ++i)
-            {
-                CW_MSG("{:.2f} => {:0b}", a.asDegrees(), angle_to_bit_direction(a));
-                a += sf::degrees(10);
-            }
+            m_ChunkMesh.setSize({ 500.0f, 500.0f });
+            m_ChunkMesh.setFillColor(sf::Color::Transparent);
+            m_ChunkMesh.setOutlineThickness(2.0f);
+            m_ChunkMesh.setOutlineColor({ 255, 255, 255, 180 });
         }
 
         void Update(sf::Time deltaTime) override
@@ -98,6 +96,17 @@ namespace CW {
         {
             CW_PROFILE_FUNCTION();
             render.setView(m_Camera.GetView());
+
+            if (m_DrawChunks)
+            {
+                m_ChunkMesh.setOutlineThickness(m_Camera.GetZoomFactor());
+                for (const auto& [key, _] : m_BeaconChunks.GetAllChunks())
+                {
+                    sf::Vector2f chunkPos = static_cast<sf::Vector2f>(key) * 500.0f;
+                    m_ChunkMesh.setPosition(chunkPos);
+                    render.draw(m_ChunkMesh);
+                }
+            }
 
             m_ResourceReciever.Draw(render);
             
@@ -180,6 +189,7 @@ namespace CW {
             m_AllocatorBeacon.Deallocate();
             m_Beacons.reserve(BEACONS_RESERVE);
             m_DeadBeacons = 0;
+            m_BeaconChunks.Clear();
 
             m_Drones.clear();
             m_Drones.reserve(droneCount);
@@ -212,6 +222,10 @@ namespace CW {
                 ImGui::Spacing();
                 ImGui::Text("mouse hovering on any window: %d", ImGui::GetIO().WantCaptureMouse);
                 m_Camera.DebugInterface();
+
+                ImGui::Spacing();
+                ImGui::Text("chunks amount: %d", m_BeaconChunks.Size());
+                ImGui::Checkbox("draw chunks (dangerous!)", &m_DrawChunks);
             }
 
             if (ImGui::CollapsingHeader("Object-pallete"))
@@ -272,14 +286,14 @@ namespace CW {
             if (m_DeadBeacons)
             {
                 auto& [beacon, index] = m_Beacons[m_Beacons.size() - m_DeadBeacons];
-                beacon->Revive(position, type, 0);
+                beacon->Revive(position, type, bitDirection);
                 index = m_BeaconChunks.AddObject(beacon);
                 --m_DeadBeacons;
             }
             else
             {
                 Beacon* newBeacon = m_AllocatorBeacon.Allocate();
-                newBeacon->Revive(position, type, 0);
+                newBeacon->Revive(position, type, bitDirection);
                 size_t index = m_BeaconChunks.AddObject(newBeacon);
                 m_Beacons.emplace_back(newBeacon, index);
             }
@@ -305,6 +319,9 @@ namespace CW {
         bool m_DrawBeacons = true;
 
         ObjectPalleteBuilder m_ObjPallete;
+
+        bool m_DrawChunks = false;
+        mutable sf::RectangleShape m_ChunkMesh;
     };
 
 } // CW

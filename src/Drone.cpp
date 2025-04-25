@@ -71,8 +71,8 @@ namespace CW {
         s_FOVVisual[0].setLength(s_ViewDistanse.y);
         s_FOVVisual[1].setLength(s_ViewDistanse.y);
 
-        s_Speed = 50.0f;
-        s_TurningSpeed = sf::degrees(5.0f);
+        s_Speed = 100.0f;
+        s_TurningSpeed = sf::degrees(15.0f);
 
         s_FOV = 0.5f;
         s_FOVRad = std::acos(s_FOV);
@@ -96,7 +96,7 @@ namespace CW {
         ImGui::Checkbox("show direction", &s_DrawDirection);
         if (ImGui::SliderFloat("fov", &s_FOV, 0.0f, 1.0f))
             s_FOVRad = std::acos(s_FOV);
-        ImGui::SliderFloat("speed", &s_Speed, 10.0f, 100.0f);
+        ImGui::SliderFloat("speed", &s_Speed, 50.0f, 200.0f);
         
         static float tmp;
         tmp = s_TurningSpeed.asRadians();
