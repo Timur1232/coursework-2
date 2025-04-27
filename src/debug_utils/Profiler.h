@@ -117,7 +117,7 @@ namespace CW {
 
 } // CW
 
-#define CW_PROFILING 0
+#define CW_PROFILING 1
 #if CW_PROFILING
 	#define CW_START_PROFILE_SESSION(name) ::CW::Profiler::Get().StartSession(name);
 	#define CW_END_PROFILE_SESSION() ::CW::Profiler::Get().EndSession();

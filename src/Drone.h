@@ -52,6 +52,8 @@ namespace CW {
 		Resource* m_TargetResource = nullptr;
 
 		int m_CarriedResources = 0;
+		float m_BeaconTimerSec = s_BeaconCooldownSec;
+		float m_WanderTimer = 0.0f;
 
 		//=================[static]=================//
 		static constexpr sf::Vector2f ONE_LENGTH_VEC = { 1.0f, 0.0f };
@@ -71,9 +73,6 @@ namespace CW {
 		static sf::Angle s_RandomWanderAngle;
 		static sf::Angle s_WanderAngleThreshold;
 		static sf::Angle s_MaxTurningDelta;
-
-		float m_BeaconTimerSec = s_BeaconCooldownSec;
-		float m_WanderTimer = 0.0f;
 
 		// Debug
 		static sf::CircleShape s_Mesh;
