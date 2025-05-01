@@ -68,8 +68,8 @@ namespace CW {
         s_MeshViewDistance.setOutlineThickness(1.0f);
 
         s_ViewDistanse = { 70.0f, 250.0f };
-        s_FOVVisual[0].setLength(s_ViewDistanse.y);
-        s_FOVVisual[1].setLength(s_ViewDistanse.y);
+        s_FOVVisual[0].SetLength(s_ViewDistanse.y);
+        s_FOVVisual[1].SetLength(s_ViewDistanse.y);
 
         s_Speed = 100.0f;
         s_TurningSpeed = sf::degrees(15.0f);
@@ -386,14 +386,14 @@ namespace CW {
         }
         if (s_DrawViewDistance)
         {
-            s_FOVVisual[0].setPosition(m_Position);
-            s_FOVVisual[1].setPosition(m_Position);
+            s_FOVVisual[0].SetPosition(m_Position);
+            s_FOVVisual[1].SetPosition(m_Position);
 
-            s_FOVVisual[0].setRotation(m_DirectionAngle);
-            s_FOVVisual[1].setRotation(m_DirectionAngle);
+            s_FOVVisual[0].SetRotation(m_DirectionAngle);
+            s_FOVVisual[1].SetRotation(m_DirectionAngle);
 
-            s_FOVVisual[0].rotateByPoint1(sf::radians(s_FOVRad));
-            s_FOVVisual[1].rotateByPoint1(sf::radians(-s_FOVRad));
+            s_FOVVisual[0].RotateByPoint1(sf::radians(s_FOVRad));
+            s_FOVVisual[1].RotateByPoint1(sf::radians(-s_FOVRad));
         }
     }
 

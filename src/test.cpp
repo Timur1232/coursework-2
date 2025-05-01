@@ -78,12 +78,12 @@ namespace CW {
                 for (auto& drone : m_Drones)
                 {
                     drone.Update(deltaTime);
-                    
+
                     drone.ReactToResources(m_Resources);
 
                     if (!drone.ReactToResourceReciver(m_ResourceReciever))
                         drone.ReactToBeacons(m_BeaconChunks);
-                    
+
                     if (m_DronesInfo)
                         drone.InfoInterface(index, &m_DronesInfo);
                     ++index;
@@ -136,8 +136,8 @@ namespace CW {
                 }
             }
 
+            m_Terrain.SetLineThickness(m_Camera.GetZoomFactor());
             m_Terrain.Draw(render);
-
         }
 
         void OnClosed() override

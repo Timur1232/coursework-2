@@ -14,20 +14,22 @@ namespace CW {
 
         void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-        void setPoint1(sf::Vector2f p1);
-        void setPoint2(sf::Vector2f p2);
+        void SetPoint1(sf::Vector2f p1);
+        void SetPoint2(sf::Vector2f p2);
 
         // Относительно первой точки
-        void setLength(float length);
+        void SetLength(float length);
 
-        void rotateByPoint1(sf::Angle angle);
-        void rotateByPoint2(sf::Angle angle);
+        void RotateByPoint1(sf::Angle angle);
+        void RotateByPoint2(sf::Angle angle);
 
         // Относительно первой точки
-        void setRotation(sf::Angle angle);
+        void SetRotation(sf::Angle angle);
 
-        void setFillColor(sf::Color color);
-        void setPosition(sf::Vector2f position);
+        void SetFillColor(sf::Color color);
+        void SetPosition(sf::Vector2f position);
+
+        void SetThickness(float thickness);
         
     private:
         sf::Vector2f m_Point1;
