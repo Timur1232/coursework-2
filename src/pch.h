@@ -39,6 +39,10 @@
 #include <imgui.h>
 #include <imgui-sfml/imgui-SFML.h>
 
+//========================[FastNoise]========================//
+
+#include <FastNoise.h>
+
 //========================[glm]========================//
 
 //#include <glm/glm.hpp>

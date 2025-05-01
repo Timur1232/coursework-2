@@ -75,7 +75,7 @@
       <PreprocessorDefinitions>SFML_STATIC;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies/SFML-3.0.0/include;$(SolutionDir)src;$(SolutionDir)dependencies/imgui;$(SolutionDir)dependencies/imgui-sfml;$(SolutionDir)dependencies/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies/SFML-3.0.0/include;$(SolutionDir)src;$(SolutionDir)dependencies/imgui;$(SolutionDir)dependencies/imgui-sfml;$(SolutionDir)dependencies/include;$(SolutionDir)dependencies/FastNoise</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -83,7 +83,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)dependencies/SFML-3.0.0/lib/x64;$(SolutionDir)dependencies/SFML-3.0.0/lib/x64/Debug;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sfml-graphics-s-d.lib;sfml-system-s-d.lib;sfml-window-s-d.lib;gdi32.lib;winmm.lib;opengl32.lib;%(AdditionalDependencies);$(SolutionDir)x64\Debug\imgui.lib</AdditionalDependencies>
+      <AdditionalDependencies>sfml-graphics-s-d.lib;sfml-system-s-d.lib;sfml-window-s-d.lib;gdi32.lib;winmm.lib;opengl32.lib;%(AdditionalDependencies);$(SolutionDir)x64\Debug\imgui.lib;$(SolutionDir)x64\Debug\FastNoise.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
@@ -93,7 +93,7 @@
       <PreprocessorDefinitions>CW_TEST;SFML_STATIC;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies/SFML-3.0.0/include;$(SolutionDir)src;$(SolutionDir)dependencies/imgui;$(SolutionDir)dependencies/imgui-sfml</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies/SFML-3.0.0/include;$(SolutionDir)src;$(SolutionDir)dependencies/imgui;$(SolutionDir)dependencies/imgui-sfml;;$(SolutionDir)dependencies/FastNoise</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -113,7 +113,7 @@
       <PreprocessorDefinitions>SFML_STATIC;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies/SFML-3.0.0/include;$(SolutionDir)src;$(SolutionDir)dependencies/imgui;$(SolutionDir)dependencies/imgui-sfml</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies/SFML-3.0.0/include;$(SolutionDir)src;$(SolutionDir)dependencies/imgui;$(SolutionDir)dependencies/imgui-sfml;;$(SolutionDir)dependencies/FastNoise</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -123,7 +123,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)dependencies\SFML-3.0.0\lib\x64;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sfml-graphics-s.lib;sfml-system-s.lib;sfml-window-s.lib;gdi32.lib;winmm.lib;opengl32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies);$(SolutionDir)x64\Release\imgui.lib;</AdditionalDependencies>
+      <AdditionalDependencies>sfml-graphics-s.lib;sfml-system-s.lib;sfml-window-s.lib;gdi32.lib;winmm.lib;opengl32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies);$(SolutionDir)x64\Release\imgui.lib;$(SolutionDir)x64\Release\FastNoise.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -149,6 +149,7 @@
     <ClCompile Include="src\Resource.cpp" />
     <ClCompile Include="src\ResourceReciever.cpp" />
     <ClCompile Include="src\TargetType.cpp" />
+    <ClCompile Include="src\Terrain.cpp" />
     <ClCompile Include="src\test.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />
   </ItemGroup>
@@ -277,6 +278,7 @@
     <ClInclude Include="src\engine\EntryPoint.h" />
     <ClInclude Include="src\engine\IUpdate.h" />
     <ClInclude Include="src\engine\UserEvent.h" />
+    <ClInclude Include="src\Terrain.h" />
     <ClInclude Include="src\utils\ArenaAllocator.h" />
     <ClInclude Include="src\engine\Chunks.h" />
     <ClInclude Include="src\utils\utils.h" />

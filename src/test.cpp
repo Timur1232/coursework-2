@@ -16,6 +16,8 @@
 
 #include "BitDirection.h"
 
+#include "Terrain.h"
+
 namespace CW {
 
     constexpr size_t BEACONS_RESERVE = 1024 * 1024;
@@ -44,6 +46,8 @@ namespace CW {
             m_ChunkMesh.setFillColor(sf::Color::Transparent);
             m_ChunkMesh.setOutlineThickness(2.0f);
             m_ChunkMesh.setOutlineColor({ 255, 255, 255, 180 });
+
+            m_Terrain.Generate(0);
         }
 
         void Update(sf::Time deltaTime) override
@@ -131,6 +135,9 @@ namespace CW {
                     drone.Draw(render);
                 }
             }
+
+            m_Terrain.Draw(render);
+
         }
 
         void OnClosed() override
@@ -313,6 +320,8 @@ namespace CW {
         ResourceReciever m_ResourceReciever{ {0.0f, 0.0f} };
         std::vector<Resource> m_Resources;
 
+        Terrain m_Terrain;
+
         // Debug
         bool m_BeaconsInfo = false;
         bool m_DronesInfo = false;
@@ -322,6 +331,7 @@ namespace CW {
 
         bool m_DrawChunks = false;
         mutable sf::RectangleShape m_ChunkMesh;
+
     };
 
 } // CW
