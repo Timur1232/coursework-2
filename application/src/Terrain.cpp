@@ -11,32 +11,22 @@ namespace CW {
 		Samples.fill(0);
 	}
 
-	/*TerrainSection::TerrainSection(TerrainSection&& other)
-		: GlobalPosition(other.GlobalPosition), Samples(std::forward<std::vector<int>>(other.Samples))
-	{
-	}
-
-	const TerrainSection& TerrainSection::operator=(TerrainSection&& other)
-	{
-		GlobalPosition = other.GlobalPosition;
-		Samples = std::forward<std::vector<int>>(other.Samples);
-		return *this;
-	}*/
-
-	void TerrainSection::Generate(FastNoise& gen, float maxHeight, float stepX)
+	void TerrainSection::Generate(NoiseGenerator& gen, int seed, float maxHeight)
 	{
 		float x = static_cast<float>(GlobalPosition * TERRAIN_SECTION_SIZE);
+		float stepX = 10.0f / static_cast<float>(TERRAIN_SECTION_SIZE);
+
 		for (auto& sample : Samples)
 		{
-			float normalizedNoiseValue = (gen.GetPerlin(x, 0.0f) + 1.0f) / 2.0f;
+			float normalizedNoiseValue = (gen->GenSingle2D(x, 0.0f, seed) + 1.0f) / 2.0f;
 			sample = normalizedNoiseValue * maxHeight;
 			x += stepX;
 		}
 	}
 
 	Terrain::Terrain()
+		: m_NoiseGenerator(FastNoise::New<FastNoise::Perlin>())
 	{
-		m_NoiseGenerator.SetSeed(std::time(0));
 	}
 
 	void Terrain::Generate(int position)
@@ -52,7 +42,7 @@ namespace CW {
 		}
 
 		m_TerrainSections.emplace_back(position);
-		m_TerrainSections.back().Generate(m_NoiseGenerator, m_MaxHeight, m_StepX);
+		m_TerrainSections.back().Generate(m_NoiseGenerator, m_Seed, m_MaxHeight);
 	}
 
 	void Terrain::Draw(sf::RenderWindow& render) const

@@ -8,6 +8,7 @@
 namespace CW {
 
 	constexpr size_t TERRAIN_SECTION_SIZE = 150;
+	using NoiseGenerator = FastNoise::SmartNode<FastNoise::Perlin>;
 
 	struct TerrainSection
 	{
@@ -15,7 +16,7 @@ namespace CW {
 		/*TerrainSection(TerrainSection&& other);
 		const TerrainSection& operator=(TerrainSection&& other);*/
 
-		void Generate(FastNoise& gen, float maxHeight, float stepX = 1.0f);
+		void Generate(NoiseGenerator& gen, int seed, float maxHeight);
 
 		int GlobalPosition;
 		std::array<int, TERRAIN_SECTION_SIZE> Samples;
@@ -36,10 +37,10 @@ namespace CW {
 
 	private:
 		std::vector<TerrainSection> m_TerrainSections;
-		FastNoise m_NoiseGenerator;
+		NoiseGenerator m_NoiseGenerator;
+		int m_Seed = 69420;
 
 		float m_MaxHeight = 1000.0f;
-		float m_StepX = 20.0f;
 
 		// Debug
 		mutable LineShape m_LineMesh;
