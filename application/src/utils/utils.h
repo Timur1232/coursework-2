@@ -92,4 +92,29 @@ namespace CW {
 		return (v1 - v2).lengthSquared();
 	}
 
+	template <class T>
+	struct Indexed
+	{
+		T Object;
+		size_t Index = 0;
+
+		Indexed() = default;
+
+		template <class... Args_t>
+		Indexed(Args_t&&... args)
+			: Object(std::forward<Args_t>(args)...)
+		{
+		}
+
+		T& operator->()
+		{
+			return Object;
+		}
+
+		const T& operator->() const
+		{
+			return Object;
+		}
+	};
+
 } // CW

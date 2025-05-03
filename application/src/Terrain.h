@@ -30,7 +30,7 @@ namespace CW {
 
 		void Generate(int position);
 
-		void Draw(sf::RenderWindow& render) const override;
+		void Draw(sf::RenderWindow& render) override;
 
 		// Debug
 		void SetLineThickness(float thickness) const;

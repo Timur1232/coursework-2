@@ -20,7 +20,6 @@
 
 namespace CW {
 
-    constexpr size_t BEACONS_RESERVE = 1024 * 1024;
 
     class MyApp
         : public Application,
@@ -57,19 +56,7 @@ namespace CW {
 
             {
                 CW_PROFILE_SCOPE("beacons update");
-                for (size_t i = 0; i < m_Beacons.size() - m_DeadBeacons; ++i)
-                {
-                    m_Beacons[i].first->Update(deltaTime);
-                    if (m_BeaconsInfo)
-                        m_Beacons[i].first->InfoInterface(i, &m_BeaconsInfo);
-
-                    if (!m_Beacons[i].first->IsAlive())
-                    {
-                        m_BeaconChunks.ForgetObject(m_Beacons[i].first->GetPos(), m_Beacons[i].second);
-                        ++m_DeadBeacons;
-                        std::swap(m_Beacons[i], m_Beacons[m_Beacons.size() - m_DeadBeacons]);
-                    }
-                }
+                m_BeaconManager.Update(deltaTime);
             }
 
             {
@@ -82,7 +69,7 @@ namespace CW {
                     drone.ReactToResources(m_Resources);
 
                     if (!drone.ReactToResourceReciver(m_ResourceReciever))
-                        drone.ReactToBeacons(m_BeaconChunks);
+                        drone.ReactToBeacons(m_BeaconManager.GetChuncks());
 
                     if (m_DronesInfo)
                         drone.InfoInterface(index, &m_DronesInfo);
@@ -96,7 +83,7 @@ namespace CW {
             m_Camera.Update(deltaTime);
         }
 
-        void Draw(sf::RenderWindow& render) const override
+        void Draw(sf::RenderWindow& render) override
         {
             CW_PROFILE_FUNCTION();
             render.setView(m_Camera.GetView());
@@ -104,7 +91,7 @@ namespace CW {
             if (m_DrawChunks)
             {
                 m_ChunkMesh.setOutlineThickness(m_Camera.GetZoomFactor());
-                for (const auto& [key, _] : m_BeaconChunks.GetAllChunks())
+                for (const auto& [key, _] : m_BeaconManager.GetChuncks().GetAllChunks())
                 {
                     sf::Vector2f chunkPos = static_cast<sf::Vector2f>(key) * 500.0f;
                     m_ChunkMesh.setPosition(chunkPos);
@@ -114,7 +101,7 @@ namespace CW {
 
             m_ResourceReciever.Draw(render);
             
-            for (const auto& resource : m_Resources)
+            for (auto& resource : m_Resources)
             {
                 resource.Draw(render);
             }
@@ -122,15 +109,12 @@ namespace CW {
             if (m_DrawBeacons)
             {
                 CW_PROFILE_SCOPE("beacons draw");
-                for (const auto& beaconPair : m_Beacons)
-                {
-                    beaconPair.first->Draw(render);
-                }
+                m_BeaconManager.DrawAllBeacons(render);
             }
 
             {
                 CW_PROFILE_SCOPE("drones draw");
-                for (const auto& drone : m_Drones)
+                for (auto& drone : m_Drones)
                 {
                     drone.Draw(render);
                 }
@@ -161,7 +145,7 @@ namespace CW {
                 {
                 case ObjectPallete::Beacon:
                 {
-                    createBeacon(m_Camera.WorldPosition(e->position), m_ObjPallete.GetBeaconType(), 0);
+                    m_BeaconManager.CreateBeacon(m_Camera.WorldPosition(e->position), m_ObjPallete.GetBeaconType(), 0);
                     break;
                 }
                 case ObjectPallete::Drone:
@@ -187,16 +171,12 @@ namespace CW {
 
         void OnCreateBeacon(const CreateBeacon* e) override
         {
-            createBeacon(e->Position, e->Type, e->BitDirection);
+            m_BeaconManager.CreateBeacon(e->Position, e->Type, e->BitDirection);
         }
 
         void RestartSim(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource)
         {
-            m_Beacons.clear();
-            m_AllocatorBeacon.Deallocate();
-            m_Beacons.reserve(BEACONS_RESERVE);
-            m_DeadBeacons = 0;
-            m_BeaconChunks.Clear();
+            m_BeaconManager.Clear();
 
             m_Drones.clear();
             m_Drones.reserve(droneCount);
@@ -219,19 +199,14 @@ namespace CW {
                 ImGui::Text("fps: %.1f", ImGui::GetIO().Framerate);
                 ImGui::Text("paused: %d", IsPaused());
                 ImGui::Spacing();
-                ImGui::Text("m_Beacons size: %d", m_Beacons.size());
-                ImGui::Text("m_Beacons capasity: %d", m_Beacons.capacity());
-                ImGui::Text("allocator current allocated: %d", m_AllocatorBeacon.CurrentAllocated());
-                ImGui::Text("allocator current capasity: %d", m_AllocatorBeacon.CurrentCapasity());
-                ImGui::Text("allocator total allocated: %d", m_AllocatorBeacon.TotalAllocated());
-                ImGui::Text("allocator total capasity: %d", m_AllocatorBeacon.TotalCapasity());
-                ImGui::Text("allocator blocks count: %d", m_AllocatorBeacon.BlockCount());
+                ImGui::Text("m_Beacons size: %d", m_BeaconManager.Size());
+                ImGui::Text("m_Beacons capasity: %d", m_BeaconManager.Capacity());
                 ImGui::Spacing();
                 ImGui::Text("mouse hovering on any window: %d", ImGui::GetIO().WantCaptureMouse);
                 m_Camera.DebugInterface();
 
                 ImGui::Spacing();
-                ImGui::Text("chunks amount: %d", m_BeaconChunks.Size());
+                ImGui::Text("chunks amount: %d", m_BeaconManager.GetChuncks().Size());
                 ImGui::Checkbox("draw chunks (dangerous!)", &m_DrawChunks);
             }
 
@@ -287,33 +262,10 @@ namespace CW {
         }
 
     private:
-        void createBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection)
-        {
-            CW_PROFILE_FUNCTION();
-            if (m_DeadBeacons)
-            {
-                auto& [beacon, index] = m_Beacons[m_Beacons.size() - m_DeadBeacons];
-                beacon->Revive(position, type, bitDirection);
-                index = m_BeaconChunks.AddObject(beacon);
-                --m_DeadBeacons;
-            }
-            else
-            {
-                Beacon* newBeacon = m_AllocatorBeacon.Allocate();
-                newBeacon->Revive(position, type, bitDirection);
-                size_t index = m_BeaconChunks.AddObject(newBeacon);
-                m_Beacons.emplace_back(newBeacon, index);
-            }
-        }
-
-    private:
         Camera2D m_Camera;
         bool m_Hold = false;
 
-        std::vector<std::pair<Beacon*, size_t>> m_Beacons;
-        size_t m_DeadBeacons = 0;
-        ArenaAllocator<Beacon> m_AllocatorBeacon{ 1024 };
-        ChunkHandler<Beacon> m_BeaconChunks{ 500.0f };
+        BeaconManager m_BeaconManager;
 
         std::vector<Drone> m_Drones;
 

@@ -28,7 +28,7 @@ namespace CW {
 		void InfoInterface(size_t index, bool* open) const;
 
 		void Update(sf::Time deltaTime) override;
-		void Draw(sf::RenderWindow& render) const override;
+		void Draw(sf::RenderWindow& render) override;
 
 		void ReactToBeacons(const ChunkHandler<Beacon>& beacons);
 		bool ReactToResourceReciver(ResourceReciever& reciever);

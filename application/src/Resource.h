@@ -20,7 +20,7 @@ namespace CW {
 		inline bool IsCarried() const { return m_IsCarried; }
 		void PickUp();
 
-		void Draw(sf::RenderWindow& render) const override;
+		void Draw(sf::RenderWindow& render) override;
 
 	private:
 		int m_Amount = 10;

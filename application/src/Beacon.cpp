@@ -59,16 +59,6 @@ namespace CW {
 		}
 	}
 
-	void Beacon::Draw(sf::RenderWindow& render) const
-	{
-		if (IsAlive())
-		{
-			s_Mesh.setPosition(m_Position);
-			s_Mesh.setFillColor(beaconColor());
-			render.draw(s_Mesh);
-		}
-	}
-
 	void Beacon::Revive(sf::Vector2f newPosition, TargetType newType, uint8_t bitDirection)
 	{
 		m_Charge = 1.0f;
@@ -87,7 +77,7 @@ namespace CW {
 		return DIRECTION_ANGLE_TABLE.at(m_BitDirection);
 	}
 
-	sf::Color Beacon::beaconColor() const
+	sf::Color Beacon::BeaconColor() const
 	{
 		sf::Color color;
 		switch (m_Type)
@@ -107,6 +97,65 @@ namespace CW {
 		}
 
 		return color;
+	}
+
+	void BeaconManager::Update(sf::Time deltaTime)
+	{
+		for (size_t i = 0; i < m_Beacons.size(); ++i)
+		{
+			auto& beacon = m_Beacons[i];
+
+			beacon->Update(deltaTime);
+
+			if (m_ShowInfo)
+				beacon->InfoInterface(i, &m_ShowInfo);
+
+			if (!beacon->IsAlive())
+			{
+				m_Chunks.ForgetObject(beacon->GetPos(), beacon.Index);
+				++m_DeadBeacons;
+				std::swap(m_Beacons[i], m_Beacons[m_Beacons.size() - m_DeadBeacons]);
+			}
+		}
+	}
+
+	void BeaconManager::DrawAllBeacons(sf::RenderWindow& render)
+	{
+		for (auto& beacon : m_Beacons)
+		{
+			if (beacon->IsAlive())
+			{
+				m_Mesh.setPosition(beacon->GetPos());
+				m_Mesh.setFillColor(beacon->BeaconColor());
+				render.draw(m_Mesh);
+			}
+		}
+	}
+
+	void BeaconManager::CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection)
+	{
+		CW_PROFILE_FUNCTION();
+		if (m_DeadBeacons)
+		{
+			IndexedBeacon& beacon = m_Beacons[m_Beacons.size() - m_DeadBeacons];
+			beacon.Object->Revive(position, type, bitDirection);
+			beacon.Index = m_Chunks.AddObject(beacon.Object.get());
+			--m_DeadBeacons;
+		}
+		else
+		{
+			m_Beacons.emplace_back(std::make_unique<Beacon>(position, type, bitDirection));
+			IndexedBeacon& newBeacon = m_Beacons.back();
+			newBeacon.Index = m_Chunks.AddObject(newBeacon.Object.get());
+		}
+	}
+
+	void BeaconManager::Clear()
+	{
+		m_Chunks.Clear();
+		m_Beacons.clear();
+		m_DeadBeacons = 0;
+		m_Beacons.reserve(BEACONS_RESERVE);
 	}
 
 } // CW

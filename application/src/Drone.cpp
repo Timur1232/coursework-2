@@ -171,7 +171,7 @@ namespace CW {
         }
     }
 
-    void Drone::Draw(sf::RenderWindow& render) const
+    void Drone::Draw(sf::RenderWindow& render)
     {
         setMeshPos(m_Position);
 
@@ -208,7 +208,7 @@ namespace CW {
         if (m_TargetResource)
             return;
 
-        ChunkPtr<Beacon> chunk = chunks.GetChunk(m_Position);
+        ChunkPtr<Beacon> chunk = chunks.GetAreaChunk(m_Position);
 
         auto [furthestBeacon, furthestDistSq] = findFurthestInChunk(chunk.CenterChunk);
         for (const Chunk<Beacon>* adjChunk : chunk.AdjacentChunks)

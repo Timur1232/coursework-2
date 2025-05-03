@@ -19,7 +19,7 @@ namespace CW {
 		for (auto& sample : Samples)
 		{
 			float normalizedNoiseValue = (gen->GenSingle2D(x, 0.0f, seed) + 1.0f) / 2.0f;
-			sample = normalizedNoiseValue * maxHeight;
+			sample = static_cast<int>(normalizedNoiseValue * maxHeight);
 			x += stepX;
 		}
 	}
@@ -45,10 +45,9 @@ namespace CW {
 		m_TerrainSections.back().Generate(m_NoiseGenerator, m_Seed, m_MaxHeight);
 	}
 
-	void Terrain::Draw(sf::RenderWindow& render) const
+	void Terrain::Draw(sf::RenderWindow& render)
 	{
 		float sampleWidth = 100.0f;
-		//ImGui::Begin("TerrainSection");
 		for (const auto& section : m_TerrainSections)
 		{
 			for (size_t i = 0; i < section.Samples.size() - 1; ++i)
@@ -59,14 +58,8 @@ namespace CW {
 				m_LineMesh.SetPoint2(p2);
 				m_LineMesh.SetPoint1(p1);
 				render.draw(m_LineMesh);
-
-				/*ImGui::Text("index: %d -> %d", i, i+1);
-				ImGui::Text("p1: (%.2f, %.2f)", p1.x, p1.y);
-				ImGui::Text("p2: (%.2f, %.2f)", p2.x, p2.y);
-				ImGui::Spacing();*/
 			}
 		}
-		//ImGui::End();
 	}
 
 	void Terrain::SetLineThickness(float thickness) const

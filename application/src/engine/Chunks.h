@@ -16,58 +16,6 @@ namespace std {
 
 namespace CW {
 
-	/*class ChunkPackage
-	{
-	public:
-		class ChunkIterator
-		{
-		public:
-			using Self = ChunkIterator;
-
-		public:
-			ChunkIterator(Chunk* chunk);
-
-			inline bool operator!=(const Self& other) const { return m_ChunkPtr != other.m_ChunkPtr; }
-			Self operator++();
-			Object* operator*() const;
-
-		private:
-			Chunk* m_ChunkPtr;
-			int m_ChunkIndex = -1;
-			Chunk::ObjectIterator m_CurrentObject;
-		};
-
-		class const_ChunkIterator
-		{
-		public:
-			using Self = const_ChunkIterator;
-
-		public:
-			const_ChunkIterator(const Chunk* chunk);
-
-			inline bool operator!=(const Self& other) const { return m_ChunkPtr != other.m_ChunkPtr; }
-			Self operator++();
-			inline const Object* operator*() const { return *m_CurrentObject; }
-
-		private:
-			const Chunk* m_ChunkPtr;
-			int m_ChunkIndex = -1;
-			Chunk::const_ObjectIterator m_CurrentObject;
-		};
-
-	public:
-		ChunkPackage(const Chunk* chunk);
-
-		ChunkIterator begin();
-		ChunkIterator end();
-
-		const_ChunkIterator begin() const;
-		const_ChunkIterator end() const;
-
-	private:
-		const Chunk* const m_CenterChunk;
-	};*/
-
 	// TODO: сделать что-то с RESERVE
 	template <std::derived_from<Object> T, size_t RESERVE = 32>
 	class Chunk
@@ -92,10 +40,10 @@ namespace CW {
 			m_Objects = std::move(other.m_Objects);
 		}
 
-		[[nodiscard]] inline bool Empty() const { return m_Objects.empty(); }
-		[[nodiscard]] inline bool Size() const { return m_Objects.size(); }
-		[[nodiscard]] inline bool Capacity() const { return m_Objects.capacity(); }
-		inline void Clear() { m_Objects.clear(); }
+		[[nodiscard]] bool Empty() const { return m_Objects.empty(); }
+		[[nodiscard]] bool Size() const { return m_Objects.size(); }
+		[[nodiscard]] bool Capacity() const { return m_Objects.capacity(); }
+		void Clear() { m_Objects.clear(); }
 
 		[[nodiscard]] ObjectIterator begin()
 		{
@@ -117,10 +65,10 @@ namespace CW {
 			return m_Objects.end();
 		}
 
-		[[nodiscard]] inline T& operator[](size_t index) { return *m_Objects[index]; }
-		[[nodiscard]] inline const T& At(size_t index) const { return *m_Objects.at(index); }
+		[[nodiscard]] T& operator[](size_t index) { return *m_Objects[index]; }
+		[[nodiscard]] const T& At(size_t index) const { return *m_Objects.at(index); }
 
-		inline size_t PushBack(T* object)
+		size_t PushBack(T* object)
 		{
 			if (m_DeadPtrs)
 			{
@@ -139,12 +87,12 @@ namespace CW {
 			return m_Objects.size() - 1;
 		}
 
-		inline void PopBack()
+		void PopBack()
 		{
 			m_Objects.pop_back();
 		}
 
-		inline void ForgetObject(size_t index)
+		void ForgetObject(size_t index)
 		{
 			m_Objects[index] = nullptr;
 			++m_DeadPtrs;
@@ -174,7 +122,7 @@ namespace CW {
 		{
 		}
 
-		[[nodiscard]] ChunkPtr<T> GetChunk(sf::Vector2f requaredPosition) const
+		[[nodiscard]] ChunkPtr<T> GetAreaChunk(sf::Vector2f requaredPosition) const
 		{
 			ChunkPtr<T> chunk;
 			sf::Vector2i chunkKey = positionToChunkKey(requaredPosition);
@@ -214,8 +162,8 @@ namespace CW {
 			m_Chunks[chunkKey].ForgetObject(index);
 		}
 
-		[[nodiscard]] inline const std::unordered_map<sf::Vector2i, Chunk<T>>& GetAllChunks() const { return m_Chunks; }
-		[[nodiscard]] inline size_t Size() const { return m_Chunks.size(); }
+		[[nodiscard]] const std::unordered_map<sf::Vector2i, Chunk<T>>& GetAllChunks() const { return m_Chunks; }
+		[[nodiscard]] size_t Size() const { return m_Chunks.size(); }
 
 		void Clear()
 		{

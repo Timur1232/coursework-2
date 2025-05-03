@@ -33,7 +33,7 @@ namespace CW {
 		ImGui::Text("resources amount: %d", m_ResourceCount);
 	}
 
-	void ResourceReciever::Draw(sf::RenderWindow& render) const
+	void ResourceReciever::Draw(sf::RenderWindow& render)
 	{
 		render.draw(m_Mesh);
 		render.draw(m_RecieveMesh);

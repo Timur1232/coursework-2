@@ -28,7 +28,7 @@ namespace CW {
 		m_IsCarried = true;
 	}
 
-	void Resource::Draw(sf::RenderWindow& render) const
+	void Resource::Draw(sf::RenderWindow& render)
 	{
 		if (!IsCarried())
 		{
