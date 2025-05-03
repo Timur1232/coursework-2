@@ -7,55 +7,34 @@
 
 namespace CW {
 
-	sf::CircleShape Beacon::s_Mesh;
-
-	float Beacon::s_ChargeThreshold = 0.05f;
-	float Beacon::s_DischargeRate = 0.2f;
-
 	Beacon::Beacon(sf::Vector2f position, TargetType type, uint8_t bitDirection)
 		: Object(position), m_Type(type), m_BitDirection(bitDirection)
 	{
-		s_Mesh.setPosition(m_Position);
 	}
 
-	void Beacon::StaticInit()
+	void Beacon::InfoInterface(size_t index) const
 	{
-		s_Mesh.setRadius(10.0f);
-		s_Mesh.setOrigin({ s_Mesh.getRadius(), s_Mesh.getRadius() });
-		s_Mesh.setPointCount(4);
-	}
-
-	void Beacon::DebugInterface()
-	{
-		ImGui::SliderFloat("charge threshold", &s_ChargeThreshold, 0.0f, 1.0f);
-		ImGui::SliderFloat("discharge rate", &s_DischargeRate, 0.1f, 100.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
-	}
-
-	void Beacon::InfoInterface(size_t index, bool* open) const
-	{
-		ImGui::Begin("Beacons", open);
 		ImGui::Separator();
 		ImGui::Text("index: %d", index);
 		ImGui::Text("alive: %d", m_Alive);
 		ImGui::Text("beacon position: (%.2f, %.2f)", m_Position.x, m_Position.y);
 		ImGui::Text("beacon charge: %.3f", m_Charge);
 		ImGui::Text("beacon direction: %d", m_BitDirection);
-		ImGui::End();
 	}
 
-	void Beacon::Update(sf::Time deltaTime)
+	void Beacon::Update(sf::Time deltaTime, const BeaconSettings& bs)
 	{
 		if (!IsAlive())
 			return;
 
-		if (m_Charge <= s_ChargeThreshold)
+		if (m_Charge <= bs.ChargeThreshold)
 		{
 			m_Charge = 0.0f;
 			m_Alive = false;
 		}
 		else
 		{
-			m_Charge -= s_DischargeRate / 100.0f * deltaTime.asSeconds();
+			m_Charge -= bs.DischargeRate / 100.0f * deltaTime.asSeconds();
 		}
 	}
 
@@ -99,16 +78,25 @@ namespace CW {
 		return color;
 	}
 
+
+	BeaconManager::BeaconManager()
+	{
+		m_Mesh.setOrigin(m_Mesh.getGeometricCenter());
+	}
+
+	void BeaconManager::DebugInterface()
+	{
+		ImGui::SliderFloat("charge threshold", &m_BeaconSettings.ChargeThreshold, 0.0f, 1.0f);
+		ImGui::SliderFloat("discharge rate", &m_BeaconSettings.DischargeRate, 0.1f, 100.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
+	}
+
 	void BeaconManager::Update(sf::Time deltaTime)
 	{
-		for (size_t i = 0; i < m_Beacons.size(); ++i)
+		for (size_t i = 0; i < m_Beacons.size() - m_DeadBeacons; ++i)
 		{
 			auto& beacon = m_Beacons[i];
 
-			beacon->Update(deltaTime);
-
-			if (m_ShowInfo)
-				beacon->InfoInterface(i, &m_ShowInfo);
+			beacon->Update(deltaTime, m_BeaconSettings);
 
 			if (!beacon->IsAlive())
 			{
@@ -138,15 +126,15 @@ namespace CW {
 		if (m_DeadBeacons)
 		{
 			IndexedBeacon& beacon = m_Beacons[m_Beacons.size() - m_DeadBeacons];
-			beacon.Object->Revive(position, type, bitDirection);
-			beacon.Index = m_Chunks.AddObject(beacon.Object.get());
+			beacon->Revive(position, type, bitDirection);
+			beacon.Index = m_Chunks.AddObject(&beacon.Object);
 			--m_DeadBeacons;
 		}
 		else
 		{
-			m_Beacons.emplace_back(std::make_unique<Beacon>(position, type, bitDirection));
+			m_Beacons.emplace_back(position, type, bitDirection);
 			IndexedBeacon& newBeacon = m_Beacons.back();
-			newBeacon.Index = m_Chunks.AddObject(newBeacon.Object.get());
+			newBeacon.Index = m_Chunks.AddObject(&newBeacon.Object);
 		}
 	}
 
@@ -156,6 +144,18 @@ namespace CW {
 		m_Beacons.clear();
 		m_DeadBeacons = 0;
 		m_Beacons.reserve(BEACONS_RESERVE);
+	}
+
+	void BeaconManager::InfoInterface(bool* open)
+	{
+		ImGui::Begin("Beacons", open);
+		size_t index = 0;
+		for (auto& beacon : m_Beacons)
+		{
+			beacon->InfoInterface(index);
+			++index;
+		}
+		ImGui::End();
 	}
 
 } // CW

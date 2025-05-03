@@ -12,30 +12,10 @@ namespace CW {
 	};
 
 
-	/*class UpdateHandler
+	template <class T>
+	concept has_update = requires(T u, sf::Time deltaTime)
 	{
-	public:
-		UpdateHandler(size_t reserve);
-
-		size_t subscribe(IUpdate* target);
-		void unsubscribe(size_t index);
-		void handleUpdates(sf::Time deltaTime);
-
-	private:
-		std::vector<IUpdate*> m_UpdateTargets;
-		bool m_HasUnsubs = false;
+		{ u.Update(deltaTime) };
 	};
 
-
-	class UpdateHandlerWrapper
-	{
-	public:
-		UpdateHandlerWrapper(UpdateHandler* handler);
-
-		size_t subscribe(IUpdate* target);
-		void unsubscribe(size_t index);
-
-	private:
-		UpdateHandler* m_UpdateHandler;
-	};*/
-}
+} // CW

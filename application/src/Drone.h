@@ -86,12 +86,13 @@ namespace CW {
 	};
 
 
-	/*class DroneDebugInterface
+	class DroneManager
 	{
 	public:
-		DroneDebugInterface() = default;
 
-		void updateInterface() const;
-	};*/
+
+	private:
+
+	};
 
 } // CW

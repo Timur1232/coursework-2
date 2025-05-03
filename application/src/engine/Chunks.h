@@ -17,7 +17,7 @@ namespace std {
 namespace CW {
 
 	// TODO: сделать что-то с RESERVE
-	template <std::derived_from<Object> T, size_t RESERVE = 32>
+	template <has_position T, size_t RESERVE = 32>
 	class Chunk
 	{
 	public:
@@ -104,7 +104,7 @@ namespace CW {
 	};
 
 
-	template <std::derived_from<Object> T>
+	template <has_position T>
 	struct ChunkPtr
 	{
 		const Chunk<T>* CenterChunk = nullptr;
@@ -112,7 +112,7 @@ namespace CW {
 	};
 
 
-	template <std::derived_from<Object> T>
+	template <has_position T>
 	class ChunkHandler
 	{
 	public:

@@ -4,11 +4,9 @@
 
 namespace CW {
 
-	/*template <class T>
-	T clamp(T a, T min, T max)
-	{
-		return (a < min) ? min : (a > max) ? max : a;
-	}*/
+	template <class T>
+	using Ref = std::reference_wrapper<T>;
+
 
 	template <class T>
 	T loop(T a, T min, T max, T delta)
@@ -92,6 +90,7 @@ namespace CW {
 		return (v1 - v2).lengthSquared();
 	}
 
+
 	template <class T>
 	struct Indexed
 	{
@@ -106,14 +105,19 @@ namespace CW {
 		{
 		}
 
-		T& operator->()
+		Indexed(T&& other)
+			: Object(std::forward<T>(other.Object)), Index(other.Index)
 		{
-			return Object;
 		}
 
-		const T& operator->() const
+		T* operator->()
 		{
-			return Object;
+			return &Object;
+		}
+
+		const T* operator->() const
+		{
+			return &Object;
 		}
 	};
 

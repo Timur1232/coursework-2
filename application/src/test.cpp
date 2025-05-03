@@ -38,7 +38,6 @@ namespace CW {
             m_Resources.reserve(128);
 
             Drone::StaticInit();
-            Beacon::StaticInit();
             Resource::StaticInit();
 
             m_ChunkMesh.setSize({ 500.0f, 500.0f });
@@ -46,7 +45,8 @@ namespace CW {
             m_ChunkMesh.setOutlineThickness(2.0f);
             m_ChunkMesh.setOutlineColor({ 255, 255, 255, 180 });
 
-            m_Terrain.Generate(0);
+            for (int i = -5; i <= 5; ++i)
+                m_Terrain.Generate(i);
         }
 
         void Update(sf::Time deltaTime) override
@@ -120,7 +120,7 @@ namespace CW {
                 }
             }
 
-            m_Terrain.SetLineThickness(m_Camera.GetZoomFactor());
+            m_Terrain.SetDotScale(m_Camera.GetZoomFactor());
             m_Terrain.Draw(render);
         }
 
@@ -252,13 +252,16 @@ namespace CW {
             {
                 ImGui::Text("default beacons settings");
                 if (ImGui::Button("default beacon"))
-                    Beacon::StaticInit();
+                    CW_WARN("Not implemented");
 
                 ImGui::Checkbox("draw beacons", &m_DrawBeacons);
                 ImGui::Checkbox("show beacons info", &m_BeaconsInfo);
-                Beacon::DebugInterface();
+                m_BeaconManager.DebugInterface();
             }
             ImGui::End();
+
+            if (m_BeaconsInfo)
+                m_BeaconManager.InfoInterface(&m_BeaconsInfo);
         }
 
     private:

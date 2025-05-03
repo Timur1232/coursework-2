@@ -7,19 +7,19 @@
 
 namespace CW {
 
-	constexpr size_t TERRAIN_SECTION_SIZE = 150;
+	constexpr size_t TERRAIN_SAMPLES_AMOUNT = 100;
+	constexpr float TERRAIN_SECTION_WIDTH = 1000.0f;
+
 	using NoiseGenerator = FastNoise::SmartNode<FastNoise::Perlin>;
 
 	struct TerrainSection
 	{
 		TerrainSection(int globalPosition);
-		/*TerrainSection(TerrainSection&& other);
-		const TerrainSection& operator=(TerrainSection&& other);*/
 
-		void Generate(NoiseGenerator& gen, int seed, float maxHeight);
+		void Generate(NoiseGenerator& gen, int seed, float maxHeight, float sampleWidth);
 
-		int GlobalPosition;
-		std::array<int, TERRAIN_SECTION_SIZE> Samples;
+		int Index;
+		std::array<float, TERRAIN_SAMPLES_AMOUNT> Samples;
 	};
 
 	class Terrain
@@ -29,21 +29,21 @@ namespace CW {
 		Terrain();
 
 		void Generate(int position);
-
 		void Draw(sf::RenderWindow& render) override;
 
 		// Debug
-		void SetLineThickness(float thickness) const;
+		void SetDotScale(float size);
 
 	private:
 		std::vector<TerrainSection> m_TerrainSections;
 		NoiseGenerator m_NoiseGenerator;
 		int m_Seed = 69420;
 
-		float m_MaxHeight = 1000.0f;
+		float m_MaxHeight = 100.0f;
+		float m_MapNoiseDistance = 5.0f;
 
 		// Debug
-		mutable LineShape m_LineMesh;
+		mutable sf::CircleShape m_DotMesh{3.0f, 4};
 	};
 
 } // CW

@@ -8,7 +8,7 @@ namespace CW {
 	{
 	public:
 		Object() = default;
-		inline Object(sf::Vector2f position)
+		inline explicit Object(sf::Vector2f position)
 			: m_Position(position)
 		{
 		}
@@ -18,6 +18,14 @@ namespace CW {
 
 	protected:
 		sf::Vector2f m_Position;
+	};
+
+
+	template <class T>
+	concept has_position = requires(T p, sf::Vector2f position)
+	{
+		{ p.GetPos() } -> std::same_as<sf::Vector2f>;
+		{ p.SetPos(position) };
 	};
 
 } // CW

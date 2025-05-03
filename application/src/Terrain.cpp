@@ -5,66 +5,88 @@
 
 namespace CW {
 
-	TerrainSection::TerrainSection(int globalPosition)
-		: GlobalPosition(globalPosition)
+	TerrainSection::TerrainSection(int index)
+		: Index(index)
 	{
 		Samples.fill(0);
 	}
 
-	void TerrainSection::Generate(NoiseGenerator& gen, int seed, float maxHeight)
+	void TerrainSection::Generate(NoiseGenerator& gen, int seed, float maxHeight, float mapNoiseDistance)
 	{
-		float x = static_cast<float>(GlobalPosition * TERRAIN_SECTION_SIZE);
-		float stepX = 10.0f / static_cast<float>(TERRAIN_SECTION_SIZE);
+		float noiseX = static_cast<float>(Index) * mapNoiseDistance;
+		float noiseStep = mapNoiseDistance / static_cast<float>(TERRAIN_SAMPLES_AMOUNT);
 
 		for (auto& sample : Samples)
 		{
-			float normalizedNoiseValue = (gen->GenSingle2D(x, 0.0f, seed) + 1.0f) / 2.0f;
-			sample = static_cast<int>(normalizedNoiseValue * maxHeight);
-			x += stepX;
+			float noiseValue = gen->GenSingle2D(noiseX, 0.0f, seed);
+			sample = noiseValue * maxHeight;
+			noiseX += noiseStep;
 		}
 	}
 
 	Terrain::Terrain()
 		: m_NoiseGenerator(FastNoise::New<FastNoise::Perlin>())
 	{
+		m_DotMesh.setOrigin(m_DotMesh.getGeometricCenter());
 	}
 
-	void Terrain::Generate(int position)
+	void Terrain::Generate(int index)
 	{
 		auto found = std::find_if(m_TerrainSections.begin(), m_TerrainSections.end(),
-			[position](const TerrainSection& section) {
-				return section.GlobalPosition == position;
+			[index](const TerrainSection& section) {
+				return section.Index == index;
 			});
 		if (found != m_TerrainSections.end())
 		{
-			CW_WARN("Trying to generate existing terrain section on position: {}", position);
+			CW_WARN("Trying to generate existing terrain section on position: {}", index);
 			return;
 		}
 
-		m_TerrainSections.emplace_back(position);
-		m_TerrainSections.back().Generate(m_NoiseGenerator, m_Seed, m_MaxHeight);
+		m_TerrainSections.emplace_back(index);
+		m_TerrainSections.back().Generate(m_NoiseGenerator, m_Seed, m_MaxHeight, m_MapNoiseDistance);
 	}
 
 	void Terrain::Draw(sf::RenderWindow& render)
 	{
-		float sampleWidth = 100.0f;
+		float sampleWidth = TERRAIN_SECTION_WIDTH / static_cast<float>(TERRAIN_SAMPLES_AMOUNT);
 		for (const auto& section : m_TerrainSections)
 		{
+			m_DotMesh.setFillColor(sf::Color::White);
+			float sectionStartPosition = static_cast<float>(section.Index) * TERRAIN_SECTION_WIDTH;
 			for (size_t i = 0; i < section.Samples.size() - 1; ++i)
 			{
-				sf::Vector2f p1{ (float)(section.GlobalPosition * TERRAIN_SECTION_SIZE + i) * sampleWidth, (float)(section.Samples.at(i))};
-				sf::Vector2f p2{ (float)(section.GlobalPosition * TERRAIN_SECTION_SIZE + i + 1) * sampleWidth, (float)(section.Samples.at(i + 1)) };
+				sf::Vector2f p1{ sectionStartPosition + i * sampleWidth, section.Samples.at(i)};
+				sf::Vector2f p2{ sectionStartPosition + (i + 1) * sampleWidth, section.Samples.at(i + 1) };
 
-				m_LineMesh.SetPoint2(p2);
-				m_LineMesh.SetPoint1(p1);
-				render.draw(m_LineMesh);
+				if (i == 0)
+				{
+					m_DotMesh.setFillColor(sf::Color::Yellow);
+				}
+				else
+				{
+					m_DotMesh.setFillColor(sf::Color::White);
+				}
+
+				m_DotMesh.setPosition(p1);
+				render.draw(m_DotMesh);
+
+				if (i == section.Samples.size() - 2)
+				{
+					m_DotMesh.setFillColor(sf::Color::Yellow);
+				}
+				else
+				{
+					m_DotMesh.setFillColor(sf::Color::White);
+				}
+				m_DotMesh.setPosition(p2);
+				render.draw(m_DotMesh);
 			}
 		}
 	}
 
-	void Terrain::SetLineThickness(float thickness) const
+	void Terrain::SetDotScale(float scale)
 	{
-		m_LineMesh.SetThickness(thickness);
+		m_DotMesh.setScale({ scale, scale });
 	}
 
 } // CW
