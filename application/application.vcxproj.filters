@@ -21,9 +21,6 @@
     <ClCompile Include="src\engine\Application.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\Chunks.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="src\engine\EventInterface.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>

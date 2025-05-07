@@ -100,7 +100,7 @@ namespace CW {
 
 			if (!beacon->IsAlive())
 			{
-				m_Chunks.ForgetObject(beacon->GetPos(), beacon.Index);
+				m_Chunks.ForgetObject(beacon);
 				++m_DeadBeacons;
 				std::swap(m_Beacons[i], m_Beacons[m_Beacons.size() - m_DeadBeacons]);
 			}
@@ -127,14 +127,14 @@ namespace CW {
 		{
 			IndexedBeacon& beacon = m_Beacons[m_Beacons.size() - m_DeadBeacons];
 			beacon->Revive(position, type, bitDirection);
-			beacon.Index = m_Chunks.AddObject(&beacon.Object);
+			m_Chunks.AddObject(beacon);
 			--m_DeadBeacons;
 		}
 		else
 		{
 			m_Beacons.emplace_back(position, type, bitDirection);
 			IndexedBeacon& newBeacon = m_Beacons.back();
-			newBeacon.Index = m_Chunks.AddObject(&newBeacon.Object);
+			m_Chunks.AddObject(newBeacon);
 		}
 	}
 

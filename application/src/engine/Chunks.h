@@ -4,6 +4,7 @@
 
 #include "engine/Object.h"
 #include "debug_utils/Log.h"
+#include "utils/utils.h"
 
 namespace std {
 	template <>
@@ -25,7 +26,8 @@ namespace CW {
 		using const_ObjectIterator = std::vector<T*>::const_iterator;
 
 	public:
-		Chunk()
+		Chunk(sf::Vector2i key)
+			: m_Key(key)
 		{
 			m_Objects.reserve(RESERVE);
 		}
@@ -44,6 +46,9 @@ namespace CW {
 		[[nodiscard]] bool Size() const { return m_Objects.size(); }
 		[[nodiscard]] bool Capacity() const { return m_Objects.capacity(); }
 		void Clear() { m_Objects.clear(); }
+
+		[[nodiscard]]  sf::Vector2i GetKey() const { return m_Key; }
+		void SetKey(sf::Vector2i key) { m_Key = key; }
 
 		[[nodiscard]] ObjectIterator begin()
 		{
@@ -101,6 +106,7 @@ namespace CW {
 	private:
 		std::vector<T*> m_Objects;
 		size_t m_DeadPtrs = 0;
+		sf::Vector2i m_Key;
 	};
 
 
@@ -126,9 +132,9 @@ namespace CW {
 		{
 			ChunkPtr<T> chunk;
 			sf::Vector2i chunkKey = positionToChunkKey(requaredPosition);
-			if (m_Chunks.contains(chunkKey))
+			if (m_ChunkIndecies.contains(chunkKey))
 			{
-				chunk.CenterChunk = &m_Chunks.at(chunkKey);
+				chunk.CenterChunk = &m_Chunks.at(m_ChunkIndecies.at(chunkKey));
 			}
 
 			size_t i = 0;
@@ -139,9 +145,9 @@ namespace CW {
 					if (offsetX == 0 && offsetY == 0)
 						continue;
 					sf::Vector2i offset = chunkKey + sf::Vector2i(offsetX, offsetY);
-					if (m_Chunks.contains(offset))
+					if (m_ChunkIndecies.contains(offset))
 					{
-						chunk.AdjacentChunks[i] = &m_Chunks.at(offset);
+						chunk.AdjacentChunks[i] = &m_Chunks.at(m_ChunkIndecies.at(offset));
 					}
 					i++;
 				}
@@ -150,24 +156,36 @@ namespace CW {
 			return chunk;
 		}
 
-		[[nodiscard]] size_t AddObject(T* object)
+		void AddObject(Indexed<T>& object)
 		{
 			sf::Vector2i chunkKey = positionToChunkKey(object->GetPos());
-			return m_Chunks[chunkKey].PushBack(object);
+			size_t chunkIndex = 0;
+			if (m_ChunkIndecies.contains(chunkKey))
+			{
+				chunkIndex = m_ChunkIndecies.at(chunkKey);
+			}
+			else
+			{
+				chunkIndex = m_Chunks.size();
+				m_ChunkIndecies[chunkKey] = chunkIndex;
+				m_Chunks.emplace_back(chunkKey);
+			}
+			object.Index = m_Chunks[chunkIndex].PushBack(&object.Object);
 		}
 
-		void ForgetObject(sf::Vector2f objectPosition, size_t index)
+		void ForgetObject(Indexed<T>& object)
 		{
-			sf::Vector2i chunkKey = positionToChunkKey(objectPosition);
-			m_Chunks[chunkKey].ForgetObject(index);
+			sf::Vector2i chunkKey = positionToChunkKey(object->GetPos());
+			size_t chunkIndex = m_ChunkIndecies.at(chunkKey);
+			m_Chunks[chunkIndex].ForgetObject(object.Index);
 		}
 
-		[[nodiscard]] const std::unordered_map<sf::Vector2i, Chunk<T>>& GetAllChunks() const { return m_Chunks; }
+		[[nodiscard]] inline const std::vector<Chunk<T>>& GetAllChunks() const { return m_Chunks; }
 		[[nodiscard]] size_t Size() const { return m_Chunks.size(); }
 
 		void Clear()
 		{
-			for (auto& [key, chunk] : m_Chunks)
+			for (auto& chunk : m_Chunks)
 			{
 				chunk.Clear();
 			}
@@ -185,7 +203,8 @@ namespace CW {
 		}
 
 	private:
-		std::unordered_map<sf::Vector2i, Chunk<T>> m_Chunks;
+		std::unordered_map<sf::Vector2i, size_t> m_ChunkIndecies;
+		std::vector<Chunk<T>> m_Chunks;
 		float m_ChunkSize = 500.0f;
 	};
 

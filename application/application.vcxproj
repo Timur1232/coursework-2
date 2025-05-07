@@ -98,7 +98,6 @@
     <ClCompile Include="src\debug_utils\LineShape.cpp" />
     <ClCompile Include="src\Drone.cpp" />
     <ClCompile Include="src\engine\Application.cpp" />
-    <ClCompile Include="src\engine\Chunks.cpp" />
     <ClCompile Include="src\engine\EventInterface.cpp" />
     <ClCompile Include="src\engine\Events.cpp" />
     <ClCompile Include="src\engine\ProgramCore.cpp" />

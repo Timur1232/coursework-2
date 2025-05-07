@@ -91,9 +91,9 @@ namespace CW {
             if (m_DrawChunks)
             {
                 m_ChunkMesh.setOutlineThickness(m_Camera.GetZoomFactor());
-                for (const auto& [key, _] : m_BeaconManager.GetChuncks().GetAllChunks())
+                for (const auto& chunk : m_BeaconManager.GetChuncks().GetAllChunks())
                 {
-                    sf::Vector2f chunkPos = static_cast<sf::Vector2f>(key) * 500.0f;
+                    sf::Vector2f chunkPos = static_cast<sf::Vector2f>(chunk.GetKey()) * 500.0f;
                     m_ChunkMesh.setPosition(chunkPos);
                     render.draw(m_ChunkMesh);
                 }
