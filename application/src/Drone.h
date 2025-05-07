@@ -14,35 +14,52 @@
 
 namespace CW {
 
+	struct DroneSettings
+	{
+		float Speed;
+		sf::Angle TurningSpeed;
+
+		float FOV;
+		float FOVRad;
+
+		sf::Vector2f ViewDistance;
+		float PickupDist;
+
+		float BeaconCooldownSec;
+		float WanderCooldownSec;
+
+		sf::Angle RandomWanderAngle;
+		sf::Angle WanderAngleThreshold;
+		sf::Angle MaxTurningDelta;
+
+		DroneSettings();
+		void SetDefault();
+	};
+
+
 	class Drone
-		: public Object,
-		  public IUpdate,
-		  public IDrawable
+		: public Object
 	{
 	public:
 		Drone(sf::Vector2f position, sf::Angle directionAngle = sf::Angle::Zero, TargetType target = TargetType::Recource);
 
-		static void StaticInit();
+		[[nodiscard]] sf::Angle GetDirection() const { return m_DirectionAngle; }
+		[[nodiscard]] sf::Angle GetAttraction() const { return m_AttractionAngle; }
 
-		static void DebugInterface();
-		void InfoInterface(size_t index, bool* open) const;
+		void Update(sf::Time deltaTime, const DroneSettings& settings);
 
-		void Update(sf::Time deltaTime) override;
-		void Draw(sf::RenderWindow& render) override;
+		void ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec, float FOV, sf::Vector2f viewDistance);
+		bool ReactToResourceReciver(ResourceReciever& reciever, float wanderCooldownSec);
 
-		void ReactToBeacons(const ChunkHandler<Beacon>& beacons);
-		bool ReactToResourceReciver(ResourceReciever& reciever);
+		void ReactToResources(std::vector<Resource>& resources, sf::Vector2f viewDistance, float FOV);
+		bool CheckResourceColission(float pickUpDist);
 
-		void ReactToResources(std::vector<Resource>& resources);
-		bool CheckResourceColission();
+		void InfoInterface(size_t index) const;
 
 	private:
-		inline void turn(sf::Time deltaTime);
-		inline void wander(sf::Time deltaTime);
-		std::pair<const Beacon*, float> findFurthestInChunk(const Chunk<Beacon>* chunk);
-
-		// Debug
-		inline void setMeshPos(sf::Vector2f position) const;
+		inline void turn(sf::Time deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta);
+		inline void wander(sf::Time deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle);
+		std::pair<const Beacon*, float> findFurthestInChunk(const Chunk<Beacon>* chunk, float FOV, sf::Vector2f viewDistance);
 
 	private:
 		sf::Angle m_DirectionAngle = sf::Angle::Zero;
@@ -52,47 +69,55 @@ namespace CW {
 		Resource* m_TargetResource = nullptr;
 
 		int m_CarriedResources = 0;
-		float m_BeaconTimerSec = s_BeaconCooldownSec;
+		float m_BeaconTimerSec = 0.0f;
 		float m_WanderTimer = 0.0f;
-
-		//=================[static]=================//
-		static constexpr sf::Vector2f ONE_LENGTH_VEC = { 1.0f, 0.0f };
-		
-		static float s_Speed;
-		static sf::Angle s_TurningSpeed;
-		
-		static float s_FOV;
-		static float s_FOVRad;
-
-		static sf::Vector2f s_ViewDistanse;
-		static float s_PickupDist;
-
-		static float s_BeaconCooldownSec;
-		static float s_WanderCooldownSec;
-
-		static sf::Angle s_RandomWanderAngle;
-		static sf::Angle s_WanderAngleThreshold;
-		static sf::Angle s_MaxTurningDelta;
-
-		// Debug
-		static sf::CircleShape s_Mesh;
-		static sf::CircleShape s_MeshViewDistance;
-		static sf::CircleShape s_DirectionVisual;
-		static sf::CircleShape s_AttractionAngleVisual;
-		static std::array<LineShape, 2> s_FOVVisual;
-
-		static bool s_DrawViewDistance;
-		static bool s_DrawDirection;
 	};
 
 
 	class DroneManager
 	{
 	public:
+		DroneManager() = default;
 
+		void UpdateAllDrones(
+			sf::Time deltaTime,
+			std::vector<Resource>& resources,
+			const ChunkHandler<Beacon>& beacons,
+			ResourceReciever& reciever
+		);
+
+		void DrawAllDrones(sf::RenderWindow& render);
+
+		void Clear();
+		void Reset(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource);
+
+		void CreateDrone(sf::Vector2f position, sf::Angle directionAngle, TargetType target);
+
+		[[nodiscard]] size_t Size() const { return m_Drones.size(); }
+		[[nodiscard]] size_t Capacity() const { return m_Drones.capacity(); }
+
+		void InfoInterface(bool* open);
+		void DebugInterface();
+
+		void SetDefaultSettings();
 
 	private:
+		// Debug
+		inline void setMeshPos(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle);
 
+	private:
+		std::vector<Drone> m_Drones;
+		DroneSettings m_DroneSettings;
+
+		// Debug
+		sf::CircleShape m_Mesh;
+		sf::CircleShape m_MeshViewDistance;
+		sf::CircleShape m_DirectionVisual;
+		sf::CircleShape m_AttractionAngleVisual;
+		std::array<LineShape, 2> m_FOVVisual;
+
+		bool m_DrawViewDistance;
+		bool m_DrawDirection;
 	};
 
 } // CW

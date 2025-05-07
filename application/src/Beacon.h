@@ -58,8 +58,6 @@ namespace CW {
 	public:
 		BeaconManager();
 
-		void DebugInterface();
-
 		void Update(sf::Time deltaTime) override;
 		void DrawAllBeacons(sf::RenderWindow& render);
 		void CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection);
@@ -70,6 +68,7 @@ namespace CW {
 		[[nodiscard]] size_t Capacity() const { return m_Beacons.capacity(); }
 		
 		void InfoInterface(bool* open);
+		void DebugInterface();
 
 	private:
 		std::vector<IndexedBeacon> m_Beacons;

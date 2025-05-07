@@ -37,7 +37,7 @@ namespace CW {
             m_Camera.SubscribeOnEvents();
             m_Resources.reserve(128);
 
-            Drone::StaticInit();
+            m_DroneManager.SetDefaultSettings();
             Resource::StaticInit();
 
             m_ChunkMesh.setSize({ 500.0f, 500.0f });
@@ -61,20 +61,7 @@ namespace CW {
 
             {
                 CW_PROFILE_SCOPE("drones update");
-                size_t index = 0;
-                for (auto& drone : m_Drones)
-                {
-                    drone.Update(deltaTime);
-
-                    drone.ReactToResources(m_Resources);
-
-                    if (!drone.ReactToResourceReciver(m_ResourceReciever))
-                        drone.ReactToBeacons(m_BeaconManager.GetChuncks());
-
-                    if (m_DronesInfo)
-                        drone.InfoInterface(index, &m_DronesInfo);
-                    ++index;
-                }
+                m_DroneManager.UpdateAllDrones(deltaTime, m_Resources, m_BeaconManager.GetChuncks(), m_ResourceReciever);
             }
         }
 
@@ -114,10 +101,7 @@ namespace CW {
 
             {
                 CW_PROFILE_SCOPE("drones draw");
-                for (auto& drone : m_Drones)
-                {
-                    drone.Draw(render);
-                }
+                m_DroneManager.DrawAllDrones(render);
             }
 
             m_Terrain.SetDotScale(m_Camera.GetZoomFactor());
@@ -151,7 +135,7 @@ namespace CW {
                 case ObjectPallete::Drone:
                 {
                     auto [direction, targetType] = m_ObjPallete.GetDroneComponents();
-                    m_Drones.emplace_back(m_Camera.WorldPosition(e->position), direction, targetType);
+                    m_DroneManager.CreateDrone(m_Camera.WorldPosition(e->position), direction, targetType);
                     break;
                 }
                 case ObjectPallete::Resource:
@@ -177,16 +161,7 @@ namespace CW {
         void RestartSim(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource)
         {
             m_BeaconManager.Clear();
-
-            m_Drones.clear();
-            m_Drones.reserve(droneCount);
-            float angleStep = 2.0f * angle::PI / (float)droneCount;
-            float angle = 0.0f;
-            for (size_t i = 0; i < droneCount; ++i, angle += angleStep)
-            {
-                m_Drones.emplace_back(startPosition, sf::radians(angle), target);
-            }
-
+            m_DroneManager.Reset(droneCount, startPosition, target);
             m_Resources.clear();
             CW_TRACE("Restarting simulation with {} drones", droneCount);
         }
@@ -241,11 +216,11 @@ namespace CW {
                 }
 
                 ImGui::Checkbox("show drones info", &m_DronesInfo);
-                Drone::DebugInterface();
+                m_DroneManager.DebugInterface();
 
                 ImGui::Text("default drones settings");
                 if (ImGui::Button("default drone"))
-                    Drone::StaticInit();
+                    m_DroneManager.SetDefaultSettings();
             }
 
             if (ImGui::CollapsingHeader("Beacons"))
@@ -262,6 +237,9 @@ namespace CW {
 
             if (m_BeaconsInfo)
                 m_BeaconManager.InfoInterface(&m_BeaconsInfo);
+
+            if (m_DronesInfo)
+                m_DroneManager.InfoInterface(&m_DronesInfo);
         }
 
     private:
@@ -269,8 +247,7 @@ namespace CW {
         bool m_Hold = false;
 
         BeaconManager m_BeaconManager;
-
-        std::vector<Drone> m_Drones;
+        DroneManager m_DroneManager;
 
         ResourceReciever m_ResourceReciever{ {0.0f, 0.0f} };
         std::vector<Resource> m_Resources;
