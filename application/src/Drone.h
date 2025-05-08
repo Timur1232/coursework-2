@@ -2,6 +2,8 @@
 
 #include "pch.h"
 
+#include "debug_utils/LineShape.h"
+
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"
 #include "engine/Object.h"
@@ -10,7 +12,7 @@
 #include "Beacon.h"
 #include "ResourceReciever.h"
 #include "Resource.h"
-#include "debug_utils/LineShape.h"
+#include "Terrain.h"
 
 namespace CW {
 
@@ -49,6 +51,9 @@ namespace CW {
 		[[nodiscard]] int GetCarriedResources() const { return m_CarriedResources; }
 		[[nodiscard]] const Resource* GetTargetResource() const { return m_TargetResource; }
 
+		void SetDirection(sf::Angle angle) { m_DirectionAngle = angle; }
+		void SetAttraction(sf::Angle angle) { m_AttractionAngle = angle; }
+
 		void Update(sf::Time deltaTime, const DroneSettings& settings);
 
 		void ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec, float FOV, sf::Vector2f viewDistance);
@@ -84,7 +89,8 @@ namespace CW {
 			sf::Time deltaTime,
 			std::vector<std::unique_ptr<Resource>>& resources,
 			const ChunkHandler<Beacon>& beacons,
-			ResourceReciever& reciever);
+			ResourceReciever& reciever,
+			const Terrain& terrain);
 
 		void DrawAllDrones(sf::RenderWindow& render);
 

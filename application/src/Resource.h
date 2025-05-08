@@ -46,4 +46,4 @@ namespace CW {
 		sf::CircleShape m_Mesh;
 	};
 
-} // Cw
+} // CW

@@ -18,8 +18,8 @@
 
 #include "Terrain.h"
 
-namespace CW {
 
+namespace CW {
 
     class MyApp
         : public Application,
@@ -60,7 +60,7 @@ namespace CW {
 
             {
                 CW_PROFILE_SCOPE("drones update");
-                m_Drones.UpdateAllDrones(deltaTime, m_Resources.GetResources(), m_Beacons.GetChuncks(), m_ResourceReciever);
+                m_Drones.UpdateAllDrones(deltaTime, m_Resources.GetResources(), m_Beacons.GetChuncks(), m_ResourceReciever, m_Terrain);
             }
         }
 
@@ -228,6 +228,77 @@ namespace CW {
                 ImGui::Checkbox("draw beacons", &m_DrawBeacons);
                 ImGui::Checkbox("show beacons info", &m_BeaconsInfo);
                 m_Beacons.DebugInterface();
+            }
+
+            if (ImGui::CollapsingHeader("Terrain"))
+            {
+                ImGui::Text("regenerate terrain");
+                if (ImGui::Button("regenerate"))
+                    m_Terrain.RegenerateExisting();
+
+                static float yOffset = m_Terrain.GetYOffset();
+                if (ImGui::InputFloat("y offset", &yOffset))
+                    m_Terrain.SetYOffset(yOffset);
+
+                static int samplesCount = (int)m_Terrain.GetSamplesPerSection();
+                static float sectionWidth = m_Terrain.GetSectionWidth();
+                if (ImGui::InputInt("samples per section", &samplesCount))
+                    m_Terrain.SetSamplesPerSection(samplesCount);
+                if (ImGui::InputFloat("section width", &sectionWidth))
+                    m_Terrain.SetSectionWidth(sectionWidth);
+
+                if (ImGui::TreeNode("noise settings"))
+                {
+                    static int seed = m_Terrain.GetSeed();
+                    static float maxHeight = m_Terrain.GetMaxHeight();
+                    static float mappedNoiseDistance = m_Terrain.GetMappedNoiseDistance();
+                    if (ImGui::InputInt("seed", &seed))
+                        m_Terrain.SetSeed(seed);
+                    if (ImGui::InputFloat("max height", &maxHeight))
+                        m_Terrain.SetMaxHeight(maxHeight);
+                    if (ImGui::InputFloat("mapped noise distance", &mappedNoiseDistance))
+                        m_Terrain.SetMapedNoiseDistance(mappedNoiseDistance);
+
+                    ImGui::Spacing();
+
+                    static float gain = m_Terrain.GetGain();
+                    static float weightedStrength = m_Terrain.GetWeightedStrength();
+                    static int octaves = m_Terrain.GetOctaves();
+                    static float lacunarity = m_Terrain.GetLacunarity();
+                    if (ImGui::InputFloat("gain", &gain))
+                        m_Terrain.SetGain(gain);
+                    if (ImGui::InputFloat("weighted strength", &weightedStrength))
+                        m_Terrain.SetWeightedStrength(weightedStrength);
+                    if (ImGui::InputInt("octaves", &octaves))
+                        m_Terrain.SetOctaves(octaves);
+                    if (ImGui::InputFloat("lacunarity", &lacunarity))
+                        m_Terrain.SetLacunarity(lacunarity);
+
+                    ImGui::TreePop();
+                }
+
+                if (ImGui::TreeNode("generating chunks"))
+                {
+                    static int startIndex = 0;
+                    static int endIndex = 0;
+                    ImGui::InputInt("start", &startIndex);
+                    ImGui::InputInt("end", &endIndex);
+                    if (ImGui::Button("generate"))
+                    {
+                        if (endIndex < startIndex)
+                        {
+                            CW_WARN("Need start <= end indecies");
+                        }
+                        else
+                        {
+                            for (int i = startIndex; i < endIndex; ++i)
+                            {
+                                m_Terrain.Generate(i);
+                            }
+                        }
+                    }
+                    ImGui::TreePop();
+                }
             }
             ImGui::End();
 

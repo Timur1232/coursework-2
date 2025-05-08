@@ -259,11 +259,17 @@ namespace CW {
         sf::Time deltaTime,
         std::vector<std::unique_ptr<Resource>>& resources,
         const ChunkHandler<Beacon>& beacons,
-        ResourceReciever& reciever)
+        ResourceReciever& reciever,
+        const Terrain& terrain)
     {
         for (auto& drone : m_Drones)
         {
             drone.Update(deltaTime, m_DroneSettings);
+            if (terrain.Near(drone, 50.0f))
+            {
+                drone.SetDirection((drone.GetDirection() + sf::degrees(180.0f)).wrapSigned());
+                drone.SetAttraction(drone.GetDirection());
+            }
 
             drone.ReactToResources(resources, m_DroneSettings.ViewDistance, m_DroneSettings.FOV);
 
