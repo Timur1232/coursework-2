@@ -46,21 +46,6 @@ namespace CW {
     {
     }
 
-    void Drone::InfoInterface(size_t index) const
-    {
-        ImGui::Separator();
-        ImGui::Text("index: %d", index);
-        ImGui::Text("position: (%.2f, %.2f)", m_Position.x, m_Position.y);
-        ImGui::Text("direction angle: %.2f", m_DirectionAngle.asDegrees());
-        ImGui::Text("attraction angle: %.2f", m_AttractionAngle.asDegrees());
-        ImGui::Text("beacon timer: %.1f s", m_BeaconTimerSec);
-        ImGui::Text("carried resources: %d", m_CarriedResources);
-        if (m_TargetResource)
-            ImGui::Text("target position: (%.2f, %.2f)", m_TargetResource->GetPos().x, m_TargetResource->GetPos().y);
-        else
-            ImGui::Text("no target");
-    }
-
     void Drone::Update(sf::Time deltaTime, const DroneSettings& settings)
     {
         //CW_PROFILE_FUNCTION();
@@ -89,7 +74,7 @@ namespace CW {
             m_AttractionAngle = (m_AttractionAngle - sf::degrees(180.0f)).wrapSigned();
             m_DirectionAngle = m_AttractionAngle;
             m_CarriedResources = m_TargetResource->GetResources();
-            m_TargetResource->PickUp();
+            m_TargetResource->Pickup();
             m_TargetResource = nullptr;
         }
     }
@@ -145,29 +130,32 @@ namespace CW {
         return false;
     }
 
-    void Drone::ReactToResources(std::vector<Resource>& resources, sf::Vector2f viewDistance, float FOV)
+    void Drone::ReactToResources(std::vector<std::unique_ptr<Resource>>& resources, sf::Vector2f viewDistance, float FOV)
     {
         if (m_TargetType == TargetType::Recource && !resources.empty() && !m_TargetResource)
         {
-            auto closestResource = resources.begin();
-            float minDistSq = distance_squared(closestResource->GetPos(), m_Position);
-            auto iter = resources.begin() + 1;
-            while (iter != resources.end())
+            auto validResources = resources
+                | std::ranges::views::filter([](const std::unique_ptr<Resource>& r) { return !r->IsCarried(); });
+
+            if (std::ranges::empty(validResources))
             {
-                if (!iter->IsCarried())
-                {
-                    if (float otherDist = distance_squared(iter->GetPos(), m_Position);
-                        otherDist < minDistSq)
-                    {
-                        minDistSq = otherDist;
-                        closestResource = iter;
-                    }
-                }
-                ++iter;
+                return;
             }
 
-            if (!closestResource->IsCarried()
-                && ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle).dot((closestResource->GetPos() - m_Position).normalized()) >= FOV
+            Resource* closestResource = validResources.front().get();
+            float minDistSq = distance_squared(closestResource->GetPos(), m_Position);
+
+            for (auto& resource : validResources | std::ranges::views::drop(1))
+            {
+                if (float otherDist = distance_squared(resource->GetPos(), m_Position);
+                    otherDist < minDistSq)
+                {
+                    minDistSq = otherDist;
+                    closestResource = resource.get();
+                }
+            }
+
+            if (ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle).dot((closestResource->GetPos() - m_Position).normalized()) >= FOV
                 && minDistSq >= viewDistance.x * viewDistance.x
                 && minDistSq <= viewDistance.y * viewDistance.y)
             {
@@ -269,10 +257,9 @@ namespace CW {
 
     void DroneManager::UpdateAllDrones(
         sf::Time deltaTime,
-        std::vector<Resource>& resources,
+        std::vector<std::unique_ptr<Resource>>& resources,
         const ChunkHandler<Beacon>& beacons,
-        ResourceReciever& reciever
-    )
+        ResourceReciever& reciever)
     {
         for (auto& drone : m_Drones)
         {
@@ -348,7 +335,18 @@ namespace CW {
             size_t index = 0;
             for (const auto& drone : m_Drones)
             {
-                drone.InfoInterface(index);
+                ImGui::Separator();
+                ImGui::Text("index: %d", index);
+                ImGui::Text("position: (%.2f, %.2f)", drone.GetPos().x, drone.GetPos().y);
+                ImGui::Text("direction angle: %.2f", drone.GetDirection().asDegrees());
+                ImGui::Text("attraction angle: %.2f", drone.GetAttraction().asDegrees());
+                ImGui::Text("beacon timer: %.1f s", drone.GetBeaconSpawnTimer());
+                ImGui::Text("carried resources: %d", drone.GetCarriedResources());
+                if (auto resource = drone.GetTargetResource())
+                    ImGui::Text("target position: (%.2f, %.2f)", resource->GetPos().x, resource->GetPos().y);
+                else
+                    ImGui::Text("no target");
+
                 ++index;
             }
             ImGui::End();

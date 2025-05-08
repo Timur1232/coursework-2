@@ -5,21 +5,12 @@
 
 namespace CW {
 
-	sf::CircleShape Resource::s_Mesh;
-
 	Resource::Resource(sf::Vector2f position, int amount)
 		: Object(position), m_Amount(amount)
 	{
 	}
 
-	void Resource::StaticInit()
-	{
-		s_Mesh.setRadius(20.0f);
-		s_Mesh.setOrigin({ s_Mesh.getRadius(), s_Mesh.getRadius() });
-		s_Mesh.setFillColor(sf::Color::Cyan);
-	}
-
-	void Resource::PickUp()
+	void Resource::Pickup()
 	{
 		if (m_IsCarried)
 		{
@@ -28,12 +19,44 @@ namespace CW {
 		m_IsCarried = true;
 	}
 
-	void Resource::Draw(sf::RenderWindow& render)
+	void Resource::Revive(sf::Vector2f position, int amount)
 	{
-		if (!IsCarried())
+		m_Position = position;
+		m_Amount = amount;
+		m_IsCarried = false;
+	}
+
+
+	ResourceManager::ResourceManager()
+	{
+		m_Mesh.setRadius(20.0f);
+		m_Mesh.setOrigin(m_Mesh.getGeometricCenter());
+		m_Mesh.setFillColor(sf::Color::Cyan);
+	}
+
+	void ResourceManager::DrawAllRecources(sf::RenderWindow& render)
+	{
+		auto validResources = m_Resources
+			| std::ranges::views::filter([](const std::unique_ptr<Resource>& r) { return !r->IsCarried(); });
+		
+		for (const auto& resource : validResources)
 		{
-			s_Mesh.setPosition(m_Position);
-			render.draw(s_Mesh);
+			m_Mesh.setPosition(resource->GetPos());
+			render.draw(m_Mesh);
+		}
+	}
+
+	void ResourceManager::CreateResource(sf::Vector2f position, int amount)
+	{
+		auto carriedResource = std::ranges::find_if(m_Resources.begin(), m_Resources.end(), [](const std::unique_ptr<Resource>& r) { return r->IsCarried(); });
+
+		if (carriedResource != m_Resources.end())
+		{
+			(*carriedResource)->Revive(position, amount);
+		}
+		else
+		{
+			m_Resources.emplace_back(std::make_unique<Resource>(position, amount));
 		}
 	}
 

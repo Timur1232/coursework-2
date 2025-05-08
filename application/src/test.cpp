@@ -35,10 +35,9 @@ namespace CW {
               m_Camera(0, 0, 800, 600)
         {
             m_Camera.SubscribeOnEvents();
-            m_Resources.reserve(128);
+            m_Resources.Reserve(128);
 
-            m_DroneManager.SetDefaultSettings();
-            Resource::StaticInit();
+            m_Drones.SetDefaultSettings();
 
             m_ChunkMesh.setSize({ 500.0f, 500.0f });
             m_ChunkMesh.setFillColor(sf::Color::Transparent);
@@ -56,12 +55,12 @@ namespace CW {
 
             {
                 CW_PROFILE_SCOPE("beacons update");
-                m_BeaconManager.Update(deltaTime);
+                m_Beacons.Update(deltaTime);
             }
 
             {
                 CW_PROFILE_SCOPE("drones update");
-                m_DroneManager.UpdateAllDrones(deltaTime, m_Resources, m_BeaconManager.GetChuncks(), m_ResourceReciever);
+                m_Drones.UpdateAllDrones(deltaTime, m_Resources.GetResources(), m_Beacons.GetChuncks(), m_ResourceReciever);
             }
         }
 
@@ -78,7 +77,7 @@ namespace CW {
             if (m_DrawChunks)
             {
                 m_ChunkMesh.setOutlineThickness(m_Camera.GetZoomFactor());
-                for (const auto& chunk : m_BeaconManager.GetChuncks().GetAllChunks())
+                for (const auto& chunk : m_Beacons.GetChuncks().GetAllChunks())
                 {
                     sf::Vector2f chunkPos = static_cast<sf::Vector2f>(chunk.GetKey()) * 500.0f;
                     m_ChunkMesh.setPosition(chunkPos);
@@ -88,20 +87,17 @@ namespace CW {
 
             m_ResourceReciever.Draw(render);
             
-            for (auto& resource : m_Resources)
-            {
-                resource.Draw(render);
-            }
+            m_Resources.DrawAllRecources(render);
 
             if (m_DrawBeacons)
             {
                 CW_PROFILE_SCOPE("beacons draw");
-                m_BeaconManager.DrawAllBeacons(render);
+                m_Beacons.DrawAllBeacons(render);
             }
 
             {
                 CW_PROFILE_SCOPE("drones draw");
-                m_DroneManager.DrawAllDrones(render);
+                m_Drones.DrawAllDrones(render);
             }
 
             m_Terrain.SetDotScale(m_Camera.GetZoomFactor());
@@ -129,18 +125,18 @@ namespace CW {
                 {
                 case ObjectPallete::Beacon:
                 {
-                    m_BeaconManager.CreateBeacon(m_Camera.WorldPosition(e->position), m_ObjPallete.GetBeaconType(), 0);
+                    m_Beacons.CreateBeacon(m_Camera.WorldPosition(e->position), m_ObjPallete.GetBeaconType(), 0);
                     break;
                 }
                 case ObjectPallete::Drone:
                 {
                     auto [direction, targetType] = m_ObjPallete.GetDroneComponents();
-                    m_DroneManager.CreateDrone(m_Camera.WorldPosition(e->position), direction, targetType);
+                    m_Drones.CreateDrone(m_Camera.WorldPosition(e->position), direction, targetType);
                     break;
                 }
                 case ObjectPallete::Resource:
                 {
-                    m_Resources.emplace_back(m_Camera.WorldPosition(e->position), m_ObjPallete.GetRsourceAmount());
+                    m_Resources.CreateResource(m_Camera.WorldPosition(e->position), m_ObjPallete.GetRsourceAmount());
                     break;
                 }
                 }
@@ -155,14 +151,14 @@ namespace CW {
 
         void OnCreateBeacon(const CreateBeacon* e) override
         {
-            m_BeaconManager.CreateBeacon(e->Position, e->Type, e->BitDirection);
+            m_Beacons.CreateBeacon(e->Position, e->Type, e->BitDirection);
         }
 
         void RestartSim(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource)
         {
-            m_BeaconManager.Clear();
-            m_DroneManager.Reset(droneCount, startPosition, target);
-            m_Resources.clear();
+            m_Beacons.Clear();
+            m_Drones.Reset(droneCount, startPosition, target);
+            m_Resources.Clear();
             CW_TRACE("Restarting simulation with {} drones", droneCount);
         }
 
@@ -174,14 +170,14 @@ namespace CW {
                 ImGui::Text("fps: %.1f", ImGui::GetIO().Framerate);
                 ImGui::Text("paused: %d", IsPaused());
                 ImGui::Spacing();
-                ImGui::Text("m_Beacons size: %d", m_BeaconManager.Size());
-                ImGui::Text("m_Beacons capasity: %d", m_BeaconManager.Capacity());
+                ImGui::Text("m_Beacons size: %d", m_Beacons.Size());
+                ImGui::Text("m_Beacons capasity: %d", m_Beacons.Capacity());
                 ImGui::Spacing();
                 ImGui::Text("mouse hovering on any window: %d", ImGui::GetIO().WantCaptureMouse);
                 m_Camera.DebugInterface();
 
                 ImGui::Spacing();
-                ImGui::Text("chunks amount: %d", m_BeaconManager.GetChuncks().Size());
+                ImGui::Text("chunks amount: %d", m_Beacons.GetChuncks().Size());
                 ImGui::Checkbox("draw chunks (dangerous!)", &m_DrawChunks);
             }
 
@@ -216,11 +212,11 @@ namespace CW {
                 }
 
                 ImGui::Checkbox("show drones info", &m_DronesInfo);
-                m_DroneManager.DebugInterface();
+                m_Drones.DebugInterface();
 
                 ImGui::Text("default drones settings");
                 if (ImGui::Button("default drone"))
-                    m_DroneManager.SetDefaultSettings();
+                    m_Drones.SetDefaultSettings();
             }
 
             if (ImGui::CollapsingHeader("Beacons"))
@@ -231,26 +227,26 @@ namespace CW {
 
                 ImGui::Checkbox("draw beacons", &m_DrawBeacons);
                 ImGui::Checkbox("show beacons info", &m_BeaconsInfo);
-                m_BeaconManager.DebugInterface();
+                m_Beacons.DebugInterface();
             }
             ImGui::End();
 
             if (m_BeaconsInfo)
-                m_BeaconManager.InfoInterface(&m_BeaconsInfo);
+                m_Beacons.InfoInterface(&m_BeaconsInfo);
 
             if (m_DronesInfo)
-                m_DroneManager.InfoInterface(&m_DronesInfo);
+                m_Drones.InfoInterface(&m_DronesInfo);
         }
 
     private:
         Camera2D m_Camera;
         bool m_Hold = false;
 
-        BeaconManager m_BeaconManager;
-        DroneManager m_DroneManager;
+        BeaconManager m_Beacons;
+        DroneManager m_Drones;
+        ResourceManager m_Resources;
 
         ResourceReciever m_ResourceReciever{ {0.0f, 0.0f} };
-        std::vector<Resource> m_Resources;
 
         Terrain m_Terrain;
 

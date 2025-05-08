@@ -45,16 +45,17 @@ namespace CW {
 
 		[[nodiscard]] sf::Angle GetDirection() const { return m_DirectionAngle; }
 		[[nodiscard]] sf::Angle GetAttraction() const { return m_AttractionAngle; }
+		[[nodiscard]] float GetBeaconSpawnTimer() const { return m_BeaconTimerSec; }
+		[[nodiscard]] int GetCarriedResources() const { return m_CarriedResources; }
+		[[nodiscard]] const Resource* GetTargetResource() const { return m_TargetResource; }
 
 		void Update(sf::Time deltaTime, const DroneSettings& settings);
 
 		void ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec, float FOV, sf::Vector2f viewDistance);
 		bool ReactToResourceReciver(ResourceReciever& reciever, float wanderCooldownSec);
 
-		void ReactToResources(std::vector<Resource>& resources, sf::Vector2f viewDistance, float FOV);
+		void ReactToResources(std::vector<std::unique_ptr<Resource>>& resources, sf::Vector2f viewDistance, float FOV);
 		bool CheckResourceColission(float pickUpDist);
-
-		void InfoInterface(size_t index) const;
 
 	private:
 		inline void turn(sf::Time deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta);
@@ -81,10 +82,9 @@ namespace CW {
 
 		void UpdateAllDrones(
 			sf::Time deltaTime,
-			std::vector<Resource>& resources,
+			std::vector<std::unique_ptr<Resource>>& resources,
 			const ChunkHandler<Beacon>& beacons,
-			ResourceReciever& reciever
-		);
+			ResourceReciever& reciever);
 
 		void DrawAllDrones(sf::RenderWindow& render);
 
@@ -116,8 +116,8 @@ namespace CW {
 		sf::CircleShape m_AttractionAngleVisual;
 		std::array<LineShape, 2> m_FOVVisual;
 
-		bool m_DrawViewDistance;
-		bool m_DrawDirection;
+		bool m_DrawViewDistance = false;
+		bool m_DrawDirection = false;
 	};
 
 } // CW
