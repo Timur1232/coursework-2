@@ -71,6 +71,7 @@ namespace CW {
 		void DebugInterface();
 
 	private:
+		// FIXME: при реалокации памяти в векторе сломаются указатели в чанках
 		std::vector<IndexedBeacon> m_Beacons;
 		ChunkHandler<Beacon> m_Chunks{ 500.0f };
 		size_t m_DeadBeacons = 0;

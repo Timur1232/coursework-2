@@ -178,7 +178,7 @@ namespace CW {
 
                 ImGui::Spacing();
                 ImGui::Text("chunks amount: %d", m_Beacons.GetChuncks().Size());
-                ImGui::Checkbox("draw chunks (dangerous!)", &m_DrawChunks);
+                ImGui::Checkbox("draw chunks", &m_DrawChunks);
             }
 
             if (ImGui::CollapsingHeader("Object-pallete"))
@@ -329,7 +329,7 @@ namespace CW {
         ObjectPalleteBuilder m_ObjPallete;
 
         bool m_DrawChunks = false;
-        mutable sf::RectangleShape m_ChunkMesh;
+        sf::RectangleShape m_ChunkMesh;
 
     };
 

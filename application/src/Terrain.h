@@ -45,7 +45,7 @@ namespace CW {
 
 		void Generate(const NoiseGenerator& gen, float maxHeight, float sampleWidth);
 
-		int Index;
+		int Key;
 		std::vector<float> Samples;
 	};
 
@@ -56,7 +56,7 @@ namespace CW {
 	public:
 		Terrain();
 
-		void Generate(int position);
+		void Generate(int keyPosition);
 		void Draw(sf::RenderWindow& render) override;
 
 		void SetYOffset(float offset) { m_YOffset = offset; }
@@ -86,7 +86,7 @@ namespace CW {
 
 		void RegenerateExisting();
 
-		[[nodeiscard]] bool Near(const Object& object, float distThreashold) const;
+		[[nodiscard]] bool IsNear(const Object& object, float distThreashold, int range = 3) const;
 
 		// Debug
 		void SetDotScale(float size);
@@ -98,17 +98,18 @@ namespace CW {
 
 	private:
 		std::vector<TerrainSection> m_TerrainSections;
-		float m_YOffset = 0.0f;
 
 		NoiseGenerator m_NoiseGenerator;
 
 		float m_MaxHeight = 1000.0f;
 		float m_MapedNoiseDistance = 0.5f;
-		size_t m_SamplesPerSection = 30;
+
+		size_t m_SamplesPerSection = 15;
 		float m_SectionWidth = 1000.0f;
+		float m_YOffset = 0.0f;
 
 		// Debug
-		mutable sf::CircleShape m_DotMesh{3.0f, 4};
+		sf::CircleShape m_DotMesh{3.0f, 4};
 	};
 
 } // CW

@@ -265,7 +265,7 @@ namespace CW {
         for (auto& drone : m_Drones)
         {
             drone.Update(deltaTime, m_DroneSettings);
-            if (terrain.Near(drone, 50.0f))
+            if (terrain.IsNear(drone, 50.0f))
             {
                 drone.SetDirection((drone.GetDirection() + sf::degrees(180.0f)).wrapSigned());
                 drone.SetAttraction(drone.GetDirection());

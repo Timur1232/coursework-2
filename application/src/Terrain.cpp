@@ -7,13 +7,13 @@
 namespace CW {
 
 	TerrainSection::TerrainSection(int index, size_t samplesCount)
-		: Index(index), Samples(samplesCount)
+		: Key(index), Samples(samplesCount)
 	{
 	}
 
 	void TerrainSection::Generate(const NoiseGenerator& gen, float maxHeight, float mapNoiseDistance)
 	{
-		float noiseX = static_cast<float>(Index) * mapNoiseDistance;
+		float noiseX = static_cast<float>(Key) * mapNoiseDistance;
 		float noiseStep = mapNoiseDistance / static_cast<float>(Samples.size());
 
 		for (auto& sample : Samples)
@@ -30,19 +30,19 @@ namespace CW {
 		m_DotMesh.setOrigin(m_DotMesh.getGeometricCenter());
 	}
 
-	void Terrain::Generate(int index)
+	void Terrain::Generate(int keyPosition)
 	{
 		auto found = std::find_if(m_TerrainSections.begin(), m_TerrainSections.end(),
-			[index](const TerrainSection& section) {
-				return section.Index == index;
+			[keyPosition](const TerrainSection& section) {
+				return section.Key == keyPosition;
 			});
 		if (found != m_TerrainSections.end())
 		{
-			CW_WARN("Trying to generate existing terrain section on position: {}", index);
+			CW_WARN("Trying to generate existing terrain section on position: {}", keyPosition);
 			return;
 		}
 
-		m_TerrainSections.emplace_back(index, m_SamplesPerSection);
+		m_TerrainSections.emplace_back(keyPosition, m_SamplesPerSection);
 		m_TerrainSections.back().Generate(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance);
 	}
 
@@ -51,7 +51,7 @@ namespace CW {
 		float sampleWidth = m_SectionWidth / static_cast<float>(m_SamplesPerSection);
 		for (const auto& section : m_TerrainSections)
 		{
-			float sectionStartPosition = static_cast<float>(section.Index) * m_SectionWidth;
+			float sectionStartPosition = static_cast<float>(section.Key) * m_SectionWidth;
 			for (size_t i = 0; i < section.Samples.size() - 1; ++i)
 			{
 				sf::Vector2f p1{ sampleToWorldPosition(section, i, sectionStartPosition, sampleWidth) };
@@ -74,29 +74,43 @@ namespace CW {
 		}
 	}
 
-	bool Terrain::Near(const Object& object, float distThreashold) const
+	bool Terrain::IsNear(const Object& object, float distThreashold, int range) const
 	{
 		int sectionIndex = object.GetPos().x / m_SectionWidth;
 		if (object.GetPos().x < 0)
 			sectionIndex -= 1;
 
-		int sampleIndex = (object.GetPos().x - sectionIndex * m_SectionWidth) / m_SamplesPerSection;
+		float sampleWidth = m_SectionWidth / static_cast<float>(m_SamplesPerSection);
+		int sampleIndex = static_cast<int>((object.GetPos().x - sectionIndex * m_SectionWidth) / sampleWidth);
 
 		auto section = std::ranges::find_if(m_TerrainSections.begin(), m_TerrainSections.end(),
-			[sectionIndex](const TerrainSection& s) { return s.Index == sectionIndex; });
+			[sectionIndex](const TerrainSection& s) { return s.Key == sectionIndex; });
 
 		if (section == m_TerrainSections.end())
 		{
 			return false;
 		}
 
-		float sampleWidth = m_SectionWidth / static_cast<float>(m_SamplesPerSection);
-		float sectionStartPosition = static_cast<float>(section->Index) * m_SectionWidth;
-
-		for (int i = -2; i <= 2; ++i)
+		// TODO: определение коллизии на границах секций
+		/*auto rightSection = section + 1;
+		auto leftSection = m_TerrainSections.end();
+		if (section != m_TerrainSections.begin())
 		{
-			if (sampleIndex + i < 0 || sampleIndex + i >= m_SamplesPerSection)
-				continue;
+			leftSection = section - 1;
+		}*/
+
+		float sectionStartPosition = static_cast<float>(section->Key) * m_SectionWidth;
+
+		for (int i = -range; i <= range; ++i)
+		{
+			/*if (sampleIndex + i < 0 && leftSection != m_TerrainSections.end())
+			{
+				samplePos = sampleToWorldPosition(*leftSection, m_SamplesPerSection - 1 + i, sectionStartPosition - m_SectionWidth, sampleWidth);
+			}
+			else if (sampleIndex + i >= m_SamplesPerSection && rightSection != m_TerrainSections.end())
+			{
+				samplePos = sampleToWorldPosition(*leftSection, i, sectionStartPosition + m_SectionWidth, sampleWidth);
+			}*/
 			sf::Vector2f samplePos = sampleToWorldPosition(*section, sampleIndex + i, sectionStartPosition, sampleWidth);
 			if (distance_squared(samplePos, object.GetPos()) <= distThreashold * distThreashold)
 			{

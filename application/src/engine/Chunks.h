@@ -33,8 +33,12 @@ namespace CW {
 		}
 
 		explicit Chunk(Chunk<T>&& other) noexcept
-			: m_Objects(std::move(other.m_Objects))
+			: m_Objects(std::move(other.m_Objects)),
+			  m_Key(other.m_Key),
+			  m_DeadPtrs(other.m_DeadPtrs)
 		{
+			other.m_Key = { 0, 0 };
+			other.m_DeadPtrs = 0;
 		}
 
 		[[nodiscard]] const Chunk<T>& operator=(Chunk<T>&& other) noexcept
@@ -48,7 +52,7 @@ namespace CW {
 		void Clear() { m_Objects.clear(); }
 
 		[[nodiscard]]  sf::Vector2i GetKey() const { return m_Key; }
-		void SetKey(sf::Vector2i key) { m_Key = key; }
+		//void SetKey(sf::Vector2i key) { m_Key = key; }
 
 		[[nodiscard]] ObjectIterator begin()
 		{
@@ -176,6 +180,11 @@ namespace CW {
 		void ForgetObject(Indexed<T>& object)
 		{
 			sf::Vector2i chunkKey = positionToChunkKey(object->GetPos());
+			if (!m_ChunkIndecies.contains(chunkKey))
+			{
+				CW_ERROR("Unable to find chunk with object on ({:.2f}, {:.2f})!", object->GetPos().x, object->GetPos().y);
+				return;
+			}
 			size_t chunkIndex = m_ChunkIndecies.at(chunkKey);
 			m_Chunks[chunkIndex].ForgetObject(object.Index);
 		}
@@ -196,16 +205,16 @@ namespace CW {
 		{
 			sf::Vector2i key(static_cast<int>(position.x / m_ChunkSize), static_cast<int>(position.y / m_ChunkSize));
 			if (position.x < 0)
-				key.x--;
+				key.x -= 1;
 			if (position.y < 0)
-				key.y--;
+				key.y -= 1;
 			return key;
 		}
 
 	private:
 		std::unordered_map<sf::Vector2i, size_t> m_ChunkIndecies;
 		std::vector<Chunk<T>> m_Chunks;
-		float m_ChunkSize = 500.0f;
+		const float m_ChunkSize = 500.0f;
 	};
 
 } // CW
