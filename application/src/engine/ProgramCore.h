@@ -4,6 +4,7 @@
 
 #include "Application.h"
 #include "Events.h"
+#include "UPSLimiter.h"
 
 namespace CW {
 
@@ -34,6 +35,8 @@ namespace CW {
 		sf::State m_WindowState = sf::State::Windowed;
 		sf::Clock m_DeltaClock;
 		sf::Time m_DeltaTime;
+
+		UPSLimiter m_UPS{ 60 };
 	};
 
 } // CW

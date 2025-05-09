@@ -7,12 +7,15 @@ namespace CW {
     class UPSLimiter
     {
     public:
-        UPSLimiter(std::chrono::milliseconds limitTime);
-        ~UPSLimiter();
+        UPSLimiter();
+        UPSLimiter(size_t ups);
+
+        void Wait() const;
+        void SetUPS(size_t ups);
 
     private:
-        std::chrono::steady_clock::time_point m_StartPoint;
-        std::chrono::milliseconds m_LimitTime;
+        std::chrono::microseconds m_LimitTime;
+        mutable std::chrono::steady_clock::time_point m_NextPoint;
     };
 
 } // CW
