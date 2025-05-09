@@ -24,7 +24,6 @@ namespace CW {
     class MyApp
         : public Application,
           public KeyPressedObs,
-          public ClosedObs,
           public MouseButtonPressedObs,
           public MouseButtonReleasedObs,
           public CreateBeaconObs
@@ -104,11 +103,6 @@ namespace CW {
             m_Terrain.Draw(render);
         }
 
-        void OnClosed() override
-        {
-            Close();
-        }
-
         void OnKeyPressed(const sf::Event::KeyPressed* event) override
         {
             if (event->code == sf::Keyboard::Key::Space)
@@ -179,6 +173,14 @@ namespace CW {
                 ImGui::Spacing();
                 ImGui::Text("chunks amount: %d", m_Beacons.GetChuncks().Size());
                 ImGui::Checkbox("draw chunks", &m_DrawChunks);
+
+                ImGui::Spacing();
+                static int ups = GetUPSLimit();
+                if (ImGui::SliderInt("ups", &ups, 30, 200))
+                {
+                    m_UPSLimit = static_cast<size_t>(ups);
+                    EventHandler::Get().AddEvent(UPSChange{ .UPS = m_UPSLimit });
+                }
             }
 
             if (ImGui::CollapsingHeader("Object-pallete"))

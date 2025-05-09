@@ -9,7 +9,9 @@
 namespace CW {
 
 	class ProgramCore
-		: public KeyPressedObs
+		: public KeyPressedObs,
+		  public ClosedObs,
+		  public UPSChangeObs
 	{
 	public:
 		ProgramCore();
@@ -24,6 +26,8 @@ namespace CW {
 		void SetApplication(std::unique_ptr<Application>&& app);
 
 		void OnKeyPressed(const sf::Event::KeyPressed* e) override;
+		void OnClosed() override;
+		void OnUPSChange(const UPSChange* e) override;
 
 	private:
 		sf::State reverseState();

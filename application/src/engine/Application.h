@@ -33,7 +33,7 @@ namespace CW {
 		bool IsPaused() const;
 		void SwitchPause();
 
-		std::chrono::milliseconds GetUPSLimit() const { return m_UPSLimit; }
+		size_t GetUPSLimit() const { return m_UPSLimit; }
 		//virtual std::unique_ptr<ApplicationState> CollectState() const = 0;
 
 	protected:
@@ -43,7 +43,7 @@ namespace CW {
 		bool m_Running = true;
 		bool m_Pause = false;
 
-		std::chrono::milliseconds m_UPSLimit = 16ms;
+		size_t m_UPSLimit = 60;
 	};
 
 } // CW

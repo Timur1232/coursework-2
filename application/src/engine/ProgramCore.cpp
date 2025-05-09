@@ -30,8 +30,6 @@ namespace CW {
 		{
 			CW_PROFILE_SCOPE("main loop");
 
-			UPSLimiter limit(m_App->GetUPSLimit());
-
 			m_DeltaTime = m_DeltaClock.restart();
 			EventHandler::Get().HandleEvents(m_Window);
 #ifdef CW_USER_EVENTS_LIST
@@ -51,6 +49,8 @@ namespace CW {
 			m_App->Draw(m_Window);
 			ImGui::SFML::Render(m_Window);
 			m_Window.display();
+
+			m_UPS.Wait();
 		}
 		CW_END_PROFILE_SESSION();
 	}
@@ -60,9 +60,9 @@ namespace CW {
 		m_App = std::forward<std::unique_ptr<Application>>(app);
 
 		m_Window.create(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle());
-		m_Window.setVerticalSyncEnabled(true);
+		/*m_Window.setVerticalSyncEnabled(true);
 
-		m_Window.setFramerateLimit(60);
+		m_Window.setFramerateLimit(60);*/
 		if (!ImGui::SFML::Init(m_Window))
 		{
 			CW_CRITICAL("Failing initializing ImGui::SFML.");
@@ -77,6 +77,16 @@ namespace CW {
 		{
 			m_Window.create(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle(), reverseState());
 		}
+	}
+
+	void ProgramCore::OnClosed()
+	{
+		m_App->Close();
+	}
+
+	void ProgramCore::OnUPSChange(const UPSChange* e)
+	{
+		m_UPS.SetUPS(e->UPS);
 	}
 
 	sf::State ProgramCore::reverseState()

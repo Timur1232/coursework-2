@@ -20,14 +20,28 @@ public:
 	virtual void OnCreateBeacon(const CreateBeacon*) = 0;
 };
 
+
+struct UPSChange
+{
+	size_t UPS;
+};
+
+class UPSChangeObs
+	: virtual public CW::OnEvent
+{
+public:
+	virtual ~UPSChangeObs() = default;
+	virtual void OnUPSChange(const UPSChange*) = 0;
+};
+
 // Для определения пользовательских типов ивентов нужно объявить в этом файле макрос CW_USER_EVENTS_LIST
 // и записать через запятую типы отправляемых ивентов
-#define CW_USER_EVENTS_LIST CreateBeacon
+#define CW_USER_EVENTS_LIST CreateBeacon, UPSChange
 
 // Если определены пользовательские типы ивентов, то необходимо объявить макрос CW_USER_EVENTS_PAIRS,
 // в котором через запятую указывается тип цели для отправления ивента и тип самого ивента
 // <тип_цели>, <тип_ивента>, <тип_цели>, <тип_ивента>, ...
-#define CW_USER_EVENTS_PAIRS CreateBeaconObs, CreateBeacon
+#define CW_USER_EVENTS_PAIRS CreateBeaconObs, CreateBeacon, UPSChangeObs, UPSChange
 
 // Пример
 // 

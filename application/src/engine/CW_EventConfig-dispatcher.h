@@ -10,3 +10,9 @@ void CW::UserDispatcher<CreateBeaconObs, CreateBeacon>::operator()()
 {
     m_Target->OnCreateBeacon(m_Event);
 }
+
+template<>
+void CW::UserDispatcher<UPSChangeObs, UPSChange>::operator()()
+{
+    m_Target->OnUPSChange(m_Event);
+}
