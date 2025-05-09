@@ -96,11 +96,13 @@
     <ClCompile Include="src\BitDirection.cpp" />
     <ClCompile Include="src\Camera2D.cpp" />
     <ClCompile Include="src\debug_utils\LineShape.cpp" />
+    <ClCompile Include="src\debug_utils\Log.cpp" />
     <ClCompile Include="src\Drone.cpp" />
     <ClCompile Include="src\engine\Application.cpp" />
     <ClCompile Include="src\engine\EventInterface.cpp" />
     <ClCompile Include="src\engine\Events.cpp" />
     <ClCompile Include="src\engine\ProgramCore.cpp" />
+    <ClCompile Include="src\engine\Renderer.cpp" />
     <ClCompile Include="src\engine\UPSLimiter.cpp" />
     <ClCompile Include="src\ObjectPallete.cpp" />
     <ClCompile Include="src\pch.cpp">
@@ -123,10 +125,10 @@
     <ClInclude Include="src\debug_utils\Profiler.h" />
     <ClInclude Include="src\Drone.h" />
     <ClInclude Include="src\engine\Application.h" />
-    <ClInclude Include="src\engine\ApplicationState.h" />
     <ClInclude Include="src\engine\Chunks.h" />
     <ClInclude Include="src\engine\CW_EventConfig-dispatcher.h" />
     <ClInclude Include="src\engine\CW_EventConfig.h" />
+    <ClInclude Include="src\engine\DoubleBuffer.h" />
     <ClInclude Include="src\engine\EntryPoint.h" />
     <ClInclude Include="src\engine\EventInterface.h" />
     <ClInclude Include="src\engine\Events.h" />

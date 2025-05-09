@@ -14,9 +14,8 @@ namespace CW {
 
 	ProgramCore::~ProgramCore()
 	{
-		if (!m_Window.isOpen())
-			m_Window.close();
-		ImGui::SFML::Shutdown();
+		m_Renderer->CloseWindow();
+		//ImGui::SFML::Shutdown();
 		CW_INFO("Closing program.");
 	}
 
@@ -26,57 +25,80 @@ namespace CW {
 		CW_START_PROFILE_SESSION();
 		CW_PROFILE_FUNCTION();
 
+		std::thread renderThread([this] {
+			while (m_RenderRunning)
+			{
+				m_Renderer->Render(m_DeltaTime);
+				m_Renderer->CopyState(*m_App);
+			}
+		});
+
 		while (m_App->IsRunning())
 		{
 			CW_PROFILE_SCOPE("main loop");
 
-			UPSLimiter limit(m_App->GetUPSLimit());
-
 			m_DeltaTime = m_DeltaClock.restart();
-			EventHandler::Get().HandleEvents(m_Window);
+			{
+				std::lock_guard<std::mutex> lock(WINDOW_MUTEX);
+				//auto& window = m_Renderer->GetWindow();
+				EventHandler::Get().HandleEvents(WINDOW);
+			}
 #ifdef CW_USER_EVENTS_LIST
 			EventHandler::Get().HandleUserEvents();
 #endif
+			{
+				//std::lock_guard<std::mutex> lock(WINDOW_MUTEX);
+				//auto& window = m_Renderer->GetWindow();
+				//ImGui::SFML::Update(WINDOW, deltaTime);
+			}
 
-			ImGui::SFML::Update(m_Window, m_DeltaTime);
-
-			m_App->UpdateInterface();
+			//m_App->UpdateInterface();
 
 			if (m_App->IsPaused())
 				m_App->PauseUpdate(m_DeltaTime);
 			else
 				m_App->Update(m_DeltaTime);
 
-			m_Window.clear();
-			m_App->Draw(m_Window);
-			ImGui::SFML::Render(m_Window);
-			m_Window.display();
+			/*m_Renderer->GetWindow().load()->clear();
+			m_App->Draw(*m_Renderer->GetWindow().load());
+			ImGui::SFML::Render(*m_Renderer->GetWindow().load());
+			m_Renderer->GetWindow().load()->display();*/
+
+			m_UPSLimiter.Wait();
 		}
+		m_RenderRunning = false;
+
+		renderThread.join();
 		CW_END_PROFILE_SESSION();
 	}
 
 	void ProgramCore::SetApplication(std::unique_ptr<Application>&& app)
 	{
 		m_App = std::forward<std::unique_ptr<Application>>(app);
-
-		m_Window.create(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle());
-		m_Window.setVerticalSyncEnabled(true);
-
-		m_Window.setFramerateLimit(60);
-		if (!ImGui::SFML::Init(m_Window))
-		{
-			CW_CRITICAL("Failing initializing ImGui::SFML.");
-		}
-
 		m_App->SubscribeOnEvents();
+	}
+
+	void ProgramCore::SetRenderer(std::unique_ptr<Renderer>&& renderer)
+	{
+		m_Renderer = std::forward<std::unique_ptr<Renderer>>(renderer);
 	}
 
 	void ProgramCore::OnKeyPressed(const sf::Event::KeyPressed* e)
 	{
 		if (e->code == sf::Keyboard::Key::F11)
 		{
-			m_Window.create(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle(), reverseState());
+			m_Renderer->RecreateWindow(reverseState());
 		}
+	}
+
+	void ProgramCore::OnClosed()
+	{
+		m_App->Close();
+	}
+
+	void ProgramCore::OnUPSChange(const UPSChange* e)
+	{
+		m_UPSLimiter.SetUPS(e->UPS);
 	}
 
 	sf::State ProgramCore::reverseState()

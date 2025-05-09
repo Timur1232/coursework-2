@@ -3,21 +3,30 @@
 
 namespace CW {
 
-    UPSLimiter::UPSLimiter(std::chrono::milliseconds limitTime)
-        : m_StartPoint(std::chrono::high_resolution_clock::now()),
-          m_LimitTime(limitTime)
+    UPSLimiter::UPSLimiter()
+        : UPSLimiter(60)
     {
     }
 
-    UPSLimiter::~UPSLimiter()
+    UPSLimiter::UPSLimiter(size_t ups)
+        : m_LimitTime(1'000'000 / ups),
+          m_NextPoint(std::chrono::high_resolution_clock::now() + m_LimitTime)
     {
-        auto endPoint = std::chrono::high_resolution_clock::now();
-        auto elapsedTime = endPoint - m_StartPoint;
-        auto remainingTime = m_LimitTime - elapsedTime;
-        if (remainingTime.count() > 0)
+    }
+
+    void UPSLimiter::Wait() const
+    {
+        auto now = std::chrono::high_resolution_clock::now();
+        if (now < m_NextPoint)
         {
-            std::this_thread::sleep_for(remainingTime);
+            std::this_thread::sleep_until(m_NextPoint);
         }
+        m_NextPoint += m_LimitTime;
+    }
+
+    void UPSLimiter::SetUPS(size_t ups)
+    {
+        m_LimitTime = std::chrono::microseconds(1'000'000 / ups);
     }
 
 } // CW

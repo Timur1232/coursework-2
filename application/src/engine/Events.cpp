@@ -125,7 +125,7 @@ namespace CW {
 		while (const std::optional event = window.pollEvent())
 		{
 			CW_PROFILE_SCOPE("outer loop");
-			ImGui::SFML::ProcessEvent(window, *event);
+			//ImGui::SFML::ProcessEvent(window, *event);
 
 			for (auto target : m_EventTargets)
 			{

@@ -6,6 +6,8 @@ namespace CW {
 
 	namespace Log {
 
+		extern std::mutex COUT_LOG;
+
 		constexpr auto RESET     = "\033[0m";
 		constexpr auto RED       = "\033[31m";
 		constexpr auto GREEN     = "\033[32m";
@@ -22,30 +24,35 @@ namespace CW {
 		template<typename... Args>
 		void trace(const std::format_string<Args...> format, Args&&... args)
 		{
+			std::lock_guard<std::mutex> lock(COUT_LOG);
 			std::cout << std::format(format, std::forward<Args>(args)...) << std::endl;
 		}
 
 		template<typename... Args>
 		void error(const std::format_string<Args...> format, Args&&... args)
 		{
+			std::lock_guard<std::mutex> lock(COUT_LOG);
 			std::cout << RED << std::format(format, std::forward<Args>(args)...) << RESET << std::endl;
 		}
 
 		template<typename... Args>
 		void info(const std::format_string<Args...> format, Args&&... args)
 		{
+			std::lock_guard<std::mutex> lock(COUT_LOG);
 			std::cout << GREEN << std::format(format, std::forward<Args>(args)...) << RESET << std::endl;
 		}
 
 		template<typename... Args>
 		void warn(const std::format_string<Args...> format, Args&&... args)
 		{
+			std::lock_guard<std::mutex> lock(COUT_LOG);
 			std::cout << YELLOW << std::format(format, std::forward<Args>(args)...) << RESET << std::endl;
 		}
 
 		template<typename... Args>
 		void critical(const std::format_string<Args...> format, Args&&... args)
 		{
+			std::lock_guard<std::mutex> lock(COUT_LOG);
 			std::cout << RED << REVERSE << std::format(format, std::forward<Args>(args)...) << RESET << std::endl;
 		}
 

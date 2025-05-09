@@ -5,11 +5,26 @@
 #include "Events.h"
 #include "IDrawable.h"
 #include "IUpdate.h"
-#include "ApplicationState.h"
 
 namespace CW {
 
+	class Renderer;
 	using namespace std::chrono_literals;
+
+	/*enum class AppStatus
+	{
+		None = 0,
+		TryingToCopy,
+		SwappingBuffers
+	};*/
+
+	enum class AppStatus
+	{
+		None = 0,
+		Updating,
+		ReadyToCopy,
+		CopyRequest
+	};
 
 	class Application
 		: public IDrawable,
@@ -17,15 +32,11 @@ namespace CW {
 		  public virtual OnEvent
 	{
 	public:
-		Application() = delete;
-		Application(int width, int height, const char* title);
+		Application() = default;
 		virtual ~Application() = default;
 
 		virtual void UpdateInterface() = 0;
 		virtual void PauseUpdate(sf::Time deltaTime) = 0;
-
-		sf::Vector2u GetWindowSize() const;
-		const char* GetTitle() const;
 
 		bool IsRunning() const;
 		void Close();
@@ -33,17 +44,21 @@ namespace CW {
 		bool IsPaused() const;
 		void SwitchPause();
 
-		std::chrono::milliseconds GetUPSLimit() const { return m_UPSLimit; }
-		//virtual std::unique_ptr<ApplicationState> CollectState() const = 0;
+		size_t GetUPSLimit() const { return m_UPSLimit; }
+
+		virtual void CollectState(Renderer& renderer) = 0;
+		AppStatus GetStatus() const { return m_Status; }
+		void RequestCopy()
+		{
+			m_Status = AppStatus::CopyRequest;
+		}
 
 	protected:
-		sf::Vector2u m_WindowSize;
-		const char* m_WindowTitle;
-
 		bool m_Running = true;
 		bool m_Pause = false;
 
-		std::chrono::milliseconds m_UPSLimit = 16ms;
+		size_t m_UPSLimit = 60;
+		std::atomic<AppStatus> m_Status = AppStatus::None;
 	};
 
 } // CW

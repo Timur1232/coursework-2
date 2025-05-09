@@ -107,6 +107,8 @@ namespace CW {
 
 		void SetDefaultSettings();
 
+		const std::vector<Drone>& GetDrones() const { return m_Drones; }
+
 	private:
 		// Debug
 		inline void setMeshPos(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle);

@@ -9,30 +9,111 @@
 #include "debug_utils/Profiler.h"
 #include "utils/ArenaAllocator.h"
 #include "ObjectPallete.h"
+#include "engine/DoubleBuffer.h"
 
 #include "Camera2D.h"
 #include "Beacon.h"
 #include "Drone.h"
-
 #include "BitDirection.h"
-
 #include "Terrain.h"
+
+#include "engine/UPSLimiter.h"
 
 
 namespace CW {
 
+    struct SimState
+    {
+        std::vector<Drone> Drones;
+        std::vector<Beacon> Beacons;
+        std::vector<Resource> Resources;
+
+        SimState() = default;
+        SimState(SimState&&) = default;
+        const SimState& operator=(SimState&& other)
+        {
+            Drones = std::move(other.Drones);
+            Beacons = std::move(other.Beacons);
+            Resources = std::move(other.Resources);
+
+            return *this;
+        }
+    };
+
+
+    class MyRenderer
+        : public Renderer
+    {
+    public:
+        MyRenderer()
+            : Renderer(800, 600, "test")
+        {
+            m_DroneMesh.setFillColor(sf::Color::Yellow);
+            m_DroneMesh.setOrigin(m_DroneMesh.getGeometricCenter());
+
+            m_BeaconMesh.setOrigin(m_BeaconMesh.getGeometricCenter());
+
+            m_ResourceMesh.setOrigin(m_ResourceMesh.getGeometricCenter());
+            m_ResourceMesh.setFillColor(sf::Color::Cyan);
+        }
+
+        void Render(sf::Time deltaTime) override
+        {
+            std::lock_guard<std::mutex> lock(WINDOW_MUTEX);
+            //ImGui::SFML::Update(WINDOW, deltaTime);
+            WINDOW.clear();
+
+            renderState();
+
+            //ImGui::SFML::Render(WINDOW);
+            WINDOW.display();
+        }
+
+        void SetState(SimState&& state)
+        {
+            m_State = std::forward<SimState>(state);
+        }
+
+    private:
+        void renderState()
+        {
+            for (const auto& drone : m_State.Drones)
+            {
+                m_DroneMesh.setPosition(drone.GetPos());
+                WINDOW.draw(m_DroneMesh);
+            }
+            for (const auto& beacon : m_State.Beacons)
+            {
+                m_BeaconMesh.setPosition(beacon.GetPos());
+                m_BeaconMesh.setFillColor(beacon.BeaconColor());
+                WINDOW.draw(m_BeaconMesh);
+            }
+            for (const auto& resource : m_State.Resources)
+            {
+                m_ResourceMesh.setPosition(resource.GetPos());
+                WINDOW.draw(m_ResourceMesh);
+            }
+        }
+
+    private:
+        SimState m_State;
+
+        sf::CircleShape m_DroneMesh{50.0f, 8};
+        sf::CircleShape m_BeaconMesh{ 10.0f, 4 };
+        sf::CircleShape m_ResourceMesh{ 20.0f, 8 };
+    };
+
+
     class MyApp
         : public Application,
           public KeyPressedObs,
-          public ClosedObs,
           public MouseButtonPressedObs,
           public MouseButtonReleasedObs,
           public CreateBeaconObs
     {
     public:
         MyApp()
-            : Application(800, 600, "test"),
-              m_Camera(0, 0, 800, 600)
+            : m_Camera(0, 0, 800, 600)
         {
             m_Camera.SubscribeOnEvents();
             m_Resources.Reserve(128);
@@ -46,10 +127,14 @@ namespace CW {
 
             for (int i = -5; i <= 5; ++i)
                 m_Terrain.Generate(i);
+
+            m_Status = AppStatus::Updating;
         }
 
         void Update(sf::Time deltaTime) override
         {
+            while (m_Status == AppStatus::ReadyToCopy);
+
             CW_PROFILE_FUNCTION();
             m_Camera.Update(deltaTime);
 
@@ -62,6 +147,17 @@ namespace CW {
                 CW_PROFILE_SCOPE("drones update");
                 m_Drones.UpdateAllDrones(deltaTime, m_Resources.GetResources(), m_Beacons.GetChuncks(), m_ResourceReciever, m_Terrain);
             }
+
+            if (m_Status == AppStatus::CopyRequest)
+                m_Status = AppStatus::ReadyToCopy;
+        }
+
+        void SwapBuffers()
+        {
+            /*while (m_Status == AppStatus::TryingToCopy);
+            m_Status = AppStatus::SwappingBuffers;
+            
+            m_Status = AppStatus::None;*/
         }
 
         void PauseUpdate(sf::Time deltaTime) override
@@ -104,11 +200,6 @@ namespace CW {
             m_Terrain.Draw(render);
         }
 
-        void OnClosed() override
-        {
-            Close();
-        }
-
         void OnKeyPressed(const sf::Event::KeyPressed* event) override
         {
             if (event->code == sf::Keyboard::Key::Space)
@@ -119,7 +210,7 @@ namespace CW {
 
         void OnMouseButtonPressed(const sf::Event::MouseButtonPressed* e) override
         {
-            if (!m_Hold && !ImGui::GetIO().WantCaptureMouse && e->button == sf::Mouse::Button::Left)
+            /*if (!m_Hold && !ImGui::GetIO().WantCaptureMouse && e->button == sf::Mouse::Button::Left)
             {
                 switch (m_ObjPallete.GetCurrentType())
                 {
@@ -141,7 +232,7 @@ namespace CW {
                 }
                 }
                 m_Hold = true;
-            }
+            }*/
         }
 
         void OnMouseButtonReleased(const sf::Event::MouseButtonReleased* e) override
@@ -179,6 +270,14 @@ namespace CW {
                 ImGui::Spacing();
                 ImGui::Text("chunks amount: %d", m_Beacons.GetChuncks().Size());
                 ImGui::Checkbox("draw chunks", &m_DrawChunks);
+
+                ImGui::Spacing();
+                static int ups = GetUPSLimit();
+                if (ImGui::SliderInt("ups", &ups, 30, 200))
+                {
+                    m_UPSLimit = static_cast<size_t>(ups);
+                    EventHandler::Get().AddEvent(UPSChange{ .UPS = m_UPSLimit });
+                }
             }
 
             if (ImGui::CollapsingHeader("Object-pallete"))
@@ -309,12 +408,41 @@ namespace CW {
                 m_Drones.InfoInterface(&m_DronesInfo);
         }
 
+        void CollectState(Renderer& renderer) override
+        {
+            /*while (m_Status == AppStatus::SwappingBuffers);
+            m_Status = AppStatus::TryingToCopy;
+
+            m_Status = AppStatus::None;*/
+
+            auto& myRender = dynamic_cast<MyRenderer&>(renderer);
+            SimState state;
+
+            for (const auto& drone : m_Drones.GetDrones())
+            {
+                state.Drones.push_back(drone);
+            }
+            for (const auto& beacon : m_Beacons.GetBeacons())
+            {
+                if (beacon->IsAlive())
+                    state.Beacons.push_back(beacon.Object);
+            }
+            for (const auto& resource : m_Resources.GetResources())
+            {
+                if (!resource->IsCarried())
+                    state.Resources.push_back(*resource);
+            }
+
+            myRender.SetState(std::move(state));
+            m_Status = AppStatus::Updating;
+        }
+
     private:
         Camera2D m_Camera;
         bool m_Hold = false;
 
-        BeaconManager m_Beacons;
         DroneManager m_Drones;
+        BeaconManager m_Beacons;
         ResourceManager m_Resources;
 
         ResourceReciever m_ResourceReciever{ {0.0f, 0.0f} };
@@ -330,7 +458,6 @@ namespace CW {
 
         bool m_DrawChunks = false;
         sf::RectangleShape m_ChunkMesh;
-
     };
 
 } // CW
@@ -338,4 +465,9 @@ namespace CW {
 std::unique_ptr<CW::Application> create_program(int argc, const char** argv)
 {
     return std::make_unique<CW::MyApp>();
+}
+
+std::unique_ptr<CW::Renderer> create_renderer(int argc, const char** argv)
+{
+    return std::make_unique<CW::MyRenderer>();
 }

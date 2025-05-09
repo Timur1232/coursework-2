@@ -4,7 +4,7 @@
 
 namespace CW {
 
-    struct ApplicationState
+    struct IApplicationState
     {
     };
 

@@ -26,8 +26,8 @@ namespace CW {
 
 	void Camera2D::OnMouseButtonPressed(const sf::Event::MouseButtonPressed* e)
 	{
-		if (!ImGui::GetIO().WantCaptureMouse)
-			m_IsMoving = e->button == sf::Mouse::Button::Right;
+		/*if (!ImGui::GetIO().WantCaptureMouse)
+			m_IsMoving = e->button == sf::Mouse::Button::Right;*/
 	}
 
 	void Camera2D::OnMouseButtonReleased(const sf::Event::MouseButtonReleased* e)
@@ -46,7 +46,7 @@ namespace CW {
 
 	void Camera2D::OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled* e)
 	{
-		if (ImGui::GetIO().WantCaptureMouse)
+		/*if (ImGui::GetIO().WantCaptureMouse)
 			return;
 		if (e->delta > 0)
 		{
@@ -57,7 +57,7 @@ namespace CW {
 		{
 			m_View.zoom(1.1f);
 			m_ZoomFactor *= 1.1f;
-		}
+		}*/
 	}
 
 	void Camera2D::OnResized(const sf::Event::Resized* e)

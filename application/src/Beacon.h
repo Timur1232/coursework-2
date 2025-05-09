@@ -66,6 +66,8 @@ namespace CW {
 		[[nodiscard]] const ChunkHandler<Beacon>& GetChuncks() const { return m_Chunks; }
 		[[nodiscard]] size_t Size() const { return m_Beacons.size(); }
 		[[nodiscard]] size_t Capacity() const { return m_Beacons.capacity(); }
+
+		const std::vector<IndexedBeacon>& GetBeacons() const { return m_Beacons; }
 		
 		void InfoInterface(bool* open);
 		void DebugInterface();

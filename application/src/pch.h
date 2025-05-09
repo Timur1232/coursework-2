@@ -17,7 +17,10 @@
 #include <chrono>
 #include <cmath>
 #include <concepts>
+
 #include <thread>
+#include <atomic>
+#include <mutex>
 
 #include <fstream>
 #include <sstream>
@@ -30,6 +33,7 @@
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
+#include <initializer_list>
 
 //========================[SFML]========================//
 
