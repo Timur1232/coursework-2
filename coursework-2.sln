@@ -3,15 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35806.99
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "coursework-2", "coursework-2.vcxproj", "{A9AB248C-20FA-4CBB-ABC0-61946715C792}"
-	ProjectSection(ProjectDependencies) = postProject
-		{23908CEA-CC77-4C06-B8E8-5650BD0C6BC6} = {23908CEA-CC77-4C06-B8E8-5650BD0C6BC6}
-		{44B05E52-5233-4639-9CF7-F7EF365657B3} = {44B05E52-5233-4639-9CF7-F7EF365657B3}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "imgui", "dependencies\imgui\imgui.vcxproj", "{23908CEA-CC77-4C06-B8E8-5650BD0C6BC6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FastNoise", "dependencies\FastNoise\FastNoise.vcxproj", "{44B05E52-5233-4639-9CF7-F7EF365657B3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "application", "application\application.vcxproj", "{4C9ACA47-6DEE-4402-85BA-5B7A48158AAD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{23908CEA-CC77-4C06-B8E8-5650BD0C6BC6} = {23908CEA-CC77-4C06-B8E8-5650BD0C6BC6}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,24 +17,18 @@ Global
 		Test|x64 = Test|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A9AB248C-20FA-4CBB-ABC0-61946715C792}.Debug|x64.ActiveCfg = Debug|x64
-		{A9AB248C-20FA-4CBB-ABC0-61946715C792}.Debug|x64.Build.0 = Debug|x64
-		{A9AB248C-20FA-4CBB-ABC0-61946715C792}.Release|x64.ActiveCfg = Release|x64
-		{A9AB248C-20FA-4CBB-ABC0-61946715C792}.Release|x64.Build.0 = Release|x64
-		{A9AB248C-20FA-4CBB-ABC0-61946715C792}.Test|x64.ActiveCfg = Test|x64
-		{A9AB248C-20FA-4CBB-ABC0-61946715C792}.Test|x64.Build.0 = Test|x64
 		{23908CEA-CC77-4C06-B8E8-5650BD0C6BC6}.Debug|x64.ActiveCfg = Debug|x64
 		{23908CEA-CC77-4C06-B8E8-5650BD0C6BC6}.Debug|x64.Build.0 = Debug|x64
 		{23908CEA-CC77-4C06-B8E8-5650BD0C6BC6}.Release|x64.ActiveCfg = Release|x64
 		{23908CEA-CC77-4C06-B8E8-5650BD0C6BC6}.Release|x64.Build.0 = Release|x64
 		{23908CEA-CC77-4C06-B8E8-5650BD0C6BC6}.Test|x64.ActiveCfg = Release|x64
 		{23908CEA-CC77-4C06-B8E8-5650BD0C6BC6}.Test|x64.Build.0 = Release|x64
-		{44B05E52-5233-4639-9CF7-F7EF365657B3}.Debug|x64.ActiveCfg = Debug|x64
-		{44B05E52-5233-4639-9CF7-F7EF365657B3}.Debug|x64.Build.0 = Debug|x64
-		{44B05E52-5233-4639-9CF7-F7EF365657B3}.Release|x64.ActiveCfg = Release|x64
-		{44B05E52-5233-4639-9CF7-F7EF365657B3}.Release|x64.Build.0 = Release|x64
-		{44B05E52-5233-4639-9CF7-F7EF365657B3}.Test|x64.ActiveCfg = Debug|x64
-		{44B05E52-5233-4639-9CF7-F7EF365657B3}.Test|x64.Build.0 = Debug|x64
+		{4C9ACA47-6DEE-4402-85BA-5B7A48158AAD}.Debug|x64.ActiveCfg = Debug|x64
+		{4C9ACA47-6DEE-4402-85BA-5B7A48158AAD}.Debug|x64.Build.0 = Debug|x64
+		{4C9ACA47-6DEE-4402-85BA-5B7A48158AAD}.Release|x64.ActiveCfg = Release|x64
+		{4C9ACA47-6DEE-4402-85BA-5B7A48158AAD}.Release|x64.Build.0 = Release|x64
+		{4C9ACA47-6DEE-4402-85BA-5B7A48158AAD}.Test|x64.ActiveCfg = Debug|x64
+		{4C9ACA47-6DEE-4402-85BA-5B7A48158AAD}.Test|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
