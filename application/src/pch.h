@@ -17,6 +17,7 @@
 #include <chrono>
 #include <cmath>
 #include <concepts>
+#include <thread>
 
 #include <fstream>
 #include <sstream>

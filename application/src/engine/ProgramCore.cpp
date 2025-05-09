@@ -3,6 +3,7 @@
 
 #include <debug_utils/Log.h>
 #include <debug_utils/Profiler.h>
+#include "UPSLimiter.h"
 
 namespace CW {
 
@@ -28,6 +29,9 @@ namespace CW {
 		while (m_App->IsRunning())
 		{
 			CW_PROFILE_SCOPE("main loop");
+
+			UPSLimiter limit(m_App->GetUPSLimit());
+
 			m_DeltaTime = m_DeltaClock.restart();
 			EventHandler::Get().HandleEvents(m_Window);
 #ifdef CW_USER_EVENTS_LIST

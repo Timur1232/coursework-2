@@ -5,8 +5,11 @@
 #include "Events.h"
 #include "IDrawable.h"
 #include "IUpdate.h"
+#include "ApplicationState.h"
 
 namespace CW {
+
+	using namespace std::chrono_literals;
 
 	class Application
 		: public IDrawable,
@@ -30,12 +33,17 @@ namespace CW {
 		bool IsPaused() const;
 		void SwitchPause();
 
+		std::chrono::milliseconds GetUPSLimit() const { return m_UPSLimit; }
+		//virtual std::unique_ptr<ApplicationState> CollectState() const = 0;
+
 	protected:
 		sf::Vector2u m_WindowSize;
 		const char* m_WindowTitle;
 
 		bool m_Running = true;
 		bool m_Pause = false;
+
+		std::chrono::milliseconds m_UPSLimit = 16ms;
 	};
 
 } // CW

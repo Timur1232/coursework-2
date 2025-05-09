@@ -101,6 +101,7 @@
     <ClCompile Include="src\engine\EventInterface.cpp" />
     <ClCompile Include="src\engine\Events.cpp" />
     <ClCompile Include="src\engine\ProgramCore.cpp" />
+    <ClCompile Include="src\engine\UPSLimiter.cpp" />
     <ClCompile Include="src\ObjectPallete.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -122,6 +123,7 @@
     <ClInclude Include="src\debug_utils\Profiler.h" />
     <ClInclude Include="src\Drone.h" />
     <ClInclude Include="src\engine\Application.h" />
+    <ClInclude Include="src\engine\ApplicationState.h" />
     <ClInclude Include="src\engine\Chunks.h" />
     <ClInclude Include="src\engine\CW_EventConfig-dispatcher.h" />
     <ClInclude Include="src\engine\CW_EventConfig.h" />
@@ -132,6 +134,8 @@
     <ClInclude Include="src\engine\IUpdate.h" />
     <ClInclude Include="src\engine\Object.h" />
     <ClInclude Include="src\engine\ProgramCore.h" />
+    <ClInclude Include="src\engine\Renderer.h" />
+    <ClInclude Include="src\engine\UPSLimiter.h" />
     <ClInclude Include="src\engine\UserEvent.h" />
     <ClInclude Include="src\ObjectPallete.h" />
     <ClInclude Include="src\pch.h" />

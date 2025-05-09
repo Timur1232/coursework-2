@@ -111,6 +111,9 @@ namespace CW {
 			{
 				samplePos = sampleToWorldPosition(*leftSection, i, sectionStartPosition + m_SectionWidth, sampleWidth);
 			}*/
+			if (sampleIndex + i < 0 || sampleIndex + i >= m_SamplesPerSection)
+				continue;
+
 			sf::Vector2f samplePos = sampleToWorldPosition(*section, sampleIndex + i, sectionStartPosition, sampleWidth);
 			if (distance_squared(samplePos, object.GetPos()) <= distThreashold * distThreashold)
 			{
