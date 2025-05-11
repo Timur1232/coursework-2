@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pch.h"
+#include <cstdint>
 
 namespace CW {
 
@@ -37,5 +37,9 @@ namespace CW {
     using f32 = float;
     using f64 = double;
     using f128 = long double;
+
+
+    template <typename T>
+    concept numeric = std::integral<T> || std::floating_point<T>;
 
 } // CW

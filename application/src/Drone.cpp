@@ -2,8 +2,8 @@
 #include "Drone.h"
 
 #include "utils/utils.h"
-#include "engine/Events.h"
-#include "engine/UserDispatcher.h"
+#include "engine/Events/UserEvents.h"
+#include "engine/Events/UserEventHandler.h"
 
 #include "debug_utils/Profiler.h"
 #include "debug_utils/Log.h"
@@ -47,11 +47,23 @@ namespace CW {
     {
     }
 
-    void Drone::Update(sf::Time deltaTime, const DroneSettings& settings)
+    void Drone::Update(sf::Time deltaTime, const DroneSettings& settings, std::vector<Resource>& resources)
     {
-        //CW_PROFILE_FUNCTION();
+        CW_PROFILE_FUNCTION();
         turn(deltaTime, settings.TurningSpeed, settings.MaxTurningDelta);
         m_Position += ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle) * settings.Speed * deltaTime.asSeconds();
+
+        if (m_Position.y < 250.0f)
+        {
+            if (m_DirectionAngle.asRadians() < 0.0f)
+            {
+                m_AttractionAngle = m_DirectionAngle * -1.0f;
+            }
+            if (m_Position.y < 0.0f)
+            {
+                m_Position.y = 0.0f;
+            }
+        }
 
         m_BeaconTimerSec -= deltaTime.asSeconds();
         if (m_BeaconTimerSec <= 0)
@@ -59,32 +71,31 @@ namespace CW {
             UserEventHandler::Get()
                 .AddEvent(CreateBeacon{ m_Position, opposite_target_type(m_TargetType),
                     angle_to_bit_direction((m_DirectionAngle + sf::degrees(180.0f)).wrapSigned()) });
-            //CW_WARN("Drone\'s spawning beacons not implemented.");
             m_BeaconTimerSec = settings.BeaconCooldownSec;
         }
 
-        wander(deltaTime, settings.WanderAngleThreshold, settings.RandomWanderAngle);
+        wander(deltaTime, settings.WanderAngleThreshold, settings.RandomWanderAngle, resources);
 
-        if (m_TargetResource && m_TargetResource->IsCarried())
+        if (m_TargetResourceIndex && resources.at(*m_TargetResourceIndex).IsCarried())
         {
-            m_TargetResource = nullptr;
+            m_TargetResourceIndex = {};
         }
-        else if (CheckResourceColission(settings.PickupDist))
+        else if (CheckResourceColission(settings.PickupDist, resources))
         {
-            CW_TRACE("Drone picked {} resources on ({}, {})", m_TargetResource->GetResources(), m_TargetResource->GetPos().x, m_TargetResource->GetPos().y);
+            CW_TRACE("Drone picked {} resources on ({}, {})", resources.at(*m_TargetResourceIndex).GetResources(), resources.at(*m_TargetResourceIndex).GetPos().x, resources.at(*m_TargetResourceIndex).GetPos().y);
             m_TargetType = TargetType::Navigation;
             m_AttractionAngle = (m_AttractionAngle - sf::degrees(180.0f)).wrapSigned();
             m_DirectionAngle = m_AttractionAngle;
-            m_CarriedResources = m_TargetResource->GetResources();
-            m_TargetResource->Pickup();
-            m_TargetResource = nullptr;
+            m_CarriedResources = resources.at(*m_TargetResourceIndex).GetResources();
+            resources.at(*m_TargetResourceIndex).Pickup();
+            m_TargetResourceIndex = {};
         }
     }
 
     void Drone::ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec, float FOV, sf::Vector2f viewDistance)
     {
-        //CW_PROFILE_FUNCTION();
-        if (m_TargetResource)
+        CW_PROFILE_FUNCTION();
+        if (m_TargetResourceIndex)
             return;
 
         ChunkPtr<Beacon> chunk = beacons.GetAreaChunk(m_Position);
@@ -102,7 +113,6 @@ namespace CW {
 
         if (furthestBeacon)
         {
-            //m_AttractionAngle = (furthestBeacon->GetPos() - m_Position).angle();
             m_AttractionAngle = furthestBeacon->GetDirectionAngle();
             m_WanderTimer = wanderCooldownSec;
         }
@@ -132,28 +142,31 @@ namespace CW {
         return false;
     }
 
-    void Drone::ReactToResources(std::vector<std::unique_ptr<Resource>>& resources, sf::Vector2f viewDistance, float FOV)
+    void Drone::ReactToResources(std::vector<Resource>& resources, sf::Vector2f viewDistance, float FOV)
     {
-        if (m_TargetType == TargetType::Recource && !resources.empty() && !m_TargetResource)
+        if (m_TargetType == TargetType::Recource && !resources.empty() && !m_TargetResourceIndex)
         {
+            int resourceIndex = -1;
             auto validResources = resources
-                | std::ranges::views::filter([](const std::unique_ptr<Resource>& r) { return !r->IsCarried(); });
+                | std::ranges::views::filter([&resourceIndex](const Resource& r) { resourceIndex++;  return !r.IsCarried(); });
 
             if (std::ranges::empty(validResources))
             {
                 return;
             }
 
-            Resource* closestResource = validResources.front().get();
+            Resource* closestResource = &validResources.front();
+            size_t closestResourceIndex = resourceIndex;
             float minDistSq = distance_squared(closestResource->GetPos(), m_Position);
 
             for (auto& resource : validResources | std::ranges::views::drop(1))
             {
-                if (float otherDist = distance_squared(resource->GetPos(), m_Position);
+                if (float otherDist = distance_squared(resource.GetPos(), m_Position);
                     otherDist < minDistSq)
                 {
                     minDistSq = otherDist;
-                    closestResource = resource.get();
+                    closestResource = &resource;
+                    closestResourceIndex = resourceIndex;
                 }
             }
 
@@ -161,18 +174,18 @@ namespace CW {
                 && minDistSq >= viewDistance.x * viewDistance.x
                 && minDistSq <= viewDistance.y * viewDistance.y)
             {
-                m_TargetResource = &(*closestResource);
-                m_AttractionAngle = (m_TargetResource->GetPos() - m_Position).angle();
+                m_TargetResourceIndex = resourceIndex;
+                m_AttractionAngle = (closestResource->GetPos() - m_Position).angle();
                 m_WanderTimer = 0.0f;
             }
         }
     }
 
-    bool Drone::CheckResourceColission(float pickUpDist)
+    bool Drone::CheckResourceColission(float pickUpDist, const std::vector<Resource>& resources)
     {
-        if (!m_TargetResource)
+        if (!m_TargetResourceIndex)
             return false;
-        return distance_squared(m_TargetResource->GetPos(), m_Position) <= pickUpDist * pickUpDist;
+        return distance_squared(resources.at(*m_TargetResourceIndex).GetPos(), m_Position) <= pickUpDist * pickUpDist;
     }
 
     void Drone::turn(sf::Time deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta)
@@ -205,7 +218,7 @@ namespace CW {
         m_DirectionAngle = loop(m_DirectionAngle, sf::degrees(-180.0f), sf::degrees(180.0f), deltaAngle);
     }
 
-    void Drone::wander(sf::Time deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle)
+    void Drone::wander(sf::Time deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle, const std::vector<Resource>& resources)
     {
         if (m_WanderTimer > 0.0f)
         {
@@ -213,9 +226,9 @@ namespace CW {
             return;
         }
 
-        if (m_TargetResource)
+        if (m_TargetResourceIndex)
         {
-            m_AttractionAngle = (m_TargetResource->GetPos() - m_Position).angle();
+            m_AttractionAngle = (resources.at(*m_TargetResourceIndex).GetPos() - m_Position).angle();
             return;
         }
         else if (std::abs((m_DirectionAngle - m_AttractionAngle).asRadians()) <= wanderAngleThreshold.asRadians())
@@ -257,16 +270,23 @@ namespace CW {
     }
 
 
+    DroneManager::DroneManager()
+    {
+        m_Texture = CreateShared<sf::Texture>("res/sprites/drone_sprite.png");
+        m_Sprite = CreateShared<sf::Sprite>(*m_Texture);
+        m_Sprite->setOrigin(static_cast<sf::Vector2f>(m_Texture->getSize()) / 2.0f);
+    }
+
     void DroneManager::UpdateAllDrones(
         sf::Time deltaTime,
-        std::vector<std::unique_ptr<Resource>>& resources,
+        std::vector<Resource>& resources,
         const ChunkHandler<Beacon>& beacons,
         ResourceReciever& reciever,
         const Terrain& terrain)
     {
         for (auto& drone : m_Drones)
         {
-            drone.Update(deltaTime, m_DroneSettings);
+            drone.Update(deltaTime, m_DroneSettings, resources);
             if (terrain.IsNear(drone, 50.0f))
             {
                 drone.SetDirection((drone.GetDirection() + sf::degrees(180.0f)).wrapSigned());
@@ -303,7 +323,17 @@ namespace CW {
                 render.draw(m_FOVVisual[1]);
             }
 
-            render.draw(m_Mesh);
+            m_Sprite->setPosition(drone.GetPos());
+            if (abs(drone.GetDirection().asRadians()) > angle::PI_2)
+            {
+                m_Sprite->setScale({1.0f, -1.0f});
+            }
+            else
+            {
+                m_Sprite->setScale({ 1.0f, 1.0f });
+            }
+            m_Sprite->setRotation(drone.GetDirection());
+            render.draw(*m_Sprite);
 
             if (m_DrawDirection)
             {
@@ -350,10 +380,7 @@ namespace CW {
                 ImGui::Text("attraction angle: %.2f", drone.GetAttraction().asDegrees());
                 ImGui::Text("beacon timer: %.1f s", drone.GetBeaconSpawnTimer());
                 ImGui::Text("carried resources: %d", drone.GetCarriedResources());
-                if (auto resource = drone.GetTargetResource())
-                    ImGui::Text("target position: (%.2f, %.2f)", resource->GetPos().x, resource->GetPos().y);
-                else
-                    ImGui::Text("no target");
+                ImGui::Text(drone.GetTargetResourceIndex() ? "has target" : "no target");
 
                 ++index;
             }
@@ -366,7 +393,9 @@ namespace CW {
         ImGui::Checkbox("show view distance", &m_DrawViewDistance);
         ImGui::Checkbox("show direction", &m_DrawDirection);
         if (ImGui::SliderFloat("fov", &m_DroneSettings.FOV, 0.0f, 1.0f))
+        {
             m_DroneSettings.FOVRad = std::acos(m_DroneSettings.FOV);
+        }
         ImGui::SliderFloat("speed", &m_DroneSettings.Speed, 50.0f, 200.0f);
 
         static float tmp;
@@ -386,7 +415,11 @@ namespace CW {
         if (ImGui::SliderAngle("max turning delta", &tmp, 1.0f, 180.0f))
             m_DroneSettings.MaxTurningDelta = sf::radians(tmp);
 
-        ImGui::SliderFloat2("view distanse", &m_DroneSettings.ViewDistance.x, 0.0f, 500.0f);
+        if (ImGui::SliderFloat2("view distanse", &m_DroneSettings.ViewDistance.x, 0.0f, 500.0f))
+        {
+            m_FOVVisual[0].SetLength(m_DroneSettings.ViewDistance.y);
+            m_FOVVisual[1].SetLength(m_DroneSettings.ViewDistance.y);
+        }
 
         ImGui::SliderFloat("beacon spawn cooldown", &m_DroneSettings.BeaconCooldownSec, 0.1f, 50.0f);
         ImGui::SliderFloat("wander cooldown", &m_DroneSettings.WanderCooldownSec, 0.1f, 50.0f);
@@ -395,10 +428,6 @@ namespace CW {
     void DroneManager::SetDefaultSettings()
     {
         m_DroneSettings.SetDefault();
-
-        m_Mesh.setRadius(50.0f);
-        m_Mesh.setOrigin(m_Mesh.getGeometricCenter());
-        m_Mesh.setPointCount(16);
         
         m_MeshViewDistance.setPointCount(16);
         
@@ -410,7 +439,6 @@ namespace CW {
         m_AttractionAngleVisual.setPointCount(3);
         m_AttractionAngleVisual.setOrigin(m_AttractionAngleVisual.getGeometricCenter());
         
-        m_Mesh.setFillColor(sf::Color::Yellow);
         m_AttractionAngleVisual.setFillColor(sf::Color::Blue);
         m_MeshViewDistance.setFillColor(sf::Color::Transparent);
         m_MeshViewDistance.setOutlineColor(sf::Color::White);
@@ -425,8 +453,6 @@ namespace CW {
 
     void DroneManager::setMeshPos(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle)
     {
-        m_Mesh.setPosition(position);
-
         if (m_DrawDirection)
         {
             m_DirectionVisual.setPosition(position + ONE_LENGTH_VEC.rotatedBy(directionAngle) * 100.0f);

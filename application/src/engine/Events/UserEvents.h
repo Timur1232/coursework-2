@@ -1,7 +1,7 @@
 #pragma once
 #include "pch.h"
 
-#include "Events.h"
+#include "Event.h"
 #include "TargetType.h"
 
 namespace CW {

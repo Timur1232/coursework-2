@@ -3,10 +3,8 @@
 #include "pch.h"
 
 #include "Application.h"
-#include "Events.h"
-#include "CoreEvents.h"
-
-#include "Types.h"
+#include "Events/Event.h"
+#include "Events/CoreEvents.h"
 
 namespace CW {
 
@@ -33,7 +31,6 @@ namespace CW {
 
 		void onClosed();
 		void onKeyPressed(KeyPressed& e);
-		//void onUPSChange();
 
 	private:
 		Unique<Application> m_App;
@@ -42,8 +39,6 @@ namespace CW {
 		sf::State m_WindowState = sf::State::Windowed;
 		sf::Clock m_DeltaClock;
 		sf::Time m_DeltaTime;
-
-		//UPSLimiter m_UPS{ 60 };
 	};
 
 } // CW

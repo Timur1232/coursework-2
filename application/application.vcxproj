@@ -99,7 +99,7 @@
     <ClCompile Include="src\Drone.cpp" />
     <ClCompile Include="src\engine\Application.cpp" />
     <ClCompile Include="src\engine\ProgramCore.cpp" />
-    <ClCompile Include="src\engine\UserDispatcher.cpp" />
+    <ClCompile Include="src\engine\Events\UserEventHandler.cpp" />
     <ClCompile Include="src\ObjectPallete.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -121,20 +121,20 @@
     <ClInclude Include="src\debug_utils\Profiler.h" />
     <ClInclude Include="src\Drone.h" />
     <ClInclude Include="src\engine\Application.h" />
-    <ClInclude Include="src\engine\Chunks.h" />
-    <ClInclude Include="src\engine\CoreEvents.h" />
-    <ClInclude Include="src\engine\CW_EventConfig.h" />
+    <ClInclude Include="src\Chunks.h" />
+    <ClInclude Include="src\engine\Events\CoreEvents.h" />
+    <ClInclude Include="src\engine\Events\CW_EventConfig.h" />
     <ClInclude Include="src\engine\EntryPoint.h" />
-    <ClInclude Include="src\engine\EventInterface.h" />
-    <ClInclude Include="src\engine\Events.h" />
+    <ClInclude Include="src\engine\Events\EventInterface.h" />
+    <ClInclude Include="src\engine\Events\Event.h" />
     <ClInclude Include="src\engine\IDrawable.h" />
     <ClInclude Include="src\engine\IUpdate.h" />
-    <ClInclude Include="src\engine\Object.h" />
+    <ClInclude Include="src\Object.h" />
     <ClInclude Include="src\engine\ProgramCore.h" />
     <ClInclude Include="src\engine\Renderer.h" />
     <ClInclude Include="src\engine\Types.h" />
-    <ClInclude Include="src\engine\UserDispatcher.h" />
-    <ClInclude Include="src\engine\UserEvents.h" />
+    <ClInclude Include="src\engine\Events\UserEventHandler.h" />
+    <ClInclude Include="src\engine\Events\UserEvents.h" />
     <ClInclude Include="src\ObjectPallete.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Resource.h" />

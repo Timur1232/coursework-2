@@ -3,10 +3,9 @@
 #include <engine/EntryPoint.h>
 
 #include <engine/ProgramCore.h>
-#include "engine/Chunks.h"
 
-#include "engine/CoreEvents.h"
-#include "engine/UserEvents.h"
+#include "engine/Events/CoreEvents.h"
+#include "engine/Events/UserEvents.h"
 
 #include "debug_utils/Log.h"
 #include "debug_utils/Profiler.h"
@@ -32,7 +31,7 @@ namespace CW {
             : Application(800, 600, "test"),
               m_Camera(0, 0, 800, 600)
         {
-            //m_Camera.SubscribeOnEvents();
+            m_ClearColor = sf::Color(135, 206, 235, 255);
             m_Resources.Reserve(128);
 
             m_Drones.SetDefaultSettings();
@@ -44,6 +43,16 @@ namespace CW {
 
             for (int i = -5; i <= 5; ++i)
                 m_Terrain.Generate(i);
+
+            if (!m_WaterShader.loadFromFile("res/shaders/water_fragment.glsl", sf::Shader::Type::Fragment))
+            {
+                CW_ERROR("Unable to load water shader!");
+            }
+
+            m_WaterShader.setUniform("uResolution", static_cast<sf::Vector2f>(GetWindowSize()));
+            m_WaterShader.setUniform("uDeepDarkFactor", 2.0f);
+            m_WaterShader.setUniform("uYOffset", 300.0f);
+            m_FullScreenQuad.setSize(static_cast<sf::Vector2f>(GetWindowSize()));
         }
 
         void Update(sf::Time deltaTime) override
@@ -59,6 +68,7 @@ namespace CW {
                 CW_PROFILE_SCOPE("drones update");
                 m_Drones.UpdateAllDrones(deltaTime, m_Resources.GetResources(), m_Beacons.GetChuncks(), m_ResourceReciever, m_Terrain);
             }
+            m_ElapsedTime += deltaTime;
         }
 
         void PauseUpdate(sf::Time deltaTime) override
@@ -68,6 +78,14 @@ namespace CW {
         void Draw(sf::RenderWindow& render) override
         {
             CW_PROFILE_FUNCTION();
+
+            m_WaterShader.setUniform("uCameraPosition", m_Camera.GetView().getCenter());
+            m_WaterShader.setUniform("uZoomFactor", m_Camera.GetZoomFactor());
+            m_WaterShader.setUniform("uTime", m_ElapsedTime.asSeconds());
+
+            render.setView(render.getDefaultView());
+            render.draw(m_FullScreenQuad, &m_WaterShader);
+
             render.setView(m_Camera.GetView());
 
             if (m_DrawChunks)
@@ -106,6 +124,7 @@ namespace CW {
             dispatcher.Dispach<KeyPressed>(CW_BUILD_EVENT_FUNC(OnKeyPressed));
             dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed));
             dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
+            dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
 
             dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon));
 
@@ -154,6 +173,12 @@ namespace CW {
         {
             m_Hold = m_Hold && e.Data.button != sf::Mouse::Button::Left;
             return false;
+        }
+
+        bool OnWindowResized(WindowResized& e)
+        {
+            m_WaterShader.setUniform("uResolution", static_cast<sf::Vector2f>(e.Size));
+            m_FullScreenQuad.setSize(static_cast<sf::Vector2f>(e.Size));
         }
 
         bool OnCreateBeacon(CreateBeacon& e)
@@ -329,6 +354,10 @@ namespace CW {
 
         Terrain m_Terrain;
 
+        sf::Shader m_WaterShader;
+        sf::RectangleShape m_FullScreenQuad;
+        sf::Time m_ElapsedTime = sf::Time::Zero;
+
         // Debug
         bool m_BeaconsInfo = false;
         bool m_DronesInfo = false;
@@ -338,7 +367,6 @@ namespace CW {
 
         bool m_DrawChunks = false;
         sf::RectangleShape m_ChunkMesh;
-
     };
 
 } // CW

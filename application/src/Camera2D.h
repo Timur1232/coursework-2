@@ -2,9 +2,9 @@
 
 #include "pch.h"
 
-#include "engine/Events.h"
-#include "engine/EventInterface.h"
-#include "engine/CoreEvents.h"
+#include "engine/Events/Event.h"
+#include "engine/Events/EventInterface.h"
+#include "engine/Events/CoreEvents.h"
 
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"

@@ -76,7 +76,7 @@ namespace CW {
 
 	bool Terrain::IsNear(const Object& object, float distThreashold, int range) const
 	{
-		int sectionIndex = object.GetPos().x / m_SectionWidth;
+		int sectionIndex = static_cast<int>(object.GetPos().x / m_SectionWidth);
 		if (object.GetPos().x < 0)
 			sectionIndex -= 1;
 

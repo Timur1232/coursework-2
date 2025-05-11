@@ -3,7 +3,7 @@
 #include "pch.h"
 
 #include "engine/IDrawable.h"
-#include "engine/Object.h"
+#include "Object.h"
 
 namespace CW {
 

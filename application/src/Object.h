@@ -13,13 +13,12 @@ namespace CW {
 		{
 		}
 
-		[[nodiscard]] inline sf::Vector2f GetPos() const { return m_Position; }
-		inline void SetPos(sf::Vector2f position) { m_Position = position; }
+		[[nodiscard]] sf::Vector2f GetPos() const { return m_Position; }
+		void SetPos(sf::Vector2f position) { m_Position = position; }
 
 	protected:
 		sf::Vector2f m_Position;
 	};
-
 
 	template <class T>
 	concept has_position = requires(T p, sf::Vector2f position)

@@ -4,8 +4,6 @@
 
 namespace CW {
 
-	template <class T>
-	using Ref = std::reference_wrapper<T>;
 
 
 	template <class T>
@@ -23,7 +21,7 @@ namespace CW {
 		return (max - min) * t + min;
 	}
 
-	constexpr uint64_t bit(unsigned int n)
+	constexpr u64 bit(unsigned int n)
 	{
 		return 1uLL << n;
 	}

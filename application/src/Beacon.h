@@ -4,8 +4,8 @@
 
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"
-#include "engine/Object.h"
-#include "engine/Chunks.h"
+#include "Object.h"
+#include "Chunks.h"
 #include "utils/utils.h"
 
 #include "TargetType.h"
@@ -44,7 +44,7 @@ namespace CW {
 	private:
 		TargetType m_Type = TargetType::None;
 		float m_Charge = 1.0f;
-		uint8_t m_BitDirection = DirectionBit::None;
+		byte m_BitDirection = DirectionBit::None;
 		bool m_Alive = true;
 	};
 

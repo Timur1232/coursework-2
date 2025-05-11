@@ -3,7 +3,7 @@
 #include "pch.h"
 
 #include "engine/IDrawable.h"
-#include "engine/Object.h"
+#include "Object.h"
 
 #include "utils/utils.h"
 
@@ -39,10 +39,10 @@ namespace CW {
 
 		void CreateResource(sf::Vector2f position, int amount = 10);
 
-		std::vector<std::unique_ptr<Resource>>& GetResources() { return m_Resources; }
+		std::vector<Resource>& GetResources() { return m_Resources; }
 
 	private:
-		std::vector<std::unique_ptr<Resource>> m_Resources;
+		std::vector<Resource> m_Resources;
 		sf::CircleShape m_Mesh;
 	};
 

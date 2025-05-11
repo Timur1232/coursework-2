@@ -57,12 +57,12 @@ namespace CW {
 	{
 		if (ImGui::GetIO().WantCaptureMouse)
 			return false;
-		if (e.Data.delta > 0)
+		if (e.Data.delta > 0 && m_ZoomFactor * 0.9f >= 0.25f)
 		{
 			m_View.zoom(0.9f);
 			m_ZoomFactor *= 0.9f;
 		}
-		else
+		else if (e.Data.delta < 0 && m_ZoomFactor * 1.1f <= 10.0f)
 		{
 			m_View.zoom(1.1f);
 			m_ZoomFactor *= 1.1f;

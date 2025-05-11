@@ -3,7 +3,7 @@
 
 namespace CW {
 
-	uint8_t angle_to_bit_direction(sf::Angle angle)
+	byte angle_to_bit_direction(sf::Angle angle)
 	{
 		bool isDiagonal = in_between_abs(angle.asRadians(), angle::PI_4, angle::PI_6)
 			|| in_between_abs(angle.asRadians(), angle::PI_2 + angle::PI_4, angle::PI_6);

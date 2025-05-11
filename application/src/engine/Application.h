@@ -2,10 +2,10 @@
 
 #include "pch.h"
 
-#include "Events.h"
 #include "IDrawable.h"
 #include "IUpdate.h"
-#include "EventInterface.h"
+#include "Events/Event.h"
+#include "Events/EventInterface.h"
 
 namespace CW {
 
@@ -26,6 +26,7 @@ namespace CW {
 
 		sf::Vector2u GetWindowSize() const;
 		const char* GetTitle() const;
+		sf::Color GetClearColor() const { return m_ClearColor; }
 
 		bool IsRunning() const;
 		void Close();
@@ -36,6 +37,7 @@ namespace CW {
 	protected:
 		sf::Vector2u m_WindowSize;
 		const char* m_WindowTitle;
+		sf::Color m_ClearColor = sf::Color::Black;
 
 		bool m_Running = true;
 		bool m_Pause = false;

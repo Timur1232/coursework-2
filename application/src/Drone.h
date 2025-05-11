@@ -6,8 +6,8 @@
 
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"
-#include "engine/Object.h"
-#include "engine/Chunks.h"
+#include "Object.h"
+#include "Chunks.h"
 
 #include "Beacon.h"
 #include "ResourceReciever.h"
@@ -49,22 +49,22 @@ namespace CW {
 		[[nodiscard]] sf::Angle GetAttraction() const { return m_AttractionAngle; }
 		[[nodiscard]] float GetBeaconSpawnTimer() const { return m_BeaconTimerSec; }
 		[[nodiscard]] int GetCarriedResources() const { return m_CarriedResources; }
-		[[nodiscard]] const Resource* GetTargetResource() const { return m_TargetResource; }
+		[[nodiscard]] std::optional<size_t> GetTargetResourceIndex() const { return m_TargetResourceIndex; }
 
 		void SetDirection(sf::Angle angle) { m_DirectionAngle = angle; }
 		void SetAttraction(sf::Angle angle) { m_AttractionAngle = angle; }
 
-		void Update(sf::Time deltaTime, const DroneSettings& settings);
+		void Update(sf::Time deltaTime, const DroneSettings& settings, std::vector<Resource>& resources);
 
 		void ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec, float FOV, sf::Vector2f viewDistance);
 		bool ReactToResourceReciver(ResourceReciever& reciever, float wanderCooldownSec);
 
-		void ReactToResources(std::vector<std::unique_ptr<Resource>>& resources, sf::Vector2f viewDistance, float FOV);
-		bool CheckResourceColission(float pickUpDist);
+		void ReactToResources(std::vector<Resource>& resources, sf::Vector2f viewDistance, float FOV);
+		bool CheckResourceColission(float pickUpDist, const std::vector<Resource>& resources);
 
 	private:
 		inline void turn(sf::Time deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta);
-		inline void wander(sf::Time deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle);
+		inline void wander(sf::Time deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle, const std::vector<Resource>& resource);
 		std::pair<const Beacon*, float> findFurthestInChunk(const Chunk<Beacon>* chunk, float FOV, sf::Vector2f viewDistance);
 
 	private:
@@ -72,7 +72,7 @@ namespace CW {
 		sf::Angle m_AttractionAngle;
 
 		TargetType m_TargetType = TargetType::Recource;
-		Resource* m_TargetResource = nullptr;
+		std::optional<size_t> m_TargetResourceIndex{};
 
 		int m_CarriedResources = 0;
 		float m_BeaconTimerSec = 0.0f;
@@ -83,11 +83,11 @@ namespace CW {
 	class DroneManager
 	{
 	public:
-		DroneManager() = default;
+		DroneManager();
 
 		void UpdateAllDrones(
 			sf::Time deltaTime,
-			std::vector<std::unique_ptr<Resource>>& resources,
+			std::vector<Resource>& resources,
 			const ChunkHandler<Beacon>& beacons,
 			ResourceReciever& reciever,
 			const Terrain& terrain);
@@ -115,8 +115,10 @@ namespace CW {
 		std::vector<Drone> m_Drones;
 		DroneSettings m_DroneSettings;
 
+		Shared<sf::Sprite> m_Sprite;
+		Shared<sf::Texture> m_Texture;
+
 		// Debug
-		sf::CircleShape m_Mesh;
 		sf::CircleShape m_MeshViewDistance;
 		sf::CircleShape m_DirectionVisual;
 		sf::CircleShape m_AttractionAngleVisual;

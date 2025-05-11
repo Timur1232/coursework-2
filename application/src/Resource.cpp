@@ -37,26 +37,26 @@ namespace CW {
 	void ResourceManager::DrawAllRecources(sf::RenderWindow& render)
 	{
 		auto validResources = m_Resources
-			| std::ranges::views::filter([](const std::unique_ptr<Resource>& r) { return !r->IsCarried(); });
+			| std::ranges::views::filter([](const Resource& r) { return !r.IsCarried(); });
 		
 		for (const auto& resource : validResources)
 		{
-			m_Mesh.setPosition(resource->GetPos());
+			m_Mesh.setPosition(resource.GetPos());
 			render.draw(m_Mesh);
 		}
 	}
 
 	void ResourceManager::CreateResource(sf::Vector2f position, int amount)
 	{
-		auto carriedResource = std::ranges::find_if(m_Resources.begin(), m_Resources.end(), [](const std::unique_ptr<Resource>& r) { return r->IsCarried(); });
+		auto carriedResource = std::ranges::find_if(m_Resources.begin(), m_Resources.end(), [](const Resource& r) { return r.IsCarried(); });
 
 		if (carriedResource != m_Resources.end())
 		{
-			(*carriedResource)->Revive(position, amount);
+			carriedResource->Revive(position, amount);
 		}
 		else
 		{
-			m_Resources.emplace_back(std::make_unique<Resource>(position, amount));
+			m_Resources.emplace_back(position, amount);
 		}
 	}
 

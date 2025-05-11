@@ -3,14 +3,15 @@
 
 #include <debug_utils/Log.h>
 #include <debug_utils/Profiler.h>
-#include "CoreEvents.h"
-#include "UserDispatcher.h"
-#include "UserEvents.h"
+#include "Events/CoreEvents.h"
+#include "Events/UserEventHandler.h"
+#include "Events/UserEvents.h"
 
 namespace CW {
 
 	ProgramCore::ProgramCore()
 	{
+		UserEventHandler::Get().Reserve(1024);
 		CW_INFO("Core initialized.");
 	}
 
@@ -46,12 +47,10 @@ namespace CW {
 			else
 				m_App->Update(m_DeltaTime);
 
-			m_Window->clear();
+			m_Window->clear(m_App->GetClearColor());
 			m_App->Draw(*m_Window);
 			ImGui::SFML::Render(*m_Window);
 			m_Window->display();
-
-			//m_UPS.Wait();
 		}
 		CW_END_PROFILE_SESSION();
 	}

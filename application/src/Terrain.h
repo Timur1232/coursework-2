@@ -4,7 +4,7 @@
 
 #include "engine/IDrawable.h"
 #include "debug_utils/LineShape.h"
-#include "engine/Object.h"
+#include "Object.h"
 
 namespace CW {
 
@@ -106,7 +106,7 @@ namespace CW {
 
 		size_t m_SamplesPerSection = 15;
 		float m_SectionWidth = 1000.0f;
-		float m_YOffset = 0.0f;
+		float m_YOffset = -3000.0f;
 
 		// Debug
 		sf::CircleShape m_DotMesh{3.0f, 4};
