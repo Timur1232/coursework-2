@@ -4,14 +4,13 @@
 
 #include "Application.h"
 #include "Events.h"
-#include "UPSLimiter.h"
+#include "CoreEvents.h"
+
+#include "Types.h"
 
 namespace CW {
 
 	class ProgramCore
-		: public KeyPressedObs,
-		  public ClosedObs,
-		  public UPSChangeObs
 	{
 	public:
 		ProgramCore();
@@ -23,24 +22,28 @@ namespace CW {
 		// Основной цикл программы
 		void Run();
 
-		void SetApplication(std::unique_ptr<Application>&& app);
 
-		void OnKeyPressed(const sf::Event::KeyPressed* e) override;
-		void OnClosed() override;
-		void OnUPSChange(const UPSChange* e) override;
+		void SetApplication(std::unique_ptr<Application>&& app);
 
 	private:
 		sf::State reverseState();
 
-	private:
-		std::unique_ptr<Application> m_App;
+		void pollEvents();
+		void pollUserEvents();
 
-		sf::RenderWindow m_Window;
+		void onClosed();
+		void onKeyPressed(KeyPressed& e);
+		//void onUPSChange();
+
+	private:
+		Unique<Application> m_App;
+
+		Unique<sf::RenderWindow> m_Window;
 		sf::State m_WindowState = sf::State::Windowed;
 		sf::Clock m_DeltaClock;
 		sf::Time m_DeltaTime;
 
-		UPSLimiter m_UPS{ 60 };
+		//UPSLimiter m_UPS{ 60 };
 	};
 
 } // CW

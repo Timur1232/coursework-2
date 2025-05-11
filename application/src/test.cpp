@@ -5,6 +5,9 @@
 #include <engine/ProgramCore.h>
 #include "engine/Chunks.h"
 
+#include "engine/CoreEvents.h"
+#include "engine/UserEvents.h"
+
 #include "debug_utils/Log.h"
 #include "debug_utils/Profiler.h"
 #include "utils/ArenaAllocator.h"
@@ -22,18 +25,14 @@
 namespace CW {
 
     class MyApp
-        : public Application,
-          public KeyPressedObs,
-          public MouseButtonPressedObs,
-          public MouseButtonReleasedObs,
-          public CreateBeaconObs
+        : public Application
     {
     public:
         MyApp()
             : Application(800, 600, "test"),
               m_Camera(0, 0, 800, 600)
         {
-            m_Camera.SubscribeOnEvents();
+            //m_Camera.SubscribeOnEvents();
             m_Resources.Reserve(128);
 
             m_Drones.SetDefaultSettings();
@@ -50,7 +49,6 @@ namespace CW {
         void Update(sf::Time deltaTime) override
         {
             CW_PROFILE_FUNCTION();
-            m_Camera.Update(deltaTime);
 
             {
                 CW_PROFILE_SCOPE("beacons update");
@@ -65,7 +63,6 @@ namespace CW {
 
         void PauseUpdate(sf::Time deltaTime) override
         {
-            m_Camera.Update(deltaTime);
         }
 
         void Draw(sf::RenderWindow& render) override
@@ -103,49 +100,66 @@ namespace CW {
             m_Terrain.Draw(render);
         }
 
-        void OnKeyPressed(const sf::Event::KeyPressed* event) override
+        bool OnEvent(Event& event) override
         {
-            if (event->code == sf::Keyboard::Key::Space)
+            EventDispatcher dispatcher(event);
+            dispatcher.Dispach<KeyPressed>(CW_BUILD_EVENT_FUNC(OnKeyPressed));
+            dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed));
+            dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
+
+            dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon));
+
+            m_Camera.OnEvent(event);
+            return true;
+        }
+
+        bool OnKeyPressed(KeyPressed& event)
+        {
+            if (event.Data.code == sf::Keyboard::Key::Space)
             {
                 SwitchPause();
             }
+            return false;
         }
 
-        void OnMouseButtonPressed(const sf::Event::MouseButtonPressed* e) override
+        bool OnMouseButtonPressed(MouseButtonPressed& e)
         {
-            if (!m_Hold && !ImGui::GetIO().WantCaptureMouse && e->button == sf::Mouse::Button::Left)
+            if (!m_Hold && !ImGui::GetIO().WantCaptureMouse && e.Data.button == sf::Mouse::Button::Left)
             {
                 switch (m_ObjPallete.GetCurrentType())
                 {
                 case ObjectPallete::Beacon:
                 {
-                    m_Beacons.CreateBeacon(m_Camera.WorldPosition(e->position), m_ObjPallete.GetBeaconType(), 0);
+                    m_Beacons.CreateBeacon(m_Camera.PixelToWorldPosition(e.Data.position), m_ObjPallete.GetBeaconType(), 0);
                     break;
                 }
                 case ObjectPallete::Drone:
                 {
                     auto [direction, targetType] = m_ObjPallete.GetDroneComponents();
-                    m_Drones.CreateDrone(m_Camera.WorldPosition(e->position), direction, targetType);
+                    m_Drones.CreateDrone(m_Camera.PixelToWorldPosition(e.Data.position), direction, targetType);
                     break;
                 }
                 case ObjectPallete::Resource:
                 {
-                    m_Resources.CreateResource(m_Camera.WorldPosition(e->position), m_ObjPallete.GetRsourceAmount());
+                    m_Resources.CreateResource(m_Camera.PixelToWorldPosition(e.Data.position), m_ObjPallete.GetRsourceAmount());
                     break;
                 }
                 }
                 m_Hold = true;
             }
+            return false;
         }
 
-        void OnMouseButtonReleased(const sf::Event::MouseButtonReleased* e) override
+        bool OnMouseButtonReleased(MouseButtonReleased& e)
         {
-            m_Hold = m_Hold && e->button != sf::Mouse::Button::Left;
+            m_Hold = m_Hold && e.Data.button != sf::Mouse::Button::Left;
+            return false;
         }
 
-        void OnCreateBeacon(const CreateBeacon* e) override
+        bool OnCreateBeacon(CreateBeacon& e)
         {
-            m_Beacons.CreateBeacon(e->Position, e->Type, e->BitDirection);
+            m_Beacons.CreateBeacon(e.Position, e.Type, e.BitDirection);
+            return false;
         }
 
         void RestartSim(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource)
@@ -173,14 +187,6 @@ namespace CW {
                 ImGui::Spacing();
                 ImGui::Text("chunks amount: %d", m_Beacons.GetChuncks().Size());
                 ImGui::Checkbox("draw chunks", &m_DrawChunks);
-
-                ImGui::Spacing();
-                static int ups = GetUPSLimit();
-                if (ImGui::SliderInt("ups", &ups, 30, 200))
-                {
-                    m_UPSLimit = static_cast<size_t>(ups);
-                    EventHandler::Get().AddEvent(UPSChange{ .UPS = m_UPSLimit });
-                }
             }
 
             if (ImGui::CollapsingHeader("Object-pallete"))

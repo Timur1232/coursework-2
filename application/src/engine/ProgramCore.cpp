@@ -3,7 +3,9 @@
 
 #include <debug_utils/Log.h>
 #include <debug_utils/Profiler.h>
-#include "UPSLimiter.h"
+#include "CoreEvents.h"
+#include "UserDispatcher.h"
+#include "UserEvents.h"
 
 namespace CW {
 
@@ -14,8 +16,8 @@ namespace CW {
 
 	ProgramCore::~ProgramCore()
 	{
-		if (!m_Window.isOpen())
-			m_Window.close();
+		if (!m_Window->isOpen())
+			m_Window->close();
 		ImGui::SFML::Shutdown();
 		CW_INFO("Closing program.");
 	}
@@ -31,12 +33,11 @@ namespace CW {
 			CW_PROFILE_SCOPE("main loop");
 
 			m_DeltaTime = m_DeltaClock.restart();
-			EventHandler::Get().HandleEvents(m_Window);
-#ifdef CW_USER_EVENTS_LIST
-			EventHandler::Get().HandleUserEvents();
-#endif
 
-			ImGui::SFML::Update(m_Window, m_DeltaTime);
+			pollEvents();
+			pollUserEvents();
+
+			ImGui::SFML::Update(*m_Window, m_DeltaTime);
 
 			m_App->UpdateInterface();
 
@@ -45,48 +46,119 @@ namespace CW {
 			else
 				m_App->Update(m_DeltaTime);
 
-			m_Window.clear();
-			m_App->Draw(m_Window);
-			ImGui::SFML::Render(m_Window);
-			m_Window.display();
+			m_Window->clear();
+			m_App->Draw(*m_Window);
+			ImGui::SFML::Render(*m_Window);
+			m_Window->display();
 
-			m_UPS.Wait();
+			//m_UPS.Wait();
 		}
 		CW_END_PROFILE_SESSION();
+	}
+
+
+	template<class _EventType = void, class _SFMLEventType = void, class... _EventSubArgs>
+	void dispatch_core_event(sf::Event& event, Application& app)
+	{
+		if (auto e = event.getIf<_SFMLEventType>())
+		{
+			_EventType dispached(*e);
+			app.OnEvent(dispached);
+		}
+		dispatch_core_event<_EventSubArgs...>(event, app);
+	}
+
+	template<>
+	void dispatch_core_event<void, void>(sf::Event& event, Application& app)
+	{
+	}
+
+	void ProgramCore::pollEvents()
+	{
+		CW_PROFILE_FUNCTION();
+		int eventsCount = 0;
+		while (std::optional event = m_Window->pollEvent())
+		{
+			{
+				CW_PROFILE_SCOPE("ImGui events");
+				ImGui::SFML::ProcessEvent(*m_Window, *event);
+			}
+
+			if (event->is<sf::Event::Closed>())
+			{
+				WindowClosed closed;
+				m_App->OnEvent(closed);
+				onClosed();
+			}
+			else
+			{
+				CW_PROFILE_SCOPE("Dispacher function");
+				dispatch_core_event<
+					WindowResized, sf::Event::Resized,
+					KeyPressed, sf::Event::KeyPressed,
+					KeyReleased, sf::Event::KeyReleased,
+					MouseWheelScrolled, sf::Event::MouseWheelScrolled,
+					MouseButtonPressed, sf::Event::MouseButtonPressed,
+					MouseButtonReleased, sf::Event::MouseButtonReleased,
+					MouseMoved, sf::Event::MouseMoved
+				>(*event, *m_App);
+			}
+			eventsCount++;
+		}
+	}
+
+
+	template<class _EventType = void, class... _EventSubArgs>
+	void dispatch_user_event(MyEvent& event, Application& app)
+	{
+		if (auto d = UserEventDispatcher<_EventType>(event))
+		{
+			d(app);
+			return;
+		}
+		dispatch_user_event<_EventSubArgs...>(event, app);
+	}
+
+	template<>
+	void dispatch_user_event<void>(MyEvent& event, Application& app)
+	{
+	}
+
+	void ProgramCore::pollUserEvents()
+	{
+		CW_PROFILE_FUNCTION();
+		for (auto& event : UserEventHandler::Get().GetEvents())
+		{
+			dispatch_user_event<CW_USER_EVENTS_LIST>(event, *m_App);
+		}
+		UserEventHandler::Get().ClearEvents();
 	}
 
 	void ProgramCore::SetApplication(std::unique_ptr<Application>&& app)
 	{
 		m_App = std::forward<std::unique_ptr<Application>>(app);
 
-		m_Window.create(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle());
+		m_Window = CreateUnique<sf::RenderWindow>(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle());
 		/*m_Window.setVerticalSyncEnabled(true);
 
 		m_Window.setFramerateLimit(60);*/
-		if (!ImGui::SFML::Init(m_Window))
+		if (!ImGui::SFML::Init(*m_Window))
 		{
 			CW_CRITICAL("Failing initializing ImGui::SFML.");
 		}
-
-		m_App->SubscribeOnEvents();
 	}
 
-	void ProgramCore::OnKeyPressed(const sf::Event::KeyPressed* e)
+	void ProgramCore::onKeyPressed(KeyPressed& e)
 	{
-		if (e->code == sf::Keyboard::Key::F11)
+		if (e.Data.code == sf::Keyboard::Key::F11)
 		{
-			m_Window.create(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle(), reverseState());
+			m_Window->create(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle(), reverseState());
 		}
 	}
 
-	void ProgramCore::OnClosed()
+	void ProgramCore::onClosed()
 	{
 		m_App->Close();
-	}
-
-	void ProgramCore::OnUPSChange(const UPSChange* e)
-	{
-		m_UPS.SetUPS(e->UPS);
 	}
 
 	sf::State ProgramCore::reverseState()

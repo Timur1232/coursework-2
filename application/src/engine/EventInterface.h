@@ -4,20 +4,13 @@
 
 namespace CW {
 
-	class OnEvent
+	class Event;
+
+	class IOnEvent
 	{
 	public:
-		virtual ~OnEvent() = default;
-		virtual bool IsAcceptingEvents() const;
-
-		void SubscribeOnEvents();
-		void UnsubscribeOnEvents() const;
-
-		size_t GetIndex() const;
-		void SetIndex(size_t index);
-
-	private:
-		size_t m_EventRecieverIndex = 0;
+		virtual ~IOnEvent() = default;
+		virtual bool OnEvent(Event& event) = 0;
 	};
 
 } // CW

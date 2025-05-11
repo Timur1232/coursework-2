@@ -3,6 +3,7 @@
 
 #include "utils/utils.h"
 #include "engine/Events.h"
+#include "engine/UserDispatcher.h"
 
 #include "debug_utils/Profiler.h"
 #include "debug_utils/Log.h"
@@ -55,9 +56,10 @@ namespace CW {
         m_BeaconTimerSec -= deltaTime.asSeconds();
         if (m_BeaconTimerSec <= 0)
         {
-            EventHandler::Get()
+            UserEventHandler::Get()
                 .AddEvent(CreateBeacon{ m_Position, opposite_target_type(m_TargetType),
                     angle_to_bit_direction((m_DirectionAngle + sf::degrees(180.0f)).wrapSigned()) });
+            //CW_WARN("Drone\'s spawning beacons not implemented.");
             m_BeaconTimerSec = settings.BeaconCooldownSec;
         }
 

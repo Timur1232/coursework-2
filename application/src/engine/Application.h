@@ -5,7 +5,7 @@
 #include "Events.h"
 #include "IDrawable.h"
 #include "IUpdate.h"
-#include "ApplicationState.h"
+#include "EventInterface.h"
 
 namespace CW {
 
@@ -14,7 +14,7 @@ namespace CW {
 	class Application
 		: public IDrawable,
 		  public IUpdate,
-		  public virtual OnEvent
+		  public IOnEvent
 	{
 	public:
 		Application() = delete;
@@ -33,17 +33,12 @@ namespace CW {
 		bool IsPaused() const;
 		void SwitchPause();
 
-		size_t GetUPSLimit() const { return m_UPSLimit; }
-		//virtual std::unique_ptr<ApplicationState> CollectState() const = 0;
-
 	protected:
 		sf::Vector2u m_WindowSize;
 		const char* m_WindowTitle;
 
 		bool m_Running = true;
 		bool m_Pause = false;
-
-		size_t m_UPSLimit = 60;
 	};
 
 } // CW
