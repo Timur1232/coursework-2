@@ -59,6 +59,12 @@ namespace CW {
 		void Generate(int keyPosition);
 		void Draw(sf::RenderWindow& render) override;
 
+		std::vector<TerrainSection>::iterator GetSection(int keyPosition);
+		std::vector<TerrainSection>::const_iterator GetSection(int keyPosition) const;
+
+		void GenerateMesh(sf::ConvexShape& mesh, int keyPosition) const;
+		void GenerateAllMeshes(std::vector<sf::ConvexShape>& meshes) const;
+
 		void SetYOffset(float offset) { m_YOffset = offset; }
 		float GetYOffset() const { return m_YOffset; }
 
@@ -95,6 +101,11 @@ namespace CW {
 		[[nodiscard]] sf::Vector2f sampleToWorldPosition(
 			const TerrainSection& section, size_t sampleIndex,
 			float sectionStartPosition, float sampleWidth) const;
+
+		[[nodiscard]] float calcSectionStartPosition(const TerrainSection& section) const;
+		[[nodiscard]] float calcSampleWidth() const;
+		[[nodiscard]] int calcSectionKeyPosition(float xPos) const;
+		[[nodiscard]] int calcSignedSampleIndex(float xPos, int sectionKeyPosition, int sampleWidth) const;
 
 	private:
 		std::vector<TerrainSection> m_TerrainSections;

@@ -44,6 +44,8 @@ namespace CW {
             for (int i = -5; i <= 5; ++i)
                 m_Terrain.Generate(i);
 
+            m_Terrain.GenerateAllMeshes(m_TerrainSectionMeshes);
+
             if (!m_WaterShader.loadFromFile("res/shaders/water_fragment.glsl", sf::Shader::Type::Fragment))
             {
                 CW_ERROR("Unable to load water shader!");
@@ -114,8 +116,11 @@ namespace CW {
                 m_Drones.DrawAllDrones(render);
             }
 
-            m_Terrain.SetDotScale(m_Camera.GetZoomFactor());
-            m_Terrain.Draw(render);
+            /*m_Terrain.SetDotScale(m_Camera.GetZoomFactor());
+            m_Terrain.Draw(render);*/
+
+            for (const auto& mesh : m_TerrainSectionMeshes)
+                render.draw(mesh);
         }
 
         bool OnEvent(Event& event) override
@@ -367,6 +372,8 @@ namespace CW {
 
         bool m_DrawChunks = false;
         sf::RectangleShape m_ChunkMesh;
+
+        std::vector<sf::ConvexShape> m_TerrainSectionMeshes;
     };
 
 } // CW

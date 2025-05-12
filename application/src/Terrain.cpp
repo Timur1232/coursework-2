@@ -32,11 +32,7 @@ namespace CW {
 
 	void Terrain::Generate(int keyPosition)
 	{
-		auto found = std::find_if(m_TerrainSections.begin(), m_TerrainSections.end(),
-			[keyPosition](const TerrainSection& section) {
-				return section.Key == keyPosition;
-			});
-		if (found != m_TerrainSections.end())
+		if (GetSection(keyPosition) != m_TerrainSections.end())
 		{
 			CW_WARN("Trying to generate existing terrain section on position: {}", keyPosition);
 			return;
@@ -48,10 +44,10 @@ namespace CW {
 
 	void Terrain::Draw(sf::RenderWindow& render)
 	{
-		float sampleWidth = m_SectionWidth / static_cast<float>(m_SamplesPerSection);
+		float sampleWidth = calcSampleWidth();
 		for (const auto& section : m_TerrainSections)
 		{
-			float sectionStartPosition = static_cast<float>(section.Key) * m_SectionWidth;
+			float sectionStartPosition = calcSectionStartPosition(section);
 			for (size_t i = 0; i < section.Samples.size() - 1; ++i)
 			{
 				sf::Vector2f p1{ sampleToWorldPosition(section, i, sectionStartPosition, sampleWidth) };
@@ -62,6 +58,77 @@ namespace CW {
 				m_DotMesh.setPosition(p2);
 				render.draw(m_DotMesh);
 			}
+		}
+	}
+
+	std::vector<TerrainSection>::iterator Terrain::GetSection(int keyPosition)
+	{
+		return std::ranges::find_if(m_TerrainSections.begin(), m_TerrainSections.end(),
+			[keyPosition](const TerrainSection& section) { return section.Key == keyPosition; });
+	}
+
+	std::vector<TerrainSection>::const_iterator Terrain::GetSection(int keyPosition) const
+	{
+		return std::ranges::find_if(m_TerrainSections.begin(), m_TerrainSections.end(),
+			[keyPosition](const TerrainSection& section) { return section.Key == keyPosition; });
+	}
+
+	void Terrain::GenerateMesh(sf::ConvexShape& mesh, int keyPosition) const
+	{
+		auto section = GetSection(keyPosition);
+		if (section == m_TerrainSections.end())
+		{
+			CW_ERROR("Section with key position {} don\'t exist!", keyPosition);
+			return;
+		}
+		auto nextSection = GetSection(keyPosition + 1);
+
+		if (nextSection != m_TerrainSections.end())
+		{
+			mesh.setPointCount(m_SamplesPerSection + 3);
+		}
+		else
+		{
+			mesh.setPointCount(m_SamplesPerSection + 2);
+		}
+
+		float sectionPosition = calcSectionStartPosition(*section);
+		float sampleWidth = calcSampleWidth();
+
+		size_t pointIndex = 0;
+		while (pointIndex < section->Samples.size())
+		{
+			mesh.setPoint(pointIndex, sampleToWorldPosition(*section, pointIndex, sectionPosition, sampleWidth));
+			pointIndex++;
+		}
+
+		sf::Vector2f bottomPoint = sampleToWorldPosition(*section, section->Samples.size() - 1, sectionPosition, sampleWidth);
+		if (nextSection != m_TerrainSections.end())
+		{
+			sf::Vector2f nextPointPos = sampleToWorldPosition(*nextSection, 0,
+				calcSectionStartPosition(*nextSection), sampleWidth);
+			mesh.setPoint(pointIndex, nextPointPos);
+			pointIndex++;
+			bottomPoint = nextPointPos;
+		}
+
+		float bottomPointHeight = 100000.0f;
+
+		bottomPoint.y = bottomPointHeight;
+		mesh.setPoint(pointIndex, bottomPoint);
+		pointIndex++;
+
+		bottomPoint = sampleToWorldPosition(*section, 0, sectionPosition, sampleWidth);
+		bottomPoint.y = bottomPointHeight;
+		mesh.setPoint(pointIndex, bottomPoint);
+	}
+
+	void Terrain::GenerateAllMeshes(std::vector<sf::ConvexShape>& meshes) const
+	{
+		meshes.resize(m_TerrainSections.size());
+		for (size_t i = 0; i < m_TerrainSections.size(); i++)
+		{
+			GenerateMesh(meshes[i], m_TerrainSections[i].Key);
 		}
 	}
 
@@ -76,16 +143,11 @@ namespace CW {
 
 	bool Terrain::IsNear(const Object& object, float distThreashold, int range) const
 	{
-		int sectionIndex = static_cast<int>(object.GetPos().x / m_SectionWidth);
-		if (object.GetPos().x < 0)
-			sectionIndex -= 1;
+		int sectionKey = calcSectionKeyPosition(object.GetPos().x);
+		float sampleWidth = calcSampleWidth();
+		int sampleIndex = calcSignedSampleIndex(object.GetPos().x, sectionKey, sampleWidth);
 
-		float sampleWidth = m_SectionWidth / static_cast<float>(m_SamplesPerSection);
-		int sampleIndex = static_cast<int>((object.GetPos().x - sectionIndex * m_SectionWidth) / sampleWidth);
-
-		auto section = std::ranges::find_if(m_TerrainSections.begin(), m_TerrainSections.end(),
-			[sectionIndex](const TerrainSection& s) { return s.Key == sectionIndex; });
-
+		auto section = GetSection(sectionKey);
 		if (section == m_TerrainSections.end())
 		{
 			return false;
@@ -99,7 +161,7 @@ namespace CW {
 			leftSection = section - 1;
 		}*/
 
-		float sectionStartPosition = static_cast<float>(section->Key) * m_SectionWidth;
+		float sectionStartPosition = calcSectionStartPosition(*section);
 
 		for (int i = -range; i <= range; ++i)
 		{
@@ -133,6 +195,29 @@ namespace CW {
 	{
 		sf::Vector2f pos{ sectionStartPosition + sampleIndex * sampleWidth, section.Samples.at(sampleIndex) - m_YOffset };
 		return pos;
+	}
+
+	float Terrain::calcSectionStartPosition(const TerrainSection& section) const
+	{
+		return static_cast<float>(section.Key) * m_SectionWidth;
+	}
+
+	float Terrain::calcSampleWidth() const
+	{
+		return m_SectionWidth / static_cast<float>(m_SamplesPerSection);
+	}
+
+	int Terrain::calcSectionKeyPosition(float xPos) const
+	{
+		int sectionKey = static_cast<int>(xPos / m_SectionWidth);
+		if (xPos < 0)
+			sectionKey -= 1;
+		return sectionKey;
+	}
+
+	int Terrain::calcSignedSampleIndex(float xPos, int sectionKeyPosition, int sampleWidth) const
+	{
+		return static_cast<int>((xPos - sectionKeyPosition * m_SectionWidth) / sampleWidth);
 	}
 
 
