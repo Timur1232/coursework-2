@@ -19,7 +19,7 @@ namespace CW {
 
 		void DebugInterface();
 
-		bool OnEvent(Event& event) override;
+		void OnEvent(Event& event) override;
 
 		const sf::View& GetView() const;
 		const float GetZoomFactor() const;

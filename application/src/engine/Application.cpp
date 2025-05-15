@@ -14,19 +14,33 @@ namespace CW {
 	{
 		for (auto& layer : m_Layers)
 		{
-			layer->Update(deltaTime);
+			if (layer->IsUpdateActive())
+				layer->Update(deltaTime);
 		}
 	}
 
 	bool Application::OnEventLayers(Event& event)
 	{
-		for (auto& layer : m_Layers)
+		auto layerIter = m_Layers.rbegin();
+		while (layerIter != m_Layers.rend())
 		{
+			auto& layer = *layerIter;
 			if (event.Handled)
 				return true;
-			layer->OnEvent(event);
+			if (layer->IsAcceptingEvents())
+				layer->OnEvent(event);
+			++layerIter;
 		}
 		return false;
+	}
+
+	void Application::DrawLayers(sf::RenderWindow& render)
+	{
+		for (auto& layer : m_Layers)
+		{
+			if (layer->IsDrawActive())
+				layer->Draw(render);
+		}
 	}
 
 	sf::Vector2u Application::GetWindowSize() const

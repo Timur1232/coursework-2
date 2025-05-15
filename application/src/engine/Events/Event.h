@@ -37,7 +37,7 @@ namespace CW {
 		{
 		}
 
-		template <class T, class F>
+		template <std::derived_from<Event> T, class F>
 		bool Dispach(const F& func)
 		{
 			if (m_Event.GetEventType() == T::GetStaticEventType())

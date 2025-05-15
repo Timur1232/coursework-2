@@ -41,7 +41,7 @@ namespace CW {
         return { sf::radians(m_DroneAngle), m_DroneTarget };
     }
 
-    std::tuple<TargetType, u8> ObjectPalleteBuilder::GetBeaconComponents() const
+    std::tuple<TargetType, byte> ObjectPalleteBuilder::GetBeaconComponents() const
     {
         return { m_BeaconType, m_BitDirection };
     }

@@ -19,7 +19,7 @@ namespace CW {
 		ImGui::Text("mouse world position: (%f, %f)", PixelToWorldPosition(m_PrevPos).x, PixelToWorldPosition(m_PrevPos).y);
 	}
 
-	bool Camera2D::OnEvent(Event& event)
+	void CW::Camera2D::OnEvent(Event& event)
 	{
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(onMouseButtonPressed));
@@ -27,7 +27,6 @@ namespace CW {
 		dispatcher.Dispach<MouseMoved>(CW_BUILD_EVENT_FUNC(onMouseMoved));
 		dispatcher.Dispach<MouseWheelScrolled>(CW_BUILD_EVENT_FUNC(onMouseWheelScrolled));
 		dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(onResized));
-		return false;
 	}
 
 	bool Camera2D::onMouseButtonPressed(MouseButtonPressed& e)

@@ -23,6 +23,20 @@
 
 namespace CW {
 
+    class SimulationLayer
+        : public Layer
+    {
+    public:
+        SimulationLayer();
+
+        void Update(float deltaTime) override;
+        void OnEvent(Event& event) override;
+        void Draw(sf::RenderWindow& render) override;
+
+    private:
+
+    };
+
     class MyApp
         : public Application
     {
@@ -135,7 +149,7 @@ namespace CW {
                 render.draw(mesh);
         }
 
-        bool OnEvent(Event& event) override
+        void OnEvent(Event& event) override
         {
             EventDispatcher dispatcher(event);
             dispatcher.Dispach<KeyPressed>(CW_BUILD_EVENT_FUNC(OnKeyPressed));
@@ -146,7 +160,6 @@ namespace CW {
             dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon));
 
             m_Camera.OnEvent(event);
-            return true;
         }
 
         bool OnKeyPressed(KeyPressed& event)
