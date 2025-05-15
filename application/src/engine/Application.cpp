@@ -10,6 +10,25 @@ namespace CW {
     {
     }
 
+	void Application::UpdateLayers(float deltaTime)
+	{
+		for (auto& layer : m_Layers)
+		{
+			layer->Update(deltaTime);
+		}
+	}
+
+	bool Application::OnEventLayers(Event& event)
+	{
+		for (auto& layer : m_Layers)
+		{
+			if (event.Handled)
+				return true;
+			layer->OnEvent(event);
+		}
+		return false;
+	}
+
 	sf::Vector2u Application::GetWindowSize() const
 	{
 		return m_WindowSize;

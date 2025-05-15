@@ -152,5 +152,8 @@
     <ClInclude Include="src\engine\Events\CW_EventConfig.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="src\engine\Layer.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

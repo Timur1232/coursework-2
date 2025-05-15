@@ -54,7 +54,7 @@ namespace CW {
 		void SetDirection(sf::Angle angle) { m_DirectionAngle = angle; }
 		void SetAttraction(sf::Angle angle) { m_AttractionAngle = angle; }
 
-		void Update(sf::Time deltaTime, const DroneSettings& settings, std::vector<Resource>& resources);
+		void Update(float deltaTime, const DroneSettings& settings, std::vector<Resource>& resources);
 
 		void ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec, float FOV, sf::Vector2f viewDistance);
 		bool ReactToResourceReciver(ResourceReciever& reciever, float wanderCooldownSec);
@@ -63,8 +63,8 @@ namespace CW {
 		bool CheckResourceColission(float pickUpDist, const std::vector<Resource>& resources);
 
 	private:
-		inline void turn(sf::Time deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta);
-		inline void wander(sf::Time deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle, const std::vector<Resource>& resource);
+		inline void turn(float deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta);
+		inline void wander(float deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle, const std::vector<Resource>& resource);
 		std::pair<const Beacon*, float> findFurthestInChunk(const Chunk<Beacon>* chunk, float FOV, sf::Vector2f viewDistance);
 
 	private:
@@ -86,7 +86,7 @@ namespace CW {
 		DroneManager();
 
 		void UpdateAllDrones(
-			sf::Time deltaTime,
+			float deltaTime,
 			std::vector<Resource>& resources,
 			const ChunkHandler<Beacon>& beacons,
 			ResourceReciever& reciever,

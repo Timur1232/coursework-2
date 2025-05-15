@@ -28,24 +28,25 @@ namespace CW {
 		CW_INFO("Starting main loop.");
 		CW_START_PROFILE_SESSION();
 		CW_PROFILE_FUNCTION();
+		sf::Time deltaTime;
 
 		while (m_App->IsRunning())
 		{
 			CW_PROFILE_SCOPE("main loop");
 
-			m_DeltaTime = m_DeltaClock.restart();
+			deltaTime = m_DeltaClock.restart();
 
 			pollEvents();
 			pollUserEvents();
 
-			ImGui::SFML::Update(*m_Window, m_DeltaTime);
+			ImGui::SFML::Update(*m_Window, deltaTime);
 
 			m_App->UpdateInterface();
 
 			if (m_App->IsPaused())
-				m_App->PauseUpdate(m_DeltaTime);
+				m_App->PauseUpdate(deltaTime.asSeconds());
 			else
-				m_App->Update(m_DeltaTime);
+				m_App->Update(deltaTime.asSeconds());
 
 			m_Window->clear(m_App->GetClearColor());
 			m_App->Draw(*m_Window);

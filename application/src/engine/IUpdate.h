@@ -8,12 +8,12 @@ namespace CW {
 	{
 	public:
 		virtual ~IUpdate() = default;
-		virtual void Update(sf::Time deltaTime) = 0;
+		virtual void Update(float deltaTime) = 0;
 	};
 
 
 	template <class T>
-	concept has_update = requires(T u, sf::Time deltaTime)
+	concept has_update = requires(T u, float deltaTime)
 	{
 		{ u.Update(deltaTime) };
 	};

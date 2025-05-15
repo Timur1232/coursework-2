@@ -29,7 +29,7 @@ namespace CW {
 
 		void InfoInterface(size_t index) const;
 
-		void Update(sf::Time deltaTime, const BeaconSettings& bs);
+		void Update(float deltaTime, const BeaconSettings& bs);
 
 		[[nodiscard]] bool IsAlive() const { return m_Alive; }
 
@@ -58,7 +58,7 @@ namespace CW {
 	public:
 		BeaconManager();
 
-		void Update(sf::Time deltaTime) override;
+		void Update(float deltaTime) override;
 		void DrawAllBeacons(sf::RenderWindow& render);
 		void CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection);
 		void Clear();
@@ -71,7 +71,6 @@ namespace CW {
 		void DebugInterface();
 
 	private:
-		// FIXME: при реалокации памяти в векторе сломаются указатели в чанках
 		std::vector<IndexedBeacon> m_Beacons;
 		ChunkHandler<Beacon> m_Chunks{ 500.0f };
 		size_t m_DeadBeacons = 0;

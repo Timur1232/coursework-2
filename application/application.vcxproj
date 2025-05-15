@@ -129,6 +129,7 @@
     <ClInclude Include="src\engine\Events\Event.h" />
     <ClInclude Include="src\engine\IDrawable.h" />
     <ClInclude Include="src\engine\IUpdate.h" />
+    <ClInclude Include="src\engine\Layer.h" />
     <ClInclude Include="src\Object.h" />
     <ClInclude Include="src\engine\ProgramCore.h" />
     <ClInclude Include="src\engine\Renderer.h" />

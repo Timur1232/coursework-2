@@ -22,7 +22,7 @@ namespace CW {
 		ImGui::Text("beacon direction: %d", m_BitDirection);
 	}
 
-	void Beacon::Update(sf::Time deltaTime, const BeaconSettings& bs)
+	void Beacon::Update(float deltaTime, const BeaconSettings& bs)
 	{
 		if (!IsAlive())
 			return;
@@ -34,7 +34,7 @@ namespace CW {
 		}
 		else
 		{
-			m_Charge -= bs.DischargeRate / 100.0f * deltaTime.asSeconds();
+			m_Charge -= bs.DischargeRate / 100.0f * deltaTime;
 		}
 	}
 
@@ -81,6 +81,7 @@ namespace CW {
 
 	BeaconManager::BeaconManager()
 	{
+		m_Beacons.reserve(1024 * 1024);
 		m_Mesh.setOrigin(m_Mesh.getGeometricCenter());
 	}
 
@@ -90,7 +91,7 @@ namespace CW {
 		ImGui::SliderFloat("discharge rate", &m_BeaconSettings.DischargeRate, 0.1f, 100.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
 	}
 
-	void BeaconManager::Update(sf::Time deltaTime)
+	void BeaconManager::Update(float deltaTime)
 	{
 		for (size_t i = 0; i < m_Beacons.size() - m_DeadBeacons; ++i)
 		{
@@ -132,7 +133,22 @@ namespace CW {
 		}
 		else
 		{
+			bool realloc = m_Beacons.capacity() - m_Beacons.size() == 0;
+			if (realloc)
+			{
+				for (auto& beacon : m_Beacons)
+				{
+					m_Chunks.ForgetObject(beacon);
+				}
+			}
 			m_Beacons.emplace_back(position, type, bitDirection);
+			if (realloc)
+			{
+				for (size_t i = 0; i < m_Beacons.size() - 1; ++i)
+				{
+					m_Chunks.AddObject(m_Beacons[i]);
+				}
+			}
 			IndexedBeacon& newBeacon = m_Beacons.back();
 			m_Chunks.AddObject(newBeacon);
 		}

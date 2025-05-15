@@ -69,7 +69,7 @@ namespace CW {
             m_FullScreenQuad.setSize(static_cast<sf::Vector2f>(GetWindowSize()));
         }
 
-        void Update(sf::Time deltaTime) override
+        void Update(float deltaTime) override
         {
             CW_PROFILE_FUNCTION();
 
@@ -85,7 +85,7 @@ namespace CW {
             m_ElapsedTime += deltaTime;
         }
 
-        void PauseUpdate(sf::Time deltaTime) override
+        void PauseUpdate(float deltaTime) override
         {
         }
 
@@ -95,7 +95,7 @@ namespace CW {
 
             m_WaterShader.setUniform("uCameraPosition", m_Camera.GetView().getCenter());
             m_WaterShader.setUniform("uZoomFactor", m_Camera.GetZoomFactor());
-            m_WaterShader.setUniform("uTime", m_ElapsedTime.asSeconds());
+            m_WaterShader.setUniform("uTime", m_ElapsedTime);
 
             render.setView(render.getDefaultView());
             render.draw(m_FullScreenQuad, &m_WaterShader);
@@ -166,7 +166,8 @@ namespace CW {
                 {
                 case ObjectPallete::Beacon:
                 {
-                    m_Beacons.CreateBeacon(m_Camera.PixelToWorldPosition(e.Data.position), m_ObjPallete.GetBeaconType(), 0);
+                    auto [type, bitDir] = m_ObjPallete.GetBeaconComponents();
+                    m_Beacons.CreateBeacon(m_Camera.PixelToWorldPosition(e.Data.position), type, bitDir);
                     break;
                 }
                 case ObjectPallete::Drone:
@@ -374,7 +375,7 @@ namespace CW {
 
         sf::Shader m_WaterShader;
         sf::RectangleShape m_FullScreenQuad;
-        sf::Time m_ElapsedTime = sf::Time::Zero;
+        float m_ElapsedTime = 0.0f;
 
         // Debug
         bool m_BeaconsInfo = false;

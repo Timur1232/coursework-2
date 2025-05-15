@@ -47,11 +47,11 @@ namespace CW {
     {
     }
 
-    void Drone::Update(sf::Time deltaTime, const DroneSettings& settings, std::vector<Resource>& resources)
+    void Drone::Update(float deltaTime, const DroneSettings& settings, std::vector<Resource>& resources)
     {
         CW_PROFILE_FUNCTION();
         turn(deltaTime, settings.TurningSpeed, settings.MaxTurningDelta);
-        m_Position += ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle) * settings.Speed * deltaTime.asSeconds();
+        m_Position += ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle) * settings.Speed * deltaTime;
 
         if (m_Position.y < 250.0f)
         {
@@ -65,7 +65,7 @@ namespace CW {
             }
         }
 
-        m_BeaconTimerSec -= deltaTime.asSeconds();
+        m_BeaconTimerSec -= deltaTime;
         if (m_BeaconTimerSec <= 0)
         {
             UserEventHandler::Get()
@@ -146,27 +146,32 @@ namespace CW {
     {
         if (m_TargetType == TargetType::Recource && !resources.empty() && !m_TargetResourceIndex)
         {
-            int resourceIndex = -1;
-            auto validResources = resources
-                | std::ranges::views::filter([&resourceIndex](const Resource& r) { resourceIndex++;  return !r.IsCarried(); });
-
-            if (std::ranges::empty(validResources))
+            Resource* closestResource = nullptr;
+            size_t closestResourceIndex = 0;
+            float minDistSq = 0.0f;
+            if (auto first = std::ranges::find_if(resources.begin(), resources.end(), [](const Resource& r) { return !r.IsCarried(); });
+                first != resources.end())
+            {
+                closestResource = &(*first);
+                minDistSq = distance_squared(closestResource->GetPos(), m_Position);
+                closestResourceIndex = first - resources.begin();
+            }
+            else
             {
                 return;
             }
 
-            Resource* closestResource = &validResources.front();
-            size_t closestResourceIndex = resourceIndex;
-            float minDistSq = distance_squared(closestResource->GetPos(), m_Position);
-
-            for (auto& resource : validResources | std::ranges::views::drop(1))
+            for (size_t i = 0; i < resources.size(); ++i)
             {
-                if (float otherDist = distance_squared(resource.GetPos(), m_Position);
-                    otherDist < minDistSq)
+                if (!resources[i].IsCarried())
                 {
-                    minDistSq = otherDist;
-                    closestResource = &resource;
-                    closestResourceIndex = resourceIndex;
+                    if (float otherDist = distance_squared(resources[i].GetPos(), m_Position);
+                        otherDist < minDistSq)
+                    {
+                        minDistSq = otherDist;
+                        closestResource = &resources[i];
+                        closestResourceIndex = i;
+                    }
                 }
             }
 
@@ -174,7 +179,7 @@ namespace CW {
                 && minDistSq >= viewDistance.x * viewDistance.x
                 && minDistSq <= viewDistance.y * viewDistance.y)
             {
-                m_TargetResourceIndex = resourceIndex;
+                m_TargetResourceIndex = closestResourceIndex;
                 m_AttractionAngle = (closestResource->GetPos() - m_Position).angle();
                 m_WanderTimer = 0.0f;
             }
@@ -188,7 +193,7 @@ namespace CW {
         return distance_squared(resources.at(*m_TargetResourceIndex).GetPos(), m_Position) <= pickUpDist * pickUpDist;
     }
 
-    void Drone::turn(sf::Time deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta)
+    void Drone::turn(float deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta)
     {
         sf::Angle deltaAngle;
         auto quarter = angle::quarter(m_AttractionAngle);
@@ -213,16 +218,16 @@ namespace CW {
         deltaAngle = (std::clamp(
                 deltaAngle + ((deltaAngle.asRadians() > 0) ? turningSpeed : ((deltaAngle.asRadians() < 0) ? -turningSpeed : sf::Angle::Zero)),
                 -maxTurningDelta, maxTurningDelta
-            ) * deltaTime.asSeconds());
+            ) * deltaTime);
 
         m_DirectionAngle = loop(m_DirectionAngle, sf::degrees(-180.0f), sf::degrees(180.0f), deltaAngle);
     }
 
-    void Drone::wander(sf::Time deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle, const std::vector<Resource>& resources)
+    void Drone::wander(float deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle, const std::vector<Resource>& resources)
     {
         if (m_WanderTimer > 0.0f)
         {
-            m_WanderTimer -= deltaTime.asSeconds();
+            m_WanderTimer -= deltaTime;
             return;
         }
 
@@ -249,20 +254,21 @@ namespace CW {
         float furthestDistSq = -1.0f;
 
         auto filteredBeacons = *chunk
-            | std::views::filter([&](const Beacon* b) { return b && b->IsAlive() && b->GetType() == m_TargetType; });
+            | std::views::filter([&](const Indexed<Beacon>* b) { return b && (*b)->IsAlive() && (*b)->GetType() == m_TargetType; });
 
-        for (const auto& beacon : filteredBeacons)
+        for (const auto& ibeacon : filteredBeacons)
         {
-            if (auto positionDelta = beacon->GetPos() - m_Position;
+            const auto& beacon = ibeacon->Object;
+            if (auto positionDelta = beacon.GetPos() - m_Position;
                 (positionDelta.x != 0.0f || positionDelta.y != 0.0f)
                 && ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle).dot(positionDelta.normalized()) >= FOV)
             {
-                if (float distSq = distance_squared(beacon->GetPos(), m_Position);
+                if (float distSq = distance_squared(beacon.GetPos(), m_Position);
                     distSq <= viewDistance.y * viewDistance.y
                     && distSq >= viewDistance.x * viewDistance.x && distSq > furthestDistSq)
                 {
                     furthestDistSq = distSq;
-                    furthestBeacon = beacon;
+                    furthestBeacon = &beacon;
                 }
             }
         }
@@ -278,7 +284,7 @@ namespace CW {
     }
 
     void DroneManager::UpdateAllDrones(
-        sf::Time deltaTime,
+        float deltaTime,
         std::vector<Resource>& resources,
         const ChunkHandler<Beacon>& beacons,
         ResourceReciever& reciever,

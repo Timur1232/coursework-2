@@ -20,7 +20,6 @@ namespace CW {
 		// Основной цикл программы
 		void Run();
 
-
 		void SetApplication(std::unique_ptr<Application>&& app);
 
 	private:
@@ -38,7 +37,6 @@ namespace CW {
 		Unique<sf::RenderWindow> m_Window;
 		sf::State m_WindowState = sf::State::Windowed;
 		sf::Clock m_DeltaClock;
-		sf::Time m_DeltaTime;
 	};
 
 } // CW
