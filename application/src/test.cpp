@@ -50,6 +50,18 @@ namespace CW {
             {
                 CW_ERROR("Unable to load water shader!");
             }
+            if (!m_TerrainTexture.loadFromFile("res/sprites/terrain_texture.png"))
+            {
+                CW_ERROR("Unable to load terrain shader!");
+            }
+            else
+            {
+                m_TerrainTexture.setRepeated(true);
+                for (auto& mesh : m_TerrainSectionMeshes)
+                {
+                    mesh.setTexture(&m_TerrainTexture);
+                }
+            }
 
             m_WaterShader.setUniform("uResolution", static_cast<sf::Vector2f>(GetWindowSize()));
             m_WaterShader.setUniform("uDeepDarkFactor", 2.0f);
@@ -184,6 +196,7 @@ namespace CW {
         {
             m_WaterShader.setUniform("uResolution", static_cast<sf::Vector2f>(e.Size));
             m_FullScreenQuad.setSize(static_cast<sf::Vector2f>(e.Size));
+            return false;
         }
 
         bool OnCreateBeacon(CreateBeacon& e)
@@ -374,6 +387,7 @@ namespace CW {
         sf::RectangleShape m_ChunkMesh;
 
         std::vector<sf::ConvexShape> m_TerrainSectionMeshes;
+        sf::Texture m_TerrainTexture;
     };
 
 } // CW
