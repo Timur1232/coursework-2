@@ -27,7 +27,7 @@ namespace CW {
 			auto& layer = *layerIter;
 			if (event.Handled)
 				return true;
-			if (layer->IsAcceptingEvents())
+			if (layer->IsEventsActive())
 				layer->OnEvent(event);
 			++layerIter;
 		}

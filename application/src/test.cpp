@@ -20,6 +20,42 @@
 
 #include "Terrain.h"
 
+//sf::Vector2f lerp_path(const std::vector<sf::Vector2f>& path, float t);
+//
+//sf::Vector2f pos_func(const std::vector<sf::Vector2f>& path, float length, float speed, float time)
+//{
+//    float elapsedDist = speed * time;
+//    float t = elapsedDist / length;
+//    return lerp_path(path, t);
+//}
+//
+//float ro(const std::vector<sf::Vector2f>& path, sf::Vector2f shooterPos, float projectileSpeed, float time)
+//{
+//    return std::abs((pos_func(path, length, speed, time) - shooterPos).length() - projectileSpeed * time);
+//}
+//
+//float tmax = 1000;
+//
+//sf::Vector2f predict(const std::vector<sf::Vector2f>& path, sf::Vector2f shooterPos, float projectileSpeed, float a, float b)
+//{
+//    float PHI = 1.618033988749f;
+//    float eps = 1e-3f;
+//
+//    while (b - a > eps)
+//    {
+//        float t1 = b - (b - a) / PHI;
+//        float t2 = a + (b - a) / PHI;
+//
+//        if (ro(path, shooterPos, projectileSpeed, t1) < ro(path, shooterPos, projectileSpeed, t2))
+//            b = t2;
+//        else
+//            a = t1;
+//    }
+//    return pos_func(path, (a + b) / 2.0f);
+//}
+//
+//float a = allTime * t;
+//float b = allTime;
 
 namespace CW {
 
@@ -27,33 +63,11 @@ namespace CW {
         : public Layer
     {
     public:
-        SimulationLayer();
-
-        void Update(float deltaTime) override;
-        void OnEvent(Event& event) override;
-        void Draw(sf::RenderWindow& render) override;
-
-    private:
-
-    };
-
-    class MyApp
-        : public Application
-    {
-    public:
-        MyApp()
-            : Application(800, 600, "test"),
-              m_Camera(0, 0, 800, 600)
+        SimulationLayer(sf::Vector2f windowSize)
+            : m_Camera(0, 0, windowSize.x, windowSize.y)
         {
-            m_ClearColor = sf::Color(135, 206, 235, 255);
             m_Resources.Reserve(128);
-
             m_Drones.SetDefaultSettings();
-
-            m_ChunkMesh.setSize({ 500.0f, 500.0f });
-            m_ChunkMesh.setFillColor(sf::Color::Transparent);
-            m_ChunkMesh.setOutlineThickness(2.0f);
-            m_ChunkMesh.setOutlineColor({ 255, 255, 255, 180 });
 
             for (int i = -5; i <= 5; ++i)
                 m_Terrain.Generate(i);
@@ -74,24 +88,28 @@ namespace CW {
                 for (auto& mesh : m_TerrainSectionMeshes)
                 {
                     mesh.setTexture(&m_TerrainTexture);
+                    mesh.setTextureRect({ {0, 0}, static_cast<sf::Vector2i>(mesh.getLocalBounds().size) });
                 }
             }
 
-            m_WaterShader.setUniform("uResolution", static_cast<sf::Vector2f>(GetWindowSize()));
+            m_ChunkMesh.setSize({ 500.0f, 500.0f });
+            m_ChunkMesh.setFillColor(sf::Color::Transparent);
+            m_ChunkMesh.setOutlineThickness(2.0f);
+            m_ChunkMesh.setOutlineColor({ 255, 255, 255, 180 });
+
+            m_WaterShader.setUniform("uResolution", windowSize);
             m_WaterShader.setUniform("uDeepDarkFactor", 2.0f);
             m_WaterShader.setUniform("uYOffset", 300.0f);
-            m_FullScreenQuad.setSize(static_cast<sf::Vector2f>(GetWindowSize()));
+            m_FullScreenQuad.setSize(windowSize);
         }
 
         void Update(float deltaTime) override
         {
-            CW_PROFILE_FUNCTION();
-
+            UpdateInterface();
             {
                 CW_PROFILE_SCOPE("beacons update");
                 m_Beacons.Update(deltaTime);
             }
-
             {
                 CW_PROFILE_SCOPE("drones update");
                 m_Drones.UpdateAllDrones(deltaTime, m_Resources.GetResources(), m_Beacons.GetChuncks(), m_ResourceReciever, m_Terrain);
@@ -99,14 +117,19 @@ namespace CW {
             m_ElapsedTime += deltaTime;
         }
 
-        void PauseUpdate(float deltaTime) override
+        void OnEvent(Event& event) override
         {
+            EventDispatcher dispatcher(event);
+            dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed));
+            dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
+            dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
+
+            dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon));
+            m_Camera.OnEvent(event);
         }
 
         void Draw(sf::RenderWindow& render) override
         {
-            CW_PROFILE_FUNCTION();
-
             m_WaterShader.setUniform("uCameraPosition", m_Camera.GetView().getCenter());
             m_WaterShader.setUniform("uZoomFactor", m_Camera.GetZoomFactor());
             m_WaterShader.setUniform("uTime", m_ElapsedTime);
@@ -128,7 +151,7 @@ namespace CW {
             }
 
             m_ResourceReciever.Draw(render);
-            
+
             m_Resources.DrawAllRecources(render);
 
             if (m_DrawBeacons)
@@ -149,28 +172,7 @@ namespace CW {
                 render.draw(mesh);
         }
 
-        void OnEvent(Event& event) override
-        {
-            EventDispatcher dispatcher(event);
-            dispatcher.Dispach<KeyPressed>(CW_BUILD_EVENT_FUNC(OnKeyPressed));
-            dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed));
-            dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
-            dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
-
-            dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon));
-
-            m_Camera.OnEvent(event);
-        }
-
-        bool OnKeyPressed(KeyPressed& event)
-        {
-            if (event.Data.code == sf::Keyboard::Key::Space)
-            {
-                SwitchPause();
-            }
-            return false;
-        }
-
+    private:
         bool OnMouseButtonPressed(MouseButtonPressed& e)
         {
             if (!m_Hold && !ImGui::GetIO().WantCaptureMouse && e.Data.button == sf::Mouse::Button::Left)
@@ -226,15 +228,12 @@ namespace CW {
             m_Resources.Clear();
             CW_TRACE("Restarting simulation with {} drones", droneCount);
         }
-
-        void UpdateInterface() override
+        
+        void UpdateInterface() 
         {
             ImGui::Begin("Debug");
-            if (ImGui::CollapsingHeader("App-statistics"))
+            if (ImGui::CollapsingHeader("Simulation-info"))
             {
-                ImGui::Text("fps: %.1f", ImGui::GetIO().Framerate);
-                ImGui::Text("paused: %d", IsPaused());
-                ImGui::Spacing();
                 ImGui::Text("m_Beacons size: %d", m_Beacons.Size());
                 ImGui::Text("m_Beacons capasity: %d", m_Beacons.Capacity());
                 ImGui::Spacing();
@@ -386,6 +385,9 @@ namespace CW {
 
         Terrain m_Terrain;
 
+        std::vector<sf::ConvexShape> m_TerrainSectionMeshes;
+        sf::Texture m_TerrainTexture;
+
         sf::Shader m_WaterShader;
         sf::RectangleShape m_FullScreenQuad;
         float m_ElapsedTime = 0.0f;
@@ -399,9 +401,63 @@ namespace CW {
 
         bool m_DrawChunks = false;
         sf::RectangleShape m_ChunkMesh;
+    };
 
-        std::vector<sf::ConvexShape> m_TerrainSectionMeshes;
-        sf::Texture m_TerrainTexture;
+
+    class MyApp
+        : public Application
+    {
+    public:
+        MyApp()
+            : Application(800, 600, "test")
+        {
+            m_ClearColor = sf::Color(135, 206, 235, 255);
+            PushLayer<SimulationLayer>(static_cast<sf::Vector2f>(GetWindowSize()));
+        }
+
+        void Update(float deltaTime) override
+        {
+            CW_PROFILE_FUNCTION();
+            UpdateInterface();
+            UpdateLayers(deltaTime);
+        }
+
+        void PauseUpdate(float deltaTime) override
+        {
+        }
+
+        void Draw(sf::RenderWindow& render) override
+        {
+            CW_PROFILE_FUNCTION();
+            DrawLayers(render);
+        }
+
+        void OnEvent(Event& event) override
+        {
+            EventDispatcher dispatcher(event);
+            OnEventLayers(event);
+        }
+
+        bool OnKeyPressed(KeyPressed& event)
+        {
+            if (event.Data.code == sf::Keyboard::Key::Space)
+            {
+                SwitchPause();
+            }
+            return false;
+        }
+
+        void UpdateInterface()
+        {
+            ImGui::Begin("Debug");
+            if (ImGui::CollapsingHeader("App-statistics"))
+            {
+                ImGui::Text("fps: %.1f", ImGui::GetIO().Framerate);
+                ImGui::Text("paused: %d", IsPaused());
+                ImGui::Spacing();
+            }
+            ImGui::End();
+        }
     };
 
 } // CW

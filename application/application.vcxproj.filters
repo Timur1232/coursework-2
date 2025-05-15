@@ -63,6 +63,9 @@
     <ClCompile Include="src\engine\Events\UserEventHandler.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\Renderer.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\debug_utils\LineShape.h">

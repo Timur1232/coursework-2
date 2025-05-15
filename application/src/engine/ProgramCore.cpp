@@ -41,8 +41,6 @@ namespace CW {
 
 			ImGui::SFML::Update(*m_Window, deltaTime);
 
-			m_App->UpdateInterface();
-
 			if (m_App->IsPaused())
 				m_App->PauseUpdate(deltaTime.asSeconds());
 			else
