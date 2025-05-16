@@ -6,6 +6,7 @@
 #include "Events/CoreEvents.h"
 #include "Events/UserEventHandler.h"
 #include "Events/UserEvents.h"
+#include "Renderer.h"
 
 namespace CW {
 
@@ -17,6 +18,7 @@ namespace CW {
 
 	ProgramCore::~ProgramCore()
 	{
+		Renderer::Get().ReleaseRenderTarget();
 		if (!m_Window->isOpen())
 			m_Window->close();
 		ImGui::SFML::Shutdown();
@@ -136,10 +138,12 @@ namespace CW {
 	{
 		m_App = std::forward<std::unique_ptr<Application>>(app);
 
-		m_Window = CreateUnique<sf::RenderWindow>(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle());
-		/*m_Window.setVerticalSyncEnabled(true);
+		m_Window = CreateShared<sf::RenderWindow>(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle());
+		Renderer::Get().SetRenderTarget(m_Window);
 
-		m_Window.setFramerateLimit(60);*/
+		//m_Window.setVerticalSyncEnabled(true);
+		//m_Window.setFramerateLimit(60);
+
 		if (!ImGui::SFML::Init(*m_Window))
 		{
 			CW_CRITICAL("Failing initializing ImGui::SFML.");

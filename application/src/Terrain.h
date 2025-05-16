@@ -105,7 +105,7 @@ namespace CW {
 		[[nodiscard]] float calcSectionStartPosition(const TerrainSection& section) const;
 		[[nodiscard]] float calcSampleWidth() const;
 		[[nodiscard]] int calcSectionKeyPosition(float xPos) const;
-		[[nodiscard]] int calcSignedSampleIndex(float xPos, int sectionKeyPosition, int sampleWidth) const;
+		int calcSignedSampleIndex(float xPos, int sectionKeyPosition, float sampleWidth) const;
 
 	private:
 		std::vector<TerrainSection> m_TerrainSections;

@@ -4,6 +4,7 @@
 #include "utils/utils.h"
 #include "engine/Events/UserEvents.h"
 #include "engine/Events/UserEventHandler.h"
+#include "engine/Renderer.h"
 
 #include "debug_utils/Profiler.h"
 #include "debug_utils/Log.h"
@@ -278,8 +279,8 @@ namespace CW {
 
     DroneManager::DroneManager()
     {
-        m_Texture = CreateShared<sf::Texture>("res/sprites/drone_sprite.png");
-        m_Sprite = CreateShared<sf::Sprite>(*m_Texture);
+        m_Texture = CreateUnique<sf::Texture>("res/sprites/drone_sprite.png");
+        m_Sprite = CreateUnique<sf::Sprite>(*m_Texture);
         m_Sprite->setOrigin(static_cast<sf::Vector2f>(m_Texture->getSize()) / 2.0f);
     }
 
@@ -310,24 +311,8 @@ namespace CW {
     {
         for (auto& drone : m_Drones)
         {
-            setMeshPos(drone.GetPos(), drone.GetDirection(), drone.GetAttraction());
-            if (m_DrawViewDistance)
-            {
-                m_MeshViewDistance.setPosition(drone.GetPos());
-
-                m_MeshViewDistance.setRadius(m_DroneSettings.ViewDistance.x);
-                m_MeshViewDistance.setOrigin({ m_DroneSettings.ViewDistance.x, m_DroneSettings.ViewDistance.x });
-
-                render.draw(m_MeshViewDistance);
-
-                m_MeshViewDistance.setRadius(m_DroneSettings.ViewDistance.y);
-                m_MeshViewDistance.setOrigin({ m_DroneSettings.ViewDistance.y, m_DroneSettings.ViewDistance.y });
-
-                render.draw(m_MeshViewDistance);
-
-                render.draw(m_FOVVisual[0]);
-                render.draw(m_FOVVisual[1]);
-            }
+            debugDrawDirectionVisuals(drone.GetPos(), drone.GetDirection(), drone.GetAttraction());
+            debugDrawViewDistance(drone.GetPos(), drone.GetDirection());
 
             m_Sprite->setPosition(drone.GetPos());
             if (abs(drone.GetDirection().asRadians()) > angle::PI_2)
@@ -339,13 +324,7 @@ namespace CW {
                 m_Sprite->setScale({ 1.0f, 1.0f });
             }
             m_Sprite->setRotation(drone.GetDirection());
-            render.draw(*m_Sprite);
-
-            if (m_DrawDirection)
-            {
-                render.draw(m_DirectionVisual);
-                render.draw(m_AttractionAngleVisual);
-            }
+            Renderer::Get().Draw(*m_Sprite);
         }
     }
 
@@ -421,11 +400,7 @@ namespace CW {
         if (ImGui::SliderAngle("max turning delta", &tmp, 1.0f, 180.0f))
             m_DroneSettings.MaxTurningDelta = sf::radians(tmp);
 
-        if (ImGui::SliderFloat2("view distanse", &m_DroneSettings.ViewDistance.x, 0.0f, 500.0f))
-        {
-            m_FOVVisual[0].SetLength(m_DroneSettings.ViewDistance.y);
-            m_FOVVisual[1].SetLength(m_DroneSettings.ViewDistance.y);
-        }
+        ImGui::SliderFloat2("view distanse", &m_DroneSettings.ViewDistance.x, 0.0f, 500.0f);
 
         ImGui::SliderFloat("beacon spawn cooldown", &m_DroneSettings.BeaconCooldownSec, 0.1f, 50.0f);
         ImGui::SliderFloat("wander cooldown", &m_DroneSettings.WanderCooldownSec, 0.1f, 50.0f);
@@ -434,48 +409,59 @@ namespace CW {
     void DroneManager::SetDefaultSettings()
     {
         m_DroneSettings.SetDefault();
-        
-        m_MeshViewDistance.setPointCount(16);
-        
-        m_DirectionVisual.setRadius(4.0f);
-        m_DirectionVisual.setOrigin(m_DirectionVisual.getGeometricCenter());
-        m_DirectionVisual.setPointCount(3);
-        
-        m_AttractionAngleVisual.setRadius(4.0f);
-        m_AttractionAngleVisual.setPointCount(3);
-        m_AttractionAngleVisual.setOrigin(m_AttractionAngleVisual.getGeometricCenter());
-        
-        m_AttractionAngleVisual.setFillColor(sf::Color::Blue);
-        m_MeshViewDistance.setFillColor(sf::Color::Transparent);
-        m_MeshViewDistance.setOutlineColor(sf::Color::White);
-        m_MeshViewDistance.setOutlineThickness(1.0f);
-        
-        m_FOVVisual[0].SetLength(m_DroneSettings.ViewDistance.y);
-        m_FOVVisual[1].SetLength(m_DroneSettings.ViewDistance.y);
-        
         m_DrawViewDistance = false;
         m_DrawDirection = false;
     }
 
-    void DroneManager::setMeshPos(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle)
+    inline void DroneManager::debugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const
     {
         if (m_DrawDirection)
         {
-            m_DirectionVisual.setPosition(position + ONE_LENGTH_VEC.rotatedBy(directionAngle) * 100.0f);
-            m_DirectionVisual.setRotation(directionAngle + sf::degrees(90.0f));
-            m_AttractionAngleVisual.setPosition(position + ONE_LENGTH_VEC.rotatedBy(attractionAngle) * 100.0f);
-            m_AttractionAngleVisual.setRotation(attractionAngle + sf::degrees(90.0f));
+            auto& directionArrowBuilder = Renderer::Get().BeginCircleShape()
+                .PointCount(3)
+                .Radius(4.0f);
+            directionArrowBuilder.Position(position + ONE_LENGTH_VEC.rotatedBy(directionAngle) * 100.0f)
+                .Rotation(directionAngle + sf::degrees(90.0f))
+                .Draw();
+            directionArrowBuilder.Position(position + ONE_LENGTH_VEC.rotatedBy(attractionAngle) * 100.0f)
+                .Rotation(attractionAngle + sf::degrees(90.0f))
+                .Color(sf::Color::Blue)
+                .Draw();
+            directionArrowBuilder.SetDefault();
         }
+    }
+
+    inline void DroneManager::debugDrawViewDistance(sf::Vector2f position, sf::Angle directionAngle) const
+    {
         if (m_DrawViewDistance)
         {
-            m_FOVVisual[0].SetPosition(position);
-            m_FOVVisual[1].SetPosition(position);
+            auto& FOVVisualBuilder = Renderer::Get().BeginLineShape()
+                .Length(m_DroneSettings.ViewDistance.y)
+                .Position(position);
+            FOVVisualBuilder
+                .SetRotationByP1(sf::radians(m_DroneSettings.FOVRad))
+                .RotateByP1(directionAngle)
+                .Draw();
+            FOVVisualBuilder.Position(position)
+                .SetRotationByP1(sf::radians(-m_DroneSettings.FOVRad))
+                .RotateByP1(directionAngle)
+                .Draw();
+            FOVVisualBuilder.SetDefault();
             
-            m_FOVVisual[0].SetRotation(directionAngle);
-            m_FOVVisual[1].SetRotation(directionAngle);
-            
-            m_FOVVisual[0].RotateByPoint1(sf::radians(m_DroneSettings.FOVRad));
-            m_FOVVisual[1].RotateByPoint1(sf::radians(-m_DroneSettings.FOVRad));
+            auto& viewDistMeshBuilder = Renderer::Get().BeginCircleShape()
+                .PointCount(16)
+                .Color(sf::Color::Transparent)
+                .OutlineColor(sf::Color::White)
+                .OutlineThickness(1.0f);
+            viewDistMeshBuilder
+                .Radius(m_DroneSettings.ViewDistance.x)
+                .Position(position)
+                .Draw();
+            viewDistMeshBuilder
+                .Radius(m_DroneSettings.ViewDistance.y)
+                .Position(position)
+                .Draw();
+            viewDistMeshBuilder.SetDefault();
         }
     }
 

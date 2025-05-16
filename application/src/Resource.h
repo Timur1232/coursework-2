@@ -30,7 +30,7 @@ namespace CW {
 	class ResourceManager
 	{
 	public:
-		ResourceManager();
+		ResourceManager() = default;
 
 		void DrawAllRecources(sf::RenderWindow& render);
 
@@ -43,7 +43,6 @@ namespace CW {
 
 	private:
 		std::vector<Resource> m_Resources;
-		sf::CircleShape m_Mesh;
 	};
 
 } // CW

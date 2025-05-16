@@ -2,6 +2,7 @@
 #include "Resource.h"
 
 #include "debug_utils/Log.h"
+#include "engine/Renderer.h"
 
 namespace CW {
 
@@ -27,13 +28,6 @@ namespace CW {
 	}
 
 
-	ResourceManager::ResourceManager()
-	{
-		m_Mesh.setRadius(20.0f);
-		m_Mesh.setOrigin(m_Mesh.getGeometricCenter());
-		m_Mesh.setFillColor(sf::Color::Cyan);
-	}
-
 	void ResourceManager::DrawAllRecources(sf::RenderWindow& render)
 	{
 		auto validResources = m_Resources
@@ -41,8 +35,12 @@ namespace CW {
 		
 		for (const auto& resource : validResources)
 		{
-			m_Mesh.setPosition(resource.GetPos());
-			render.draw(m_Mesh);
+			Renderer::Get().BeginCircleShape()
+				.DefaultAfterDraw()
+				.Radius(20.0f)
+				.Color(sf::Color::Cyan)
+				.Position(resource.GetPos())
+				.Draw();
 		}
 	}
 

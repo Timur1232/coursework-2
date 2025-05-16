@@ -4,6 +4,7 @@
 #include "utils/utils.h"
 #include "debug_utils/Profiler.h"
 #include "BitDirection.h"
+#include "engine/Renderer.h"
 
 namespace CW {
 
@@ -82,7 +83,7 @@ namespace CW {
 	BeaconManager::BeaconManager()
 	{
 		m_Beacons.reserve(1024 * 1024);
-		m_Mesh.setOrigin(m_Mesh.getGeometricCenter());
+		//m_Mesh.setOrigin(m_Mesh.getGeometricCenter());
 	}
 
 	void BeaconManager::DebugInterface()
@@ -110,15 +111,22 @@ namespace CW {
 
 	void BeaconManager::DrawAllBeacons(sf::RenderWindow& render)
 	{
+		auto& circleBuilder = Renderer::Get().BeginCircleShape();
+		circleBuilder.PointCount(4)
+			.Radius(10.0f);
 		for (auto& beacon : m_Beacons)
 		{
 			if (beacon->IsAlive())
 			{
-				m_Mesh.setPosition(beacon->GetPos());
+				circleBuilder.Position(beacon->GetPos())
+					.Color(beacon->BeaconColor())
+					.Draw();
+				/*m_Mesh.setPosition(beacon->GetPos());
 				m_Mesh.setFillColor(beacon->BeaconColor());
-				render.draw(m_Mesh);
+				render.draw(m_Mesh);*/
 			}
 		}
+		circleBuilder.SetDefault();
 	}
 
 	void BeaconManager::CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection)

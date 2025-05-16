@@ -76,7 +76,7 @@ namespace CW {
 		size_t m_DeadBeacons = 0;
 
 		BeaconSettings m_BeaconSettings;
-		sf::CircleShape m_Mesh{10.0f, 4};
+		//sf::CircleShape m_Mesh{10.0f, 4};
 
 		static constexpr size_t BEACONS_RESERVE = 1024 * 1024;
 	};

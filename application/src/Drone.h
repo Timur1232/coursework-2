@@ -57,10 +57,10 @@ namespace CW {
 		void Update(float deltaTime, const DroneSettings& settings, std::vector<Resource>& resources);
 
 		void ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec, float FOV, sf::Vector2f viewDistance);
-		bool ReactToResourceReciver(ResourceReciever& reciever, float wanderCooldownSec);
+		[[nodiscard]] bool ReactToResourceReciver(ResourceReciever& reciever, float wanderCooldownSec);
 
 		void ReactToResources(std::vector<Resource>& resources, sf::Vector2f viewDistance, float FOV);
-		bool CheckResourceColission(float pickUpDist, const std::vector<Resource>& resources);
+		[[nodiscard]] bool CheckResourceColission(float pickUpDist, const std::vector<Resource>& resources);
 
 	private:
 		inline void turn(float deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta);
@@ -109,21 +109,17 @@ namespace CW {
 
 	private:
 		// Debug
-		inline void setMeshPos(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle);
+		inline void debugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const;
+		inline void debugDrawViewDistance(sf::Vector2f position, sf::Angle directionAngle) const;
 
 	private:
 		std::vector<Drone> m_Drones;
 		DroneSettings m_DroneSettings;
 
-		Shared<sf::Sprite> m_Sprite;
-		Shared<sf::Texture> m_Texture;
+		Unique<sf::Sprite> m_Sprite;
+		Unique<sf::Texture> m_Texture;
 
 		// Debug
-		sf::CircleShape m_MeshViewDistance;
-		sf::CircleShape m_DirectionVisual;
-		sf::CircleShape m_AttractionAngleVisual;
-		std::array<LineShape, 2> m_FOVVisual;
-
 		bool m_DrawViewDistance = false;
 		bool m_DrawDirection = false;
 	};

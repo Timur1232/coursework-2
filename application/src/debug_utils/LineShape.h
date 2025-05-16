@@ -9,7 +9,6 @@ namespace CW {
     {
     public:
         LineShape();
-        LineShape(float length);
         LineShape(sf::Vector2f p1, sf::Vector2f p2);
 
         void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
@@ -20,21 +19,21 @@ namespace CW {
         // Относительно первой точки
         void SetLength(float length);
 
+        void SetRotationByPoint1(sf::Angle angle);
+        void SetRotationByPoint2(sf::Angle angle);
+
         void RotateByPoint1(sf::Angle angle);
         void RotateByPoint2(sf::Angle angle);
 
+        void SetPoint1Color(sf::Color color);
+        void SetPoint2Color(sf::Color color);
+        void SetColor(sf::Color color);
+
         // Относительно первой точки
-        void SetRotation(sf::Angle angle);
-
-        void SetFillColor(sf::Color color);
         void SetPosition(sf::Vector2f position);
-
-        void SetThickness(float thickness);
         
     private:
-        sf::Vector2f m_Point1;
-        sf::Vector2f m_Point2;
-        sf::RectangleShape m_Mesh;
+        std::array<sf::Vertex, 2> m_Points;
     };
 
 } // CW

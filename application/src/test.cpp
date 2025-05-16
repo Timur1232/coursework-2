@@ -1,11 +1,10 @@
 #include "pch.h"
 
-#include <engine/EntryPoint.h>
-
-#include <engine/ProgramCore.h>
-
+#include "engine/EntryPoint.h"
+#include "engine/ProgramCore.h"
 #include "engine/Events/CoreEvents.h"
 #include "engine/Events/UserEvents.h"
+#include "engine/Renderer.h"
 
 #include "debug_utils/Log.h"
 #include "debug_utils/Profiler.h"
@@ -64,7 +63,8 @@ namespace CW {
     {
     public:
         SimulationLayer(sf::Vector2f windowSize)
-            : m_Camera(0, 0, windowSize.x, windowSize.y)
+            : m_Camera(0, 0, windowSize.x, windowSize.y),
+              m_WindowSize(windowSize)
         {
             m_Resources.Reserve(128);
             m_Drones.SetDefaultSettings();
@@ -92,15 +92,9 @@ namespace CW {
                 }
             }
 
-            m_ChunkMesh.setSize({ 500.0f, 500.0f });
-            m_ChunkMesh.setFillColor(sf::Color::Transparent);
-            m_ChunkMesh.setOutlineThickness(2.0f);
-            m_ChunkMesh.setOutlineColor({ 255, 255, 255, 180 });
-
             m_WaterShader.setUniform("uResolution", windowSize);
             m_WaterShader.setUniform("uDeepDarkFactor", 2.0f);
             m_WaterShader.setUniform("uYOffset", 300.0f);
-            m_FullScreenQuad.setSize(windowSize);
         }
 
         void Update(float deltaTime) override
@@ -130,24 +124,33 @@ namespace CW {
 
         void Draw(sf::RenderWindow& render) override
         {
+            auto& renderer = Renderer::Get();
             m_WaterShader.setUniform("uCameraPosition", m_Camera.GetView().getCenter());
             m_WaterShader.setUniform("uZoomFactor", m_Camera.GetZoomFactor());
             m_WaterShader.setUniform("uTime", m_ElapsedTime);
 
-            render.setView(render.getDefaultView());
-            render.draw(m_FullScreenQuad, &m_WaterShader);
-
-            render.setView(m_Camera.GetView());
+            renderer.SetDefaultView();
+            renderer.BeginRectangleShape()
+                .DefaultAfterDraw()
+                .Size(m_WindowSize)
+                .Shader(&m_WaterShader)
+                .Draw();
+            renderer.SetView(m_Camera.GetView());
 
             if (m_DrawChunks)
             {
-                m_ChunkMesh.setOutlineThickness(m_Camera.GetZoomFactor());
+                auto& chunkMeshBuilder = renderer.BeginRectangleShape();
+                chunkMeshBuilder.Size({ 500.0f, 500.0f })
+                    .Color(sf::Color::Transparent)
+                    .OutlineThickness(m_Camera.GetZoomFactor())
+                    .OutlineColor({ 255, 255, 255, 180 });
                 for (const auto& chunk : m_Beacons.GetChuncks().GetAllChunks())
                 {
                     sf::Vector2f chunkPos = static_cast<sf::Vector2f>(chunk.GetKey()) * 500.0f;
-                    m_ChunkMesh.setPosition(chunkPos);
-                    render.draw(m_ChunkMesh);
+                    chunkMeshBuilder.Position(chunkPos)
+                        .Draw();
                 }
+                chunkMeshBuilder.SetDefault();
             }
 
             m_ResourceReciever.Draw(render);
@@ -165,11 +168,8 @@ namespace CW {
                 m_Drones.DrawAllDrones(render);
             }
 
-            /*m_Terrain.SetDotScale(m_Camera.GetZoomFactor());
-            m_Terrain.Draw(render);*/
-
             for (const auto& mesh : m_TerrainSectionMeshes)
-                render.draw(mesh);
+                renderer.Draw(mesh);
         }
 
     private:
@@ -211,7 +211,7 @@ namespace CW {
         bool OnWindowResized(WindowResized& e)
         {
             m_WaterShader.setUniform("uResolution", static_cast<sf::Vector2f>(e.Size));
-            m_FullScreenQuad.setSize(static_cast<sf::Vector2f>(e.Size));
+            m_WindowSize = static_cast<sf::Vector2f>(e.Size);
             return false;
         }
 
@@ -388,8 +388,8 @@ namespace CW {
         std::vector<sf::ConvexShape> m_TerrainSectionMeshes;
         sf::Texture m_TerrainTexture;
 
+        sf::Vector2f m_WindowSize;
         sf::Shader m_WaterShader;
-        sf::RectangleShape m_FullScreenQuad;
         float m_ElapsedTime = 0.0f;
 
         // Debug
@@ -400,7 +400,6 @@ namespace CW {
         ObjectPalleteBuilder m_ObjPallete;
 
         bool m_DrawChunks = false;
-        sf::RectangleShape m_ChunkMesh;
     };
 
 

@@ -34,7 +34,7 @@ namespace CW {
 	private:
 		Unique<Application> m_App;
 
-		Unique<sf::RenderWindow> m_Window;
+		Shared<sf::RenderWindow> m_Window;
 		sf::State m_WindowState = sf::State::Windowed;
 		sf::Clock m_DeltaClock;
 	};

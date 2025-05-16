@@ -14,7 +14,7 @@ namespace CW {
 	public:
 		ResourceReciever(sf::Vector2f position);
 
-		void DebugInterface();
+		void DebugInterface() const;
 
 		void Draw(sf::RenderWindow& render) override;
 
@@ -29,10 +29,6 @@ namespace CW {
 		int m_ResourceCount = 0;
 		float m_RecieveRadius;
 		float m_BroadcastRadius;
-
-		sf::CircleShape m_Mesh;
-		sf::CircleShape m_RecieveMesh;
-		sf::CircleShape m_BroadcastMesh;
 	};
 
 } // CW

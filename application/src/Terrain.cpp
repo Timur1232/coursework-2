@@ -215,7 +215,7 @@ namespace CW {
 		return sectionKey;
 	}
 
-	int Terrain::calcSignedSampleIndex(float xPos, int sectionKeyPosition, int sampleWidth) const
+	int CW::Terrain::calcSignedSampleIndex(float xPos, int sectionKeyPosition, float sampleWidth) const
 	{
 		return static_cast<int>((xPos - sectionKeyPosition * m_SectionWidth) / sampleWidth);
 	}

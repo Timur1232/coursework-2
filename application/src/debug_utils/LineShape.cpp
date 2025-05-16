@@ -6,106 +6,82 @@
 namespace CW {
 
     LineShape::LineShape()
-        : LineShape(1.0f)
+        : LineShape({ 0.0f, 0.0f }, {1.0f, 0.0f})
     {
-    }
-
-    LineShape::LineShape(float length)
-        : m_Mesh({length, 1.0f}), m_Point1(-length / 2.0f, 0.0f), m_Point2(length / 2.0f, 0.0f)
-    {
-        sf::Vector2f center = m_Mesh.getGeometricCenter();
-        m_Mesh.setOrigin({center.x - length / 2.0f, center.y});
     }
 
     LineShape::LineShape(sf::Vector2f p1, sf::Vector2f p2)
-        : m_Point1(p1), m_Point2(p2)
     {
-        m_Mesh.setOrigin(m_Mesh.getGeometricCenter());
-
-        float dist = distance(p1, p2);
-        m_Mesh.setSize({ dist, m_Mesh.getSize().y });
-
-        sf::Angle angle = (p2 - p1).angle();
-        m_Mesh.setRotation(angle);
+        m_Points[0].position = p1;
+        m_Points[1].position = p2;
     }
 
     void LineShape::draw(sf::RenderTarget& target, sf::RenderStates states) const
     {
-        target.draw(m_Mesh, states);
+        target.draw(m_Points.data(), m_Points.size(), sf::PrimitiveType::Lines);
     }
 
     void LineShape::SetPoint1(sf::Vector2f p1)
     {
-        p1 *= -1.0f;
-        if (p1 == m_Point2)
-            return;
-        sf::Angle delta = (m_Point2 - m_Point1).angleTo(m_Point2 - p1);
-        m_Mesh.rotate(delta);
-
-        m_Point1 = p1;
-        float dist = distance(m_Point1, m_Point2);
-        m_Mesh.setSize({ dist, m_Mesh.getSize().y });
+        m_Points[0].position = p1;
     }
 
     void LineShape::SetPoint2(sf::Vector2f p2)
     {
-        p2 *= -1.0f;
-        if (p2 == m_Point1)
-            return;
-        sf::Angle delta = (m_Point2 - m_Point1).angleTo(p2 - m_Point1);
-        m_Mesh.rotate(delta);
-        m_Mesh.move({ m_Point2 - p2 });
-
-        m_Point2 = p2;
-        float dist = distance(m_Point1, m_Point2);
-        m_Mesh.setSize({ dist, m_Mesh.getSize().y });
+        m_Points[1].position = p2;
     }
 
     void LineShape::SetLength(float length)
     {
-        m_Mesh.setSize({ length, m_Mesh.getSize().y });
-        sf::Vector2f delta = (m_Point2 - m_Point1).normalized() * length;
-        m_Point2 = m_Point1 + delta;
+        sf::Vector2f normDir = (m_Points[1].position - m_Points[0].position).normalized();
+        m_Points[1].position = m_Points[0].position + normDir * length;
+    }
+
+    void LineShape::SetRotationByPoint1(sf::Angle angle)
+    {
+        sf::Vector2f zeroAngleSameLength = sf::Vector2f(1.0f, 0.0f) * (m_Points[1].position - m_Points[0].position).length();
+        m_Points[1].position = m_Points[0].position + zeroAngleSameLength.rotatedBy(angle);
+    }
+
+    void LineShape::SetRotationByPoint2(sf::Angle angle)
+    {
+        sf::Vector2f zeroAngleSameLength = sf::Vector2f(1.0f, 0.0f) * (m_Points[0].position - m_Points[1].position).length();
+        m_Points[0].position = m_Points[1].position + zeroAngleSameLength.rotatedBy(angle);
     }
 
     void LineShape::RotateByPoint1(sf::Angle angle)
     {
-        sf::Vector2f delta = (m_Point2 - m_Point1).rotatedBy(angle);
-        m_Point2 = m_Point1 + delta;
-        m_Mesh.rotate(angle);
+        sf::Vector2f delta = (m_Points[1].position - m_Points[0].position).rotatedBy(angle);
+        m_Points[1].position = m_Points[0].position + delta;
     }
 
     void LineShape::RotateByPoint2(sf::Angle angle)
     {
-        sf::Vector2f delta = (m_Point1 - m_Point2).rotatedBy(angle);
-        m_Point1 = m_Point2 + delta;
-        m_Mesh.rotate(angle);
+        sf::Vector2f delta = (m_Points[0].position - m_Points[1].position).rotatedBy(angle);
+        m_Points[0].position = m_Points[1].position + delta;
     }
 
-    void LineShape::SetRotation(sf::Angle angle)
+    void LineShape::SetPoint1Color(sf::Color color)
     {
-        m_Mesh.setRotation(angle);
-        sf::Angle originalAngle = (m_Point2 - m_Point1).angle();
-        sf::Vector2f delta = (m_Point2 - m_Point1).rotatedBy(originalAngle - angle);
-        m_Point1 = m_Point2 + delta;
+        m_Points[0].color = color;
     }
 
-    void LineShape::SetFillColor(sf::Color color)
+    void LineShape::SetPoint2Color(sf::Color color)
     {
-        m_Mesh.setFillColor(color);
+        m_Points[1].color = color;
+    }
+
+    void LineShape::SetColor(sf::Color color)
+    {
+        SetPoint1Color(color);
+        SetPoint2Color(color);
     }
 
     void LineShape::SetPosition(sf::Vector2f position)
     {
-        sf::Vector2f delta = position - m_Mesh.getPosition();
-        m_Mesh.setPosition(position);
-        m_Point1 += delta;
-        m_Point2 += delta;
-    }
-
-    void LineShape::SetThickness(float thickness)
-    {
-        m_Mesh.setSize({ m_Mesh.getSize().x, thickness });
+        sf::Vector2f delta = m_Points[1].position - m_Points[0].position;
+        m_Points[0].position = position;
+        m_Points[1].position = m_Points[0].position + delta;
     }
 
 } // CW
