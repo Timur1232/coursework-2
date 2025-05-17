@@ -16,7 +16,7 @@ namespace CW {
 
 		void DebugInterface() const;
 
-		void Draw(sf::RenderWindow& render) override;
+		void Draw() override;
 
 		[[nodiscard]] int GetResources() const;
 		[[nodiscard]] float GetBroadcastRadius() const;

@@ -34,12 +34,12 @@ namespace CW {
 		return false;
 	}
 
-	void Application::DrawLayers(sf::RenderWindow& render)
+	void Application::DrawLayers()
 	{
 		for (auto& layer : m_Layers)
 		{
 			if (layer->IsDrawActive())
-				layer->Draw(render);
+				layer->Draw();
 		}
 	}
 

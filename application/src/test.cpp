@@ -19,6 +19,9 @@
 
 #include "Terrain.h"
 
+#define SHADERS_FOLDER "res/shaders/"
+#define SPRITES_FOLDER "res/sprites/"
+
 namespace CW {
 
     class SimulationLayer
@@ -32,11 +35,16 @@ namespace CW {
             m_Resources.Reserve(128);
             m_Drones.SetDefaultSettings();
 
-            if (!m_WaterShader.loadFromFile("res/shaders/water_fragment.glsl", sf::Shader::Type::Fragment))
+            if (!m_WaterShader.loadFromFile(SHADERS_FOLDER "water_fragment.glsl", sf::Shader::Type::Fragment))
             {
                 CW_ERROR("Unable to load water shader!");
             }
-            if (!m_TerrainTexture.loadFromFile("res/sprites/terrain_texture.png"))
+            if (!m_DarkeningShader.loadFromFile(SHADERS_FOLDER "deepness_darkening_fragment.glsl", sf::Shader::Type::Fragment))
+            {
+                CW_ERROR("Unable to load darkening shader!");
+            }
+
+            if (!m_TerrainTexture.loadFromFile(SPRITES_FOLDER "terrain_texture.png"))
             {
                 CW_ERROR("Unable to load terrain texture!");
             }
@@ -44,16 +52,23 @@ namespace CW {
             {
                 m_TerrainTexture.setRepeated(true);
             }
+
             GenerateChunkRange(m_GeneratedRange.x, m_GeneratedRange.y);
 
             m_WaterShader.setUniform("uResolution", windowSize);
-            m_WaterShader.setUniform("uDeepDarkFactor", 2.0f);
-            m_WaterShader.setUniform("uYOffset", 300.0f);
+            m_WaterShader.setUniform("uDeepDarkFactor", 3.5f);
+            m_WaterShader.setUniform("uWaterYOffset", 300.0f);
+
+            m_DarkeningShader.setUniform("uResolution", windowSize);
+            m_DarkeningShader.setUniform("uDarkeningFactor", 25.0f);
+            m_DarkeningShader.setUniform("uYOffset", 3000.0f);
         }
 
         void Update(float deltaTime) override
         {
-            GenerateChuncksInCameraView();
+            GenerateChunksInCameraView();
+            GenerateChunksForDrones();
+
             UpdateInterface();
             {
                 CW_PROFILE_SCOPE("beacons update");
@@ -77,12 +92,16 @@ namespace CW {
             m_Camera.OnEvent(event);
         }
 
-        void Draw(sf::RenderWindow& render) override
+        void Draw() override
         {
             auto& renderer = Renderer::Get();
             m_WaterShader.setUniform("uCameraPosition", m_Camera.GetView().getCenter());
             m_WaterShader.setUniform("uZoomFactor", m_Camera.GetZoomFactor());
             m_WaterShader.setUniform("uTime", m_ElapsedTime);
+
+            m_DarkeningShader.setUniform("uZoomFactor", m_Camera.GetZoomFactor());
+            m_DarkeningShader.setUniform("uCameraPosition", m_Camera.GetView().getCenter());
+            m_DarkeningShader.setUniform("uCameraViewYSize", m_Camera.GetView().getSize().y);
 
             renderer.SetDefaultView();
             renderer.BeginRectangleShape()
@@ -108,23 +127,26 @@ namespace CW {
                 chunkMeshBuilder.SetDefault();
             }
 
-            m_ResourceReciever.Draw(render);
+            m_ResourceReciever.Draw();
 
-            m_Resources.DrawAllRecources(render);
+            m_Resources.DrawAllRecources();
 
             if (m_DrawBeacons)
             {
                 CW_PROFILE_SCOPE("beacons draw");
-                m_Beacons.DrawAllBeacons(render);
+                m_Beacons.DrawAllBeacons();
             }
 
             {
                 CW_PROFILE_SCOPE("drones draw");
-                m_Drones.DrawAllDrones(render);
+                m_Drones.DrawAllDrones();
             }
 
             for (const auto& mesh : m_TerrainSectionMeshes)
+            {
                 renderer.Draw(mesh);
+                renderer.Draw(mesh, &m_DarkeningShader);
+            }
         }
 
     private:
@@ -275,7 +297,7 @@ namespace CW {
                     static float maxHeight = m_Terrain.GetMaxHeight();
                     static float mappedNoiseDistance = m_Terrain.GetMappedNoiseDistance();
                     if (ImGui::InputInt("seed", &seed))
-                        m_Terrain.SetSeed(seed);
+                        m_Terrain.SetDetailedSeed(seed);
                     if (ImGui::InputFloat("max height", &maxHeight))
                         m_Terrain.SetMaxHeight(maxHeight);
                     if (ImGui::InputFloat("mapped noise distance", &mappedNoiseDistance))
@@ -331,7 +353,7 @@ namespace CW {
                 m_Drones.InfoInterface(&m_DronesInfo);
         }
 
-        void GenerateChuncksInCameraView()
+        void GenerateChunksInCameraView()
         {
             sf::Vector2f cameraViewSize = m_Camera.GetView().getSize();
             sf::Vector2f cameraViewPosition = m_Camera.GetView().getCenter() - cameraViewSize / 2.0f;
@@ -369,6 +391,24 @@ namespace CW {
             }
         }
 
+        void GenerateChunksForDrones()
+        {
+            auto [leftBorderX, rightBorderX] = m_Drones.GetFurthestHorizontalReach();
+            int leftBorderKey = m_Terrain.CalcSectionKeyPosition(leftBorderX - m_Terrain.GetSectionWidth());
+            int rightBorderKey = m_Terrain.CalcSectionKeyPosition(rightBorderX + m_Terrain.GetSectionWidth());
+            if (leftBorderKey < m_GeneratedRange.x)
+            {
+                GenerateChunkRange(leftBorderKey, m_GeneratedRange.x);
+                m_GeneratedRange.x = leftBorderKey;
+            }
+            if (rightBorderKey >= m_GeneratedRange.y)
+            {
+                rightBorderKey += 1;
+                GenerateChunkRange(m_GeneratedRange.y, rightBorderKey);
+                m_GeneratedRange.y = rightBorderKey;
+            }
+        }
+
     private:
         Camera2D m_Camera;
         bool m_Hold = false;
@@ -386,8 +426,10 @@ namespace CW {
         sf::Texture m_TerrainTexture;
 
         sf::Vector2f m_WindowSize;
-        sf::Shader m_WaterShader;
         float m_ElapsedTime = 0.0f;
+
+        sf::Shader m_WaterShader;
+        sf::Shader m_DarkeningShader;
 
         // Debug
         bool m_BeaconsInfo = false;
@@ -422,10 +464,10 @@ namespace CW {
         {
         }
 
-        void Draw(sf::RenderWindow& render) override
+        void Draw() override
         {
             CW_PROFILE_FUNCTION();
-            DrawLayers(render);
+            DrawLayers();
         }
 
         void OnEvent(Event& event) override
@@ -434,6 +476,7 @@ namespace CW {
             OnEventLayers(event);
         }
 
+    private:
         bool OnKeyPressed(KeyPressed& event)
         {
             if (event.Data.code == sf::Keyboard::Key::Space)

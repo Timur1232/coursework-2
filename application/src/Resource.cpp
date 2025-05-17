@@ -28,7 +28,7 @@ namespace CW {
 	}
 
 
-	void ResourceManager::DrawAllRecources(sf::RenderWindow& render)
+	void ResourceManager::DrawAllRecources()
 	{
 		auto validResources = m_Resources
 			| std::ranges::views::filter([](const Resource& r) { return !r.IsCarried(); });

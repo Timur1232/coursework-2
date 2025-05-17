@@ -32,7 +32,7 @@ namespace CW {
 	public:
 		ResourceManager() = default;
 
-		void DrawAllRecources(sf::RenderWindow& render);
+		void DrawAllRecources();
 
 		void Clear() { m_Resources.clear(); }
 		void Reserve(size_t reserve) { m_Resources.reserve(reserve); }

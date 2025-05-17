@@ -314,7 +314,7 @@ namespace CW {
         }
     }
 
-    void DroneManager::DrawAllDrones(sf::RenderWindow& render)
+    void DroneManager::DrawAllDrones()
     {
         for (auto& drone : m_Drones)
         {

@@ -92,7 +92,7 @@ namespace CW {
 			ResourceReciever& reciever,
 			const Terrain& terrain);
 
-		void DrawAllDrones(sf::RenderWindow& render);
+		void DrawAllDrones();
 
 		void Clear();
 		void Reset(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource);
@@ -106,6 +106,8 @@ namespace CW {
 		void DebugInterface();
 
 		void SetDefaultSettings();
+
+		sf::Vector2f GetFurthestHorizontalReach() const { return m_FurthestHorizontalReach; }
 
 	private:
 		// Debug

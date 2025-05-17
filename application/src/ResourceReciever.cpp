@@ -16,7 +16,7 @@ namespace CW {
 		ImGui::Text("resources amount: %d", m_ResourceCount);
 	}
 
-	void ResourceReciever::Draw(sf::RenderWindow& render)
+	void ResourceReciever::Draw()
 	{
 		auto& circleBuilder = Renderer::Get().BeginCircleShape();
 		// body

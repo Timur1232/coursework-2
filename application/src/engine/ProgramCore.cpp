@@ -49,7 +49,7 @@ namespace CW {
 				m_App->Update(deltaTime.asSeconds());
 
 			m_Window->clear(m_App->GetClearColor());
-			m_App->Draw(*m_Window);
+			m_App->Draw();
 			ImGui::SFML::Render(*m_Window);
 			m_Window->display();
 		}

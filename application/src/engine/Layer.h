@@ -2,18 +2,19 @@
 #include <pch.h>
 
 #include "Events/Event.h"
+#include "IDrawable.h"
+#include "IUpdate.h"
 
 namespace CW {
 
     class Layer
+        : public IDrawable,
+          public IUpdate,
+          public IOnEvent
     {
     public:
         Layer() = default;
         virtual ~Layer() = default;
-
-        virtual void Update(float deltaTime) = 0;
-        virtual void OnEvent(Event& event) = 0;
-        virtual void Draw(sf::RenderWindow& render) = 0;
 
         bool IsUpdateActive() const { return m_UpdateActive; }
         bool IsDrawActive() const { return m_DrawActive; }

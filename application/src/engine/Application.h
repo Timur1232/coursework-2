@@ -27,7 +27,7 @@ namespace CW {
 
 		void UpdateLayers(float deltaTime);
 		bool OnEventLayers(Event& event);
-		void DrawLayers(sf::RenderWindow& render);
+		void DrawLayers();
 
 		sf::Vector2u GetWindowSize() const;
 		const char* GetTitle() const;

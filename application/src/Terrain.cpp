@@ -7,21 +7,37 @@
 
 namespace CW {
 
+	float NoiseGenerator::GenSingle2D(float x, float y) const
+	{
+		return m_NoiseTreeBase->GenSingle2D(x * m_BaseFrequensy, y * m_BaseFrequensy, m_BaseSeed) * m_BaseFactor
+			+ m_NoiseTreeDetailed->GenSingle2D(x, y, m_DetailedSeed) * m_DetailedFactor;
+	}
+
+
+	float deepness_func(float x, float bellWidth, float maxHeight)
+	{
+		float exponent = -(x * x) / (2.0f * (bellWidth * bellWidth));
+		return maxHeight - maxHeight * std::exp(exponent);
+	}
+
 	TerrainSection::TerrainSection(int index, size_t samplesCount)
 		: Key(index), Samples(samplesCount)
 	{
 	}
 
-	void TerrainSection::Generate(const NoiseGenerator& gen, float maxHeight, float mapNoiseDistance)
+	void TerrainSection::Generate(const NoiseGenerator& gen, float maxHeight, float mapNoiseDistance, float sectionWidth, float bellWidth, float bellHeight)
 	{
+		float realX = static_cast<float>(Key) * sectionWidth;
+		float realStep = sectionWidth / static_cast<float>(Samples.size() - 1);
 		float noiseX = static_cast<float>(Key) * mapNoiseDistance;
 		float noiseStep = mapNoiseDistance / static_cast<float>(Samples.size() - 1);
 
 		for (auto& sample : Samples)
 		{
 			float noiseValue = gen.GenSingle2D(noiseX, 0.0f);
-			sample = noiseValue * maxHeight;
+			sample = noiseValue * maxHeight + deepness_func(realX, bellWidth, bellHeight);
 			noiseX += noiseStep;
+			realX += realStep;
 		}
 	}
 
@@ -40,11 +56,11 @@ namespace CW {
 		}
 
 		m_TerrainSections.emplace_back(keyPosition, m_SamplesPerSection + 1);
-		m_TerrainSections.back().Generate(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance);
+		m_TerrainSections.back().Generate(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance, m_SectionWidth, m_BellWidth, m_BellHeigth);
 		return true;
 	}
 
-	void Terrain::DebugDraw(sf::RenderWindow& render)
+	void Terrain::DebugDraw()
 	{
 		float sampleWidth = calcSampleWidth();
 		for (const auto& section : m_TerrainSections)
@@ -125,7 +141,7 @@ namespace CW {
 		for (auto& section : m_TerrainSections)
 		{
 			section.Samples.resize(m_SamplesPerSection + 1);
-			section.Generate(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance);
+			section.Generate(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance, m_SectionWidth, m_BellWidth, m_BellHeigth);
 		}
 	}
 
@@ -189,16 +205,19 @@ namespace CW {
 		return sectionKey;
 	}
 
-	int CW::Terrain::calcSignedSampleIndex(float xPos, int sectionKeyPosition, float sampleWidth) const
+	int Terrain::calcSignedSampleIndex(float xPos, int sectionKeyPosition, float sampleWidth) const
 	{
 		return static_cast<int>((xPos - sectionKeyPosition * m_SectionWidth) / sampleWidth);
 	}
 
 
 	NoiseGenerator::NoiseGenerator()
-		: m_NoiseTree(FastNoise::New<FastNoise::FractalFBm>())
+		: m_NoiseTreeDetailed(FastNoise::New<FastNoise::FractalFBm>()),
+		  m_NoiseTreeBase(FastNoise::New<FastNoise::FractalFBm>())
 	{
-		m_NoiseTree->SetSource(FastNoise::New<FastNoise::Perlin>());
+		m_NoiseTreeDetailed->SetSource(FastNoise::New<FastNoise::Perlin>());
+		m_NoiseTreeBase->SetSource(FastNoise::New<FastNoise::Perlin>());
 	}
+
 
 } // CW

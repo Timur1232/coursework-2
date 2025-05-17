@@ -109,7 +109,7 @@ namespace CW {
 		}
 	}
 
-	void BeaconManager::DrawAllBeacons(sf::RenderWindow& render)
+	void BeaconManager::DrawAllBeacons()
 	{
 		auto& circleBuilder = Renderer::Get().BeginCircleShape();
 		circleBuilder.PointCount(4)

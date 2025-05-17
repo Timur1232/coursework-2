@@ -59,7 +59,7 @@ namespace CW {
 		BeaconManager();
 
 		void Update(float deltaTime) override;
-		void DrawAllBeacons(sf::RenderWindow& render);
+		void DrawAllBeacons();
 		void CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection);
 		void Clear();
 

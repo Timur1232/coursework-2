@@ -1,8 +1,8 @@
-#version 430 core
+#version 330 core
 
 uniform vec2 uResolution;
 uniform vec2 uCameraPosition;
-uniform float uYOffset;
+uniform float uWaterYOffset;
 uniform float uZoomFactor;
 uniform float uTime;
 uniform float uDeepDarkFactor;
@@ -27,6 +27,11 @@ float WaterMask(vec2 uv, float h, float t, float i) {
     return waterMask;
 }
 
+float sigmoid(float x)
+{
+    return 1.0 / (1.0 + exp(-x));
+}
+
 out vec4 fragColor;
 
 void main()
@@ -36,7 +41,7 @@ void main()
     uv *= uZoomFactor;
     uv.x += v;
     
-    float h = (uCameraPosition.y + uYOffset) / uResolution.y * 2.0;
+    float h = (uCameraPosition.y + uWaterYOffset) / uResolution.y * 2.0;
 
     vec3 waterColor = vec3(26.0, 71.0, 128.0) / 255.0;
     vec3 deepWaterColor = vec3(0.0, 51.0, 98.0) / 255.0;

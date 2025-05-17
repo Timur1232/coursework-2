@@ -8,14 +8,14 @@ namespace CW {
 	{
 	public:
 		virtual ~IDrawable() = default;
-		virtual void Draw(sf::RenderWindow&) = 0;
+		virtual void Draw() = 0;
 	};
 
 
 	template <class T>
-	concept has_draw = requires(T d, sf::RenderWindow & render)
+	concept has_draw = requires(T d)
 	{
-		{ d.Draw(render) };
+		{ d.Draw() };
 	};
 
 } // CW
