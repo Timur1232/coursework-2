@@ -55,7 +55,7 @@ namespace CW {
 	public:
 		Terrain();
 
-		void Generate(int keyPosition);
+		bool Generate(int keyPosition);
 		void DebugDraw(sf::RenderWindow& render);
 
 		std::vector<TerrainSection>::iterator GetSection(int keyPosition);
@@ -84,6 +84,8 @@ namespace CW {
 		size_t GetSamplesPerSection() const { return m_SamplesPerSection; }
 		float GetSectionWidth() const { return m_SectionWidth; }
 
+		size_t GetSectionsCount() const { return m_TerrainSections.size(); }
+
 		float GetGain() const { return m_NoiseGenerator.GetGain(); }
 		float GetWeightedStrength() const { return m_NoiseGenerator.GetWeightedStrength(); }
 		int GetOctaves() const { return m_NoiseGenerator.GetOctaves(); }
@@ -96,14 +98,14 @@ namespace CW {
 		// Debug
 		void SetDotScale(float size);
 
+		float CalcSectionStartPosition(int key) const;
+		[[nodiscard]] int CalcSectionKeyPosition(float xPos) const;
+
 	private:
 		[[nodiscard]] sf::Vector2f sampleToWorldPosition(
 			const TerrainSection& section, size_t sampleIndex,
 			float sectionStartPosition, float sampleWidth) const;
-
-		[[nodiscard]] float calcSectionStartPosition(const TerrainSection& section) const;
 		[[nodiscard]] float calcSampleWidth() const;
-		[[nodiscard]] int calcSectionKeyPosition(float xPos) const;
 		int calcSignedSampleIndex(float xPos, int sectionKeyPosition, float sampleWidth) const;
 
 	private:

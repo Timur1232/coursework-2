@@ -32,28 +32,19 @@ namespace CW {
             m_Resources.Reserve(128);
             m_Drones.SetDefaultSettings();
 
-            for (int i = -5; i <= 5; ++i)
-                m_Terrain.Generate(i);
-
-            m_Terrain.GenerateAllMeshes(m_TerrainSectionMeshes);
-
             if (!m_WaterShader.loadFromFile("res/shaders/water_fragment.glsl", sf::Shader::Type::Fragment))
             {
                 CW_ERROR("Unable to load water shader!");
             }
             if (!m_TerrainTexture.loadFromFile("res/sprites/terrain_texture.png"))
             {
-                CW_ERROR("Unable to load terrain shader!");
+                CW_ERROR("Unable to load terrain texture!");
             }
             else
             {
                 m_TerrainTexture.setRepeated(true);
-                for (auto& mesh : m_TerrainSectionMeshes)
-                {
-                    mesh.setTexture(&m_TerrainTexture);
-                    mesh.setTextureRect({ {0, 0}, static_cast<sf::Vector2i>(mesh.getLocalBounds().size) });
-                }
             }
+            GenerateChunkRange(m_GeneratedRange.x, m_GeneratedRange.y);
 
             m_WaterShader.setUniform("uResolution", windowSize);
             m_WaterShader.setUniform("uDeepDarkFactor", 2.0f);
@@ -62,6 +53,7 @@ namespace CW {
 
         void Update(float deltaTime) override
         {
+            GenerateChuncksInCameraView();
             UpdateInterface();
             {
                 CW_PROFILE_SCOPE("beacons update");
@@ -206,6 +198,9 @@ namespace CW {
                 ImGui::Spacing();
                 ImGui::Text("chunks amount: %d", m_Beacons.GetChuncks().Size());
                 ImGui::Checkbox("draw chunks", &m_DrawChunks);
+
+                ImGui::Spacing();
+                ImGui::Text("terrain sections generated: %d (%d; %d)", m_Terrain.GetSectionsCount(), m_GeneratedRange.x, m_GeneratedRange.y);
             }
 
             if (ImGui::CollapsingHeader("Object-pallete"))
@@ -336,6 +331,44 @@ namespace CW {
                 m_Drones.InfoInterface(&m_DronesInfo);
         }
 
+        void GenerateChuncksInCameraView()
+        {
+            sf::Vector2f cameraViewSize = m_Camera.GetView().getSize();
+            sf::Vector2f cameraViewPosition = m_Camera.GetView().getCenter() - cameraViewSize / 2.0f;
+            sf::FloatRect cameraViewRect{ cameraViewPosition, m_Camera.GetView().getSize() };
+
+            int leftBorderKey = m_Terrain.CalcSectionKeyPosition(cameraViewPosition.x);
+            int rightBorderKey = m_Terrain.CalcSectionKeyPosition(cameraViewPosition.x + cameraViewSize.x);
+
+            float leftBorderX = m_Terrain.CalcSectionStartPosition(leftBorderKey) + m_Terrain.GetSectionWidth();
+            float rightBorderX = m_Terrain.CalcSectionStartPosition(rightBorderKey);
+
+            if (leftBorderKey < m_GeneratedRange.x && cameraViewRect.contains({ leftBorderX, cameraViewRect.getCenter().y }))
+            {
+                GenerateChunkRange(leftBorderKey, m_GeneratedRange.x);
+                m_GeneratedRange.x = leftBorderKey;
+            }
+            if (rightBorderKey >= m_GeneratedRange.y && cameraViewRect.contains({ rightBorderX, cameraViewRect.getCenter().y }))
+            {
+                rightBorderKey += 1;
+                GenerateChunkRange(m_GeneratedRange.y, rightBorderKey);
+                m_GeneratedRange.y = rightBorderKey;
+            }
+        }
+
+        void GenerateChunkRange(int left, int right)
+        {
+            for (int key = left; key < right; ++key)
+            {
+                if (!m_Terrain.Generate(key))
+                    continue;
+                auto& mesh = m_TerrainSectionMeshes.emplace_back();
+                m_Terrain.GenerateMesh(mesh, key);
+                mesh.setTexture(&m_TerrainTexture);
+                mesh.setTextureRect({ {0, 0}, static_cast<sf::Vector2i>(mesh.getLocalBounds().size) });
+            }
+        }
+
     private:
         Camera2D m_Camera;
         bool m_Hold = false;
@@ -347,7 +380,7 @@ namespace CW {
         ResourceReciever m_ResourceReciever{ {0.0f, 0.0f} };
 
         Terrain m_Terrain;
-        sf::Vector2i m_TerrainGenerationIndexies;
+        sf::Vector2i m_GeneratedRange{-5, 5};
 
         std::vector<sf::ConvexShape> m_TerrainSectionMeshes;
         sf::Texture m_TerrainTexture;

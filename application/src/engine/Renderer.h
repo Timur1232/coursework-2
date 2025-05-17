@@ -153,6 +153,9 @@ namespace CW {
         void SetView(const sf::View& view) { m_RenderTarget->setView(view); }
         void SetDefaultView() { m_RenderTarget->setView(m_RenderTarget->getDefaultView()); }
 
+        /*bool Intersects(const sf::FloatRect& bounds) { return m_RenderTarget->getView().getViewport().findIntersection(bounds).has_value(); }
+        bool Contains(sf::Vector2f point) { return m_RenderTarget->getView().getViewport().contains(point); }*/
+
         RCircleShapeBuilder& BeginCircleShape() { return m_CircleShapeBuilde; }
         RRectangleShapeBuilder& BeginRectangleShape() { return m_RectangleShapeBuilder; }
         RLineShapeBuilder& BeginLineShape() { return m_LineShapeBuilder; }

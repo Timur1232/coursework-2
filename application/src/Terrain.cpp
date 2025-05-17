@@ -15,7 +15,7 @@ namespace CW {
 	void TerrainSection::Generate(const NoiseGenerator& gen, float maxHeight, float mapNoiseDistance)
 	{
 		float noiseX = static_cast<float>(Key) * mapNoiseDistance;
-		float noiseStep = mapNoiseDistance / static_cast<float>(Samples.size());
+		float noiseStep = mapNoiseDistance / static_cast<float>(Samples.size() - 1);
 
 		for (auto& sample : Samples)
 		{
@@ -31,16 +31,17 @@ namespace CW {
 		m_DotMesh.setOrigin(m_DotMesh.getGeometricCenter());
 	}
 
-	void Terrain::Generate(int keyPosition)
+	bool CW::Terrain::Generate(int keyPosition)
 	{
 		if (GetSection(keyPosition) != m_TerrainSections.end())
 		{
 			CW_WARN("Trying to generate existing terrain section on position: {}", keyPosition);
-			return;
+			return false;
 		}
 
-		m_TerrainSections.emplace_back(keyPosition, m_SamplesPerSection);
+		m_TerrainSections.emplace_back(keyPosition, m_SamplesPerSection + 1);
 		m_TerrainSections.back().Generate(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance);
+		return true;
 	}
 
 	void Terrain::DebugDraw(sf::RenderWindow& render)
@@ -48,8 +49,8 @@ namespace CW {
 		float sampleWidth = calcSampleWidth();
 		for (const auto& section : m_TerrainSections)
 		{
-			float sectionStartPosition = calcSectionStartPosition(section);
-			for (size_t i = 0; i < section.Samples.size() - 1; ++i)
+			float sectionStartPosition = CalcSectionStartPosition(section.Key);
+			for (size_t i = 0; i < m_SamplesPerSection - 1; ++i)
 			{
 				sf::Vector2f p1{ sampleToWorldPosition(section, i, sectionStartPosition, sampleWidth) };
 				sf::Vector2f p2{ sampleToWorldPosition(section, i + 1, sectionStartPosition, sampleWidth) };
@@ -84,18 +85,10 @@ namespace CW {
 			CW_ERROR("Section with key position {} don\'t exist!", keyPosition);
 			return;
 		}
-		auto nextSection = GetSection(keyPosition + 1);
+		//
+		mesh.setPointCount(m_SamplesPerSection + 3);
 
-		if (nextSection != m_TerrainSections.end())
-		{
-			mesh.setPointCount(m_SamplesPerSection + 3);
-		}
-		else
-		{
-			mesh.setPointCount(m_SamplesPerSection + 2);
-		}
-
-		float sectionPosition = calcSectionStartPosition(*section);
+		float sectionPosition = CalcSectionStartPosition(section->Key);
 		float sampleWidth = calcSampleWidth();
 
 		size_t pointIndex = 0;
@@ -106,14 +99,6 @@ namespace CW {
 		}
 
 		sf::Vector2f bottomPoint = sampleToWorldPosition(*section, section->Samples.size() - 1, sectionPosition, sampleWidth);
-		if (nextSection != m_TerrainSections.end())
-		{
-			sf::Vector2f nextPointPos = sampleToWorldPosition(*nextSection, 0,
-				calcSectionStartPosition(*nextSection), sampleWidth);
-			mesh.setPoint(pointIndex, nextPointPos);
-			pointIndex++;
-			bottomPoint = nextPointPos;
-		}
 
 		float bottomPointHeight = 100000.0f;
 
@@ -139,14 +124,14 @@ namespace CW {
 	{
 		for (auto& section : m_TerrainSections)
 		{
-			section.Samples.resize(m_SamplesPerSection);
+			section.Samples.resize(m_SamplesPerSection + 1);
 			section.Generate(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance);
 		}
 	}
 
 	bool Terrain::IsNear(const Object& object, float distThreashold, int range) const
 	{
-		int sectionKey = calcSectionKeyPosition(object.GetPos().x);
+		int sectionKey = CalcSectionKeyPosition(object.GetPos().x);
 		float sampleWidth = calcSampleWidth();
 		int sampleIndex = calcSignedSampleIndex(object.GetPos().x, sectionKey, sampleWidth);
 
@@ -158,7 +143,7 @@ namespace CW {
 
 		// TODO: определение коллизии на границах секций
 
-		float sectionStartPosition = calcSectionStartPosition(*section);
+		float sectionStartPosition = CalcSectionStartPosition(section->Key);
 
 		for (int i = -range; i <= range; ++i)
 		{
@@ -186,9 +171,9 @@ namespace CW {
 		return pos;
 	}
 
-	float Terrain::calcSectionStartPosition(const TerrainSection& section) const
+	float Terrain::CalcSectionStartPosition(int key) const
 	{
-		return static_cast<float>(section.Key) * m_SectionWidth;
+		return static_cast<float>(key) * m_SectionWidth;
 	}
 
 	float Terrain::calcSampleWidth() const
@@ -196,7 +181,7 @@ namespace CW {
 		return m_SectionWidth / static_cast<float>(m_SamplesPerSection);
 	}
 
-	int Terrain::calcSectionKeyPosition(float xPos) const
+	int Terrain::CalcSectionKeyPosition(float xPos) const
 	{
 		int sectionKey = static_cast<int>(xPos / m_SectionWidth);
 		if (xPos < 0)

@@ -294,6 +294,13 @@ namespace CW {
         for (auto& drone : m_Drones)
         {
             drone.Update(deltaTime, m_DroneSettings, resources);
+
+            // Подсчет максимальной достигнутой горизонтальной позиции
+            if (drone.GetPos().x < m_FurthestHorizontalReach.x)
+                m_FurthestHorizontalReach.x = drone.GetPos().x;
+            if (drone.GetPos().x > m_FurthestHorizontalReach.y)
+                m_FurthestHorizontalReach.y = drone.GetPos().x;
+
             if (terrain.IsNear(drone, 50.0f))
             {
                 drone.SetDirection((drone.GetDirection() + sf::degrees(180.0f)).wrapSigned());

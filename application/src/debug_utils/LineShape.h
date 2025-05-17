@@ -13,6 +13,9 @@ namespace CW {
 
         void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
+        sf::Vector2f GetP1Pos() const { return m_Points[0].position; }
+        sf::Vector2f GetP2Pos() const { return m_Points[1].position; }
+
         void SetPoint1(sf::Vector2f p1);
         void SetPoint2(sf::Vector2f p2);
 

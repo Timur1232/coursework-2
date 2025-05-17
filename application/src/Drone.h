@@ -115,6 +115,7 @@ namespace CW {
 	private:
 		std::vector<Drone> m_Drones;
 		DroneSettings m_DroneSettings;
+		sf::Vector2f m_FurthestHorizontalReach;
 
 		Unique<sf::Sprite> m_Sprite;
 		Unique<sf::Texture> m_Texture;

@@ -35,7 +35,7 @@ namespace CW {
 
 	private:
 		sf::View m_View;
-		sf::Vector2i m_PrevPos{};
+		sf::Vector2i m_PrevPos;
 		float m_ZoomFactor = 1.0f;
 		bool m_IsMoving = false;
 	};

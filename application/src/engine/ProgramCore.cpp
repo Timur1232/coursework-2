@@ -141,8 +141,8 @@ namespace CW {
 		m_Window = CreateShared<sf::RenderWindow>(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle());
 		Renderer::Get().SetRenderTarget(m_Window);
 
-		//m_Window.setVerticalSyncEnabled(true);
-		//m_Window.setFramerateLimit(60);
+		m_Window->setVerticalSyncEnabled(true);
+		m_Window->setFramerateLimit(60);
 
 		if (!ImGui::SFML::Init(*m_Window))
 		{
