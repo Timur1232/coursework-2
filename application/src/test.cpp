@@ -5,6 +5,7 @@
 #include "engine/Events/CoreEvents.h"
 #include "engine/Events/UserEvents.h"
 #include "engine/Renderer.h"
+#include "engine/Events/UserEventHandler.h"
 
 #include "debug_utils/Log.h"
 #include "debug_utils/Profiler.h"
@@ -18,6 +19,8 @@
 #include "BitDirection.h"
 
 #include "Terrain.h"
+
+#include "engine/Button.h"
 
 #define SHADERS_FOLDER "res/shaders/"
 #define SPRITES_FOLDER "res/sprites/"
@@ -208,143 +211,145 @@ namespace CW {
         
         void UpdateInterface() 
         {
-            ImGui::Begin("Debug");
-            if (ImGui::CollapsingHeader("Simulation-info"))
+            if (ImGui::Begin("Debug"))
             {
-                ImGui::Text("m_Beacons size: %d", m_Beacons.Size());
-                ImGui::Text("m_Beacons capasity: %d", m_Beacons.Capacity());
-                ImGui::Spacing();
-                ImGui::Text("mouse hovering on any window: %d", ImGui::GetIO().WantCaptureMouse);
-                m_Camera.DebugInterface();
-
-                ImGui::Spacing();
-                ImGui::Text("chunks amount: %d", m_Beacons.GetChuncks().Size());
-                ImGui::Checkbox("draw chunks", &m_DrawChunks);
-
-                ImGui::Spacing();
-                ImGui::Text("terrain sections generated: %d (%d; %d)", m_Terrain.GetSectionsCount(), m_GeneratedRange.x, m_GeneratedRange.y);
-            }
-
-            if (ImGui::CollapsingHeader("Object-pallete"))
-            {
-                m_ObjPallete.UpdateInterface();
-            }
-
-            if (ImGui::CollapsingHeader("Resources"))
-            {
-                m_ResourceReciever.DebugInterface();
-            }
-
-            if (ImGui::CollapsingHeader("Drones"))
-            {
-                static int droneCount = 100;
-                static sf::Vector2f startPos = { 0.0f, 0.0f };
-                static TargetType target = TargetType::Recource;
-
-                ImGui::InputInt("drone count", &droneCount);
-                ImGui::InputFloat2("starting position", &startPos.x);
-                ImGui::Text("target on start");
-                if (ImGui::RadioButton("Recource##Drones", target == TargetType::Recource))
-                    target = TargetType::Recource;
-                ImGui::SameLine();
-                if (ImGui::RadioButton("Navigation##Drones", target == TargetType::Navigation))
-                    target = TargetType::Navigation;
-
-                if (ImGui::Button("restart simulation"))
+                if (ImGui::CollapsingHeader("Simulation-info"))
                 {
-                    RestartSim(droneCount, startPos, target);
-                }
-
-                ImGui::Checkbox("show drones info", &m_DronesInfo);
-                m_Drones.DebugInterface();
-
-                ImGui::Text("default drones settings");
-                if (ImGui::Button("default drone"))
-                    m_Drones.SetDefaultSettings();
-            }
-
-            if (ImGui::CollapsingHeader("Beacons"))
-            {
-                ImGui::Text("default beacons settings");
-                if (ImGui::Button("default beacon"))
-                    CW_WARN("Not implemented");
-
-                ImGui::Checkbox("draw beacons", &m_DrawBeacons);
-                ImGui::Checkbox("show beacons info", &m_BeaconsInfo);
-                m_Beacons.DebugInterface();
-            }
-
-            if (ImGui::CollapsingHeader("Terrain"))
-            {
-                ImGui::Text("regenerate terrain");
-                if (ImGui::Button("regenerate"))
-                    m_Terrain.RegenerateExisting();
-
-                static float yOffset = m_Terrain.GetYOffset();
-                if (ImGui::InputFloat("y offset", &yOffset))
-                    m_Terrain.SetYOffset(yOffset);
-
-                static int samplesCount = (int)m_Terrain.GetSamplesPerSection();
-                static float sectionWidth = m_Terrain.GetSectionWidth();
-                if (ImGui::InputInt("samples per section", &samplesCount))
-                    m_Terrain.SetSamplesPerSection(samplesCount);
-                if (ImGui::InputFloat("section width", &sectionWidth))
-                    m_Terrain.SetSectionWidth(sectionWidth);
-
-                if (ImGui::TreeNode("noise settings"))
-                {
-                    static int seed = m_Terrain.GetSeed();
-                    static float maxHeight = m_Terrain.GetMaxHeight();
-                    static float mappedNoiseDistance = m_Terrain.GetMappedNoiseDistance();
-                    if (ImGui::InputInt("seed", &seed))
-                        m_Terrain.SetDetailedSeed(seed);
-                    if (ImGui::InputFloat("max height", &maxHeight))
-                        m_Terrain.SetMaxHeight(maxHeight);
-                    if (ImGui::InputFloat("mapped noise distance", &mappedNoiseDistance))
-                        m_Terrain.SetMapedNoiseDistance(mappedNoiseDistance);
+                    ImGui::Text("m_Beacons size: %d", m_Beacons.Size());
+                    ImGui::Text("m_Beacons capasity: %d", m_Beacons.Capacity());
+                    ImGui::Spacing();
+                    ImGui::Text("mouse hovering on any window: %d", ImGui::GetIO().WantCaptureMouse);
+                    m_Camera.DebugInterface();
 
                     ImGui::Spacing();
+                    ImGui::Text("chunks amount: %d", m_Beacons.GetChuncks().Size());
+                    ImGui::Checkbox("draw chunks", &m_DrawChunks);
 
-                    static float gain = m_Terrain.GetGain();
-                    static float weightedStrength = m_Terrain.GetWeightedStrength();
-                    static int octaves = m_Terrain.GetOctaves();
-                    static float lacunarity = m_Terrain.GetLacunarity();
-                    if (ImGui::InputFloat("gain", &gain))
-                        m_Terrain.SetGain(gain);
-                    if (ImGui::InputFloat("weighted strength", &weightedStrength))
-                        m_Terrain.SetWeightedStrength(weightedStrength);
-                    if (ImGui::InputInt("octaves", &octaves))
-                        m_Terrain.SetOctaves(octaves);
-                    if (ImGui::InputFloat("lacunarity", &lacunarity))
-                        m_Terrain.SetLacunarity(lacunarity);
-
-                    ImGui::TreePop();
+                    ImGui::Spacing();
+                    ImGui::Text("terrain sections generated: %d (%d; %d)", m_Terrain.GetSectionsCount(), m_GeneratedRange.x, m_GeneratedRange.y);
                 }
 
-                if (ImGui::TreeNode("generating chunks"))
+                if (ImGui::CollapsingHeader("Object-pallete"))
                 {
-                    static int startIndex = 0;
-                    static int endIndex = 0;
-                    ImGui::InputInt("start", &startIndex);
-                    ImGui::InputInt("end", &endIndex);
-                    if (ImGui::Button("generate"))
+                    m_ObjPallete.UpdateInterface();
+                }
+
+                if (ImGui::CollapsingHeader("Resources"))
+                {
+                    m_ResourceReciever.DebugInterface();
+                }
+
+                if (ImGui::CollapsingHeader("Drones"))
+                {
+                    static int droneCount = 100;
+                    static sf::Vector2f startPos = { 0.0f, 0.0f };
+                    static TargetType target = TargetType::Recource;
+
+                    ImGui::InputInt("drone count", &droneCount);
+                    ImGui::InputFloat2("starting position", &startPos.x);
+                    ImGui::Text("target on start");
+                    if (ImGui::RadioButton("Recource##Drones", target == TargetType::Recource))
+                        target = TargetType::Recource;
+                    ImGui::SameLine();
+                    if (ImGui::RadioButton("Navigation##Drones", target == TargetType::Navigation))
+                        target = TargetType::Navigation;
+
+                    if (ImGui::Button("restart simulation"))
                     {
-                        if (endIndex < startIndex)
+                        RestartSim(droneCount, startPos, target);
+                    }
+
+                    ImGui::Checkbox("show drones info", &m_DronesInfo);
+                    m_Drones.DebugInterface();
+
+                    ImGui::Text("default drones settings");
+                    if (ImGui::Button("default drone"))
+                        m_Drones.SetDefaultSettings();
+                }
+
+                if (ImGui::CollapsingHeader("Beacons"))
+                {
+                    ImGui::Text("default beacons settings");
+                    if (ImGui::Button("default beacon"))
+                        CW_WARN("Not implemented");
+
+                    ImGui::Checkbox("draw beacons", &m_DrawBeacons);
+                    ImGui::Checkbox("show beacons info", &m_BeaconsInfo);
+                    m_Beacons.DebugInterface();
+                }
+
+                if (ImGui::CollapsingHeader("Terrain"))
+                {
+                    ImGui::Text("regenerate terrain");
+                    if (ImGui::Button("regenerate"))
+                        m_Terrain.RegenerateExisting();
+
+                    static float yOffset = m_Terrain.GetYOffset();
+                    if (ImGui::InputFloat("y offset", &yOffset))
+                        m_Terrain.SetYOffset(yOffset);
+
+                    static int samplesCount = (int)m_Terrain.GetSamplesPerSection();
+                    static float sectionWidth = m_Terrain.GetSectionWidth();
+                    if (ImGui::InputInt("samples per section", &samplesCount))
+                        m_Terrain.SetSamplesPerSection(samplesCount);
+                    if (ImGui::InputFloat("section width", &sectionWidth))
+                        m_Terrain.SetSectionWidth(sectionWidth);
+
+                    if (ImGui::TreeNode("noise settings"))
+                    {
+                        static int seed = m_Terrain.GetSeed();
+                        static float maxHeight = m_Terrain.GetMaxHeight();
+                        static float mappedNoiseDistance = m_Terrain.GetMappedNoiseDistance();
+                        if (ImGui::InputInt("seed", &seed))
+                            m_Terrain.SetDetailedSeed(seed);
+                        if (ImGui::InputFloat("max height", &maxHeight))
+                            m_Terrain.SetMaxHeight(maxHeight);
+                        if (ImGui::InputFloat("mapped noise distance", &mappedNoiseDistance))
+                            m_Terrain.SetMapedNoiseDistance(mappedNoiseDistance);
+
+                        ImGui::Spacing();
+
+                        static float gain = m_Terrain.GetGain();
+                        static float weightedStrength = m_Terrain.GetWeightedStrength();
+                        static int octaves = m_Terrain.GetOctaves();
+                        static float lacunarity = m_Terrain.GetLacunarity();
+                        if (ImGui::InputFloat("gain", &gain))
+                            m_Terrain.SetGain(gain);
+                        if (ImGui::InputFloat("weighted strength", &weightedStrength))
+                            m_Terrain.SetWeightedStrength(weightedStrength);
+                        if (ImGui::InputInt("octaves", &octaves))
+                            m_Terrain.SetOctaves(octaves);
+                        if (ImGui::InputFloat("lacunarity", &lacunarity))
+                            m_Terrain.SetLacunarity(lacunarity);
+
+                        ImGui::TreePop();
+                    }
+
+                    if (ImGui::TreeNode("generating chunks"))
+                    {
+                        static int startIndex = 0;
+                        static int endIndex = 0;
+                        ImGui::InputInt("start", &startIndex);
+                        ImGui::InputInt("end", &endIndex);
+                        if (ImGui::Button("generate"))
                         {
-                            CW_WARN("Need start <= end indecies");
-                        }
-                        else
-                        {
-                            for (int i = startIndex; i < endIndex; ++i)
+                            if (endIndex < startIndex)
                             {
-                                m_Terrain.Generate(i);
+                                CW_WARN("Need start <= end indecies");
+                            }
+                            else
+                            {
+                                for (int i = startIndex; i < endIndex; ++i)
+                                {
+                                    m_Terrain.Generate(i);
+                                }
                             }
                         }
+                        ImGui::TreePop();
                     }
-                    ImGui::TreePop();
                 }
+                ImGui::End();
             }
-            ImGui::End();
 
             if (m_BeaconsInfo)
                 m_Beacons.InfoInterface(&m_BeaconsInfo);
@@ -416,7 +421,6 @@ namespace CW {
         BeaconManager m_Beacons;
         DroneManager m_Drones;
         ResourceManager m_Resources;
-
         ResourceReciever m_ResourceReciever{ {0.0f, 0.0f} };
 
         Terrain m_Terrain;
@@ -442,6 +446,82 @@ namespace CW {
     };
 
 
+    class MainMenuLayer
+        : public Layer
+    {
+    public:
+        MainMenuLayer(sf::Vector2f windowSize)
+            : m_StartButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f - 100.0f }, sf::Vector2f{ 100.0f, 50.0f })),
+              m_ExitButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f }, sf::Vector2f{ 100.0f, 50.0f }))
+        {
+            m_StartSim.SetCollisionChecker(m_StartButtonCollision);
+            m_Exit.SetCollisionChecker(m_ExitButtonCollision);
+
+            m_StartSim.SetOnClickCallback(
+                [this](MouseButtonPressed& e) {
+                    m_SimSetting = true;
+                    return true;
+                });
+            m_Exit.SetOnClickCallback(
+                [](MouseButtonPressed& e) {
+                    UserEventHandler::Get().AddEvent(CloseApp{});
+                    return true;
+                });
+        }
+
+        void Update(float deltaTime) override
+        {
+            if (m_SimSetting)
+            {
+                if (ImGui::Begin("Simulation settings", &m_SimSetting, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize))
+                {
+                    if (ImGui::Button("Start simulation"))
+                    {
+                        UserEventHandler::Get().AddEvent(StartSimulation{});
+                        m_UpdateActive = false;
+                        m_DrawActive = false;
+                    }
+                    ImGui::End();
+                }
+            }
+        }
+
+        void Draw() override
+        {
+            // Start sim
+            Renderer::Get().BeginRectangleShape()
+                .Size(m_StartButtonCollision->GetSize())
+                .Position(m_StartButtonCollision->GetPos())
+                .Color(sf::Color::Green)
+                .OutlineThickness(2.0f)
+                .OutlineColor({ 25, 240, 25 })
+                .Draw();
+            // Exit
+            Renderer::Get().BeginRectangleShape()
+                .Size(m_ExitButtonCollision->GetSize())
+                .Position(m_ExitButtonCollision->GetPos())
+                .Color(sf::Color::Red)
+                .OutlineThickness(2.0f)
+                .OutlineColor({ 240, 25, 25 })
+                .Draw()
+                .SetDefault();
+        }
+
+        void OnEvent(Event& event) override
+        {
+            m_StartSim.OnEvent(event);
+            m_Exit.OnEvent(event);
+        }
+
+    private:
+        Shared<RectCollision> m_StartButtonCollision;
+        Shared<RectCollision> m_ExitButtonCollision;
+        Button m_StartSim;
+        Button m_Exit;
+        bool m_SimSetting = false;
+    };
+
+
     class MyApp
         : public Application
     {
@@ -450,7 +530,7 @@ namespace CW {
             : Application(800, 600, "test")
         {
             m_ClearColor = sf::Color(135, 206, 235, 255);
-            PushLayer<SimulationLayer>(static_cast<sf::Vector2f>(GetWindowSize()));
+            PushLayer<MainMenuLayer>(static_cast<sf::Vector2f>(GetWindowSize()));
         }
 
         void Update(float deltaTime) override
@@ -473,6 +553,8 @@ namespace CW {
         void OnEvent(Event& event) override
         {
             EventDispatcher dispatcher(event);
+            dispatcher.Dispach<CloseApp>(CW_BUILD_EVENT_FUNC(OnCloseApp));
+            dispatcher.Dispach<StartSimulation>(CW_BUILD_EVENT_FUNC(OnStartSimulation));
             OnEventLayers(event);
         }
 
@@ -486,17 +568,34 @@ namespace CW {
             return false;
         }
 
+        bool OnCloseApp(CloseApp&)
+        {
+            Close();
+            return true;
+        }
+
+        bool OnStartSimulation(StartSimulation&)
+        {
+            InsertLayer<SimulationLayer>(0, static_cast<sf::Vector2f>(GetWindowSize()));
+            return true;
+        }
+
         void UpdateInterface()
         {
-            ImGui::Begin("Debug");
-            if (ImGui::CollapsingHeader("App-statistics"))
+            if (ImGui::Begin("Debug"))
             {
-                ImGui::Text("fps: %.1f", ImGui::GetIO().Framerate);
-                ImGui::Text("paused: %d", IsPaused());
-                ImGui::Spacing();
+                if (ImGui::CollapsingHeader("App-statistics"))
+                {
+                    ImGui::Text("fps: %.1f", ImGui::GetIO().Framerate);
+                    ImGui::Text("paused: %d", IsPaused());
+                    ImGui::Spacing();
+                }
+                ImGui::End();
             }
-            ImGui::End();
         }
+
+    private:
+        //bool m_OpenDebugMenu = false;
     };
 
 } // CW

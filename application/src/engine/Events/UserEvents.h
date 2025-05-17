@@ -22,4 +22,22 @@ namespace CW {
 		static EventType GetStaticEventType() { return EventType::CreateBeacon; }
 	};
 
+	class CloseApp
+		: public CW::Event
+	{
+	public:
+		CloseApp() = default;
+		EventType GetEventType() const { return EventType::CloseApp; }
+		static EventType GetStaticEventType() { return EventType::CloseApp; }
+	};
+
+	class StartSimulation
+		: public CW::Event
+	{
+	public:
+		StartSimulation() = default;
+		EventType GetEventType() const { return EventType::StartSimulation; }
+		static EventType GetStaticEventType() { return EventType::StartSimulation; }
+	};
+
 } // CW

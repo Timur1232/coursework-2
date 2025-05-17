@@ -11,7 +11,6 @@ namespace CW {
 		virtual void Draw() = 0;
 	};
 
-
 	template <class T>
 	concept has_draw = requires(T d)
 	{

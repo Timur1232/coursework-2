@@ -24,7 +24,7 @@ namespace CW {
         void SetDrawActive(bool b) { m_DrawActive = b; }
         void SetEventsActive(bool b) { m_EventsActive = b; }
 
-    private:
+    protected:
         bool m_UpdateActive = true;
         bool m_DrawActive = true;
         bool m_EventsActive = true;

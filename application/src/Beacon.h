@@ -4,7 +4,7 @@
 
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"
-#include "Object.h"
+#include "engine/Object.h"
 #include "Chunks.h"
 #include "utils/utils.h"
 

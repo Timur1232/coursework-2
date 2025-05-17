@@ -98,6 +98,7 @@
     <ClCompile Include="src\debug_utils\LineShape.cpp" />
     <ClCompile Include="src\Drone.cpp" />
     <ClCompile Include="src\engine\Application.cpp" />
+    <ClCompile Include="src\engine\Button.cpp" />
     <ClCompile Include="src\engine\ProgramCore.cpp" />
     <ClCompile Include="src\engine\Events\UserEventHandler.cpp" />
     <ClCompile Include="src\engine\Renderer.cpp" />
@@ -124,6 +125,8 @@
     <ClInclude Include="src\Drone.h" />
     <ClInclude Include="src\engine\Application.h" />
     <ClInclude Include="src\Chunks.h" />
+    <ClInclude Include="src\engine\Button.h" />
+    <ClInclude Include="src\engine\CollisionStrategy.h" />
     <ClInclude Include="src\engine\Events\CoreEvents.h" />
     <ClInclude Include="src\engine\Events\CW_EventConfig.h" />
     <ClInclude Include="src\engine\EntryPoint.h" />
@@ -132,7 +135,7 @@
     <ClInclude Include="src\engine\IDrawable.h" />
     <ClInclude Include="src\engine\IUpdate.h" />
     <ClInclude Include="src\engine\Layer.h" />
-    <ClInclude Include="src\Object.h" />
+    <ClInclude Include="src\engine\Object.h" />
     <ClInclude Include="src\engine\ProgramCore.h" />
     <ClInclude Include="src\engine\Renderer.h" />
     <ClInclude Include="src\engine\Types.h" />

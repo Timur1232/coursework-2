@@ -4,7 +4,7 @@
 
 #include "engine/IDrawable.h"
 #include "debug_utils/LineShape.h"
-#include "Object.h"
+#include "engine/Object.h"
 
 namespace CW {
 
