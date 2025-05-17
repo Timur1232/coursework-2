@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include "debug_utils/LineShape.h"
+#include "debug_utils/DotShape.h"
 
 namespace CW {
 
@@ -91,7 +92,6 @@ namespace CW {
     private:
         LineShape m_LineMesh;
         bool m_Default = false;
-        const sf::Shader* m_Shader = nullptr;
     };
 
     class RConvexShapeSetter
@@ -119,6 +119,26 @@ namespace CW {
         const sf::Shader* m_Shader = nullptr;
     };
 
+    class RDotBuilder
+    {
+    public:
+        using Self = RDotBuilder;
+    public:
+        RDotBuilder() { SetDefault(); }
+
+        Self& SetDefault();
+        Self& DefaultAfterDraw() { m_Default = true; return *this; }
+
+        Self& Position(sf::Vector2f position) { m_Dot.SetPosition(position); return *this; }
+        Self& Color(sf::Color color) { m_Dot.SetColor(color); return *this; }
+
+        Self& Draw();
+
+    private:
+        DotShape m_Dot;
+        bool m_Default = false;
+    };
+
 
     class Renderer
     {
@@ -137,6 +157,7 @@ namespace CW {
         RRectangleShapeBuilder& BeginRectangleShape() { return m_RectangleShapeBuilder; }
         RLineShapeBuilder& BeginLineShape() { return m_LineShapeBuilder; }
         RConvexShapeSetter BeginConvexShapeSetting(sf::ConvexShape& mesh) { return RConvexShapeSetter(mesh); }
+        RDotBuilder& BeginDotShape() { return m_DotBuilder; }
 
     private:
         Renderer() = default;
@@ -147,6 +168,7 @@ namespace CW {
         RCircleShapeBuilder m_CircleShapeBuilde;
         RRectangleShapeBuilder m_RectangleShapeBuilder;
         RLineShapeBuilder m_LineShapeBuilder;
+        RDotBuilder m_DotBuilder;
     };
 
 } // CW

@@ -51,13 +51,12 @@ namespace CW {
 
 
 	class Terrain
-		: public IDrawable
 	{
 	public:
 		Terrain();
 
 		void Generate(int keyPosition);
-		void Draw(sf::RenderWindow& render) override;
+		void DebugDraw(sf::RenderWindow& render);
 
 		std::vector<TerrainSection>::iterator GetSection(int keyPosition);
 		std::vector<TerrainSection>::const_iterator GetSection(int keyPosition) const;

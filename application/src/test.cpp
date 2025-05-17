@@ -19,43 +19,6 @@
 
 #include "Terrain.h"
 
-//sf::Vector2f lerp_path(const std::vector<sf::Vector2f>& path, float t);
-//
-//sf::Vector2f pos_func(const std::vector<sf::Vector2f>& path, float length, float speed, float time)
-//{
-//    float elapsedDist = speed * time;
-//    float t = elapsedDist / length;
-//    return lerp_path(path, t);
-//}
-//
-//float ro(const std::vector<sf::Vector2f>& path, sf::Vector2f shooterPos, float projectileSpeed, float time)
-//{
-//    return std::abs((pos_func(path, length, speed, time) - shooterPos).length() - projectileSpeed * time);
-//}
-//
-//float tmax = 1000;
-//
-//sf::Vector2f predict(const std::vector<sf::Vector2f>& path, sf::Vector2f shooterPos, float projectileSpeed, float a, float b)
-//{
-//    float PHI = 1.618033988749f;
-//    float eps = 1e-3f;
-//
-//    while (b - a > eps)
-//    {
-//        float t1 = b - (b - a) / PHI;
-//        float t2 = a + (b - a) / PHI;
-//
-//        if (ro(path, shooterPos, projectileSpeed, t1) < ro(path, shooterPos, projectileSpeed, t2))
-//            b = t2;
-//        else
-//            a = t1;
-//    }
-//    return pos_func(path, (a + b) / 2.0f);
-//}
-//
-//float a = allTime * t;
-//float b = allTime;
-
 namespace CW {
 
     class SimulationLayer
@@ -384,6 +347,7 @@ namespace CW {
         ResourceReciever m_ResourceReciever{ {0.0f, 0.0f} };
 
         Terrain m_Terrain;
+        sf::Vector2i m_TerrainGenerationIndexies;
 
         std::vector<sf::ConvexShape> m_TerrainSectionMeshes;
         sf::Texture m_TerrainTexture;

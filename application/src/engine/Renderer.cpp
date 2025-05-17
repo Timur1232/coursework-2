@@ -18,10 +18,7 @@ namespace CW {
     {
         Renderer::Get().Draw(m_CirlceMesh, m_Shader);
         if (m_Default)
-        {
             SetDefault();
-            m_Default = false;
-        }
         return *this;
     }
 
@@ -37,6 +34,7 @@ namespace CW {
             .PointCount(16)
             .Texture(nullptr, true)
             .Shader(nullptr);
+        m_Default = false;
         return *this;
     }
 
@@ -51,6 +49,7 @@ namespace CW {
             .OutlineThickness(1.0f)
             .Texture(nullptr, true)
             .Shader(nullptr);
+        m_Default = false;
         return *this;
     }
 
@@ -58,10 +57,7 @@ namespace CW {
     {
         Renderer::Get().Draw(m_RectangleMesh, m_Shader);
         if (m_Default)
-        {
             SetDefault();
-            m_Default = false;
-        }
         return *this;
     }
 
@@ -70,6 +66,7 @@ namespace CW {
         P1Position({ 0.0f, 0.0f })
             .P2Position({ 1.0f, 0.0f })
             .Color(sf::Color::White);
+        m_Default = false;
         return *this;
     }
 
@@ -77,16 +74,29 @@ namespace CW {
     {
         Renderer::Get().Draw(m_LineMesh);
         if (m_Default)
-        {
             SetDefault();
-            m_Default = false;
-        }
         return *this;
     }
 
     RConvexShapeSetter& RConvexShapeSetter::Draw()
     {
         Renderer::Get().Draw(m_ConvexMesh, m_Shader);
+        return *this;
+    }
+
+    RDotBuilder& RDotBuilder::SetDefault()
+    {
+        Position({ 0.0f, 0.0f })
+            .Color(sf::Color::White);
+        m_Default = false;
+        return *this;
+    }
+
+    RDotBuilder& RDotBuilder::Draw()
+    {
+        Renderer::Get().Draw(m_Dot);
+        if (m_Default)
+            SetDefault();
         return *this;
     }
 

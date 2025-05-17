@@ -117,6 +117,7 @@
     <ClInclude Include="src\Beacon.h" />
     <ClInclude Include="src\BitDirection.h" />
     <ClInclude Include="src\Camera2D.h" />
+    <ClInclude Include="src\debug_utils\DotShape.h" />
     <ClInclude Include="src\debug_utils\LineShape.h" />
     <ClInclude Include="src\debug_utils\Log.h" />
     <ClInclude Include="src\debug_utils\Profiler.h" />

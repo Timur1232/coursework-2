@@ -3,6 +3,7 @@
 
 #include "debug_utils/Log.h"
 #include "utils/utils.h"
+#include "engine/Renderer.h"
 
 namespace CW {
 
@@ -42,7 +43,7 @@ namespace CW {
 		m_TerrainSections.back().Generate(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance);
 	}
 
-	void Terrain::Draw(sf::RenderWindow& render)
+	void Terrain::DebugDraw(sf::RenderWindow& render)
 	{
 		float sampleWidth = calcSampleWidth();
 		for (const auto& section : m_TerrainSections)
@@ -53,10 +54,12 @@ namespace CW {
 				sf::Vector2f p1{ sampleToWorldPosition(section, i, sectionStartPosition, sampleWidth) };
 				sf::Vector2f p2{ sampleToWorldPosition(section, i + 1, sectionStartPosition, sampleWidth) };
 
-				m_DotMesh.setPosition(p1);
-				render.draw(m_DotMesh);
-				m_DotMesh.setPosition(p2);
-				render.draw(m_DotMesh);
+				Renderer::Get().BeginDotShape()
+					.Position(p1)
+					.Draw()
+					.Position(p2)
+					.Draw()
+					.SetDefault();
 			}
 		}
 	}
@@ -154,25 +157,11 @@ namespace CW {
 		}
 
 		// TODO: определение коллизии на границах секций
-		/*auto rightSection = section + 1;
-		auto leftSection = m_TerrainSections.end();
-		if (section != m_TerrainSections.begin())
-		{
-			leftSection = section - 1;
-		}*/
 
 		float sectionStartPosition = calcSectionStartPosition(*section);
 
 		for (int i = -range; i <= range; ++i)
 		{
-			/*if (sampleIndex + i < 0 && leftSection != m_TerrainSections.end())
-			{
-				samplePos = sampleToWorldPosition(*leftSection, m_SamplesPerSection - 1 + i, sectionStartPosition - m_SectionWidth, sampleWidth);
-			}
-			else if (sampleIndex + i >= m_SamplesPerSection && rightSection != m_TerrainSections.end())
-			{
-				samplePos = sampleToWorldPosition(*leftSection, i, sectionStartPosition + m_SectionWidth, sampleWidth);
-			}*/
 			if (sampleIndex + i < 0 || sampleIndex + i >= m_SamplesPerSection)
 				continue;
 

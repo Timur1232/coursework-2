@@ -162,7 +162,7 @@ namespace CW {
                 return;
             }
 
-            for (size_t i = 0; i < resources.size(); ++i)
+            for (size_t i = closestResourceIndex + 1; i < resources.size(); ++i)
             {
                 if (!resources[i].IsCarried())
                 {
