@@ -8,3 +8,4 @@ Course project for university on 4-nd semester.
 # Used resources
 ## Shaders
 - Water shader: https://www.shadertoy.com/view/ctXXWN
+- "DVD" backgroung in main menu: https://www.shadertoy.com/view/wtcSzN
