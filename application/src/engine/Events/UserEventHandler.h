@@ -37,7 +37,7 @@ namespace CW {
 		void Reserve(size_t eventReserve);
 
 		template<class T>
-		void AddEvent(T&& event)
+		void SendEvent(T&& event)
 		{
 			m_UserEvents.emplace_back(MyEvent{ .Data = std::move(event) });
 		}

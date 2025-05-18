@@ -3,6 +3,7 @@
 
 #include "debug_utils/Log.h"
 #include "engine/Renderer.h"
+#include "utils/utils.h"
 
 namespace CW {
 
@@ -54,6 +55,32 @@ namespace CW {
 		}
 		else
 		{
+			m_Resources.emplace_back(position, amount);
+		}
+	}
+
+	void ResourceManager::GenerateResourceOnSection(const Terrain& terrain, int sectionKey)
+	{
+		if (rand_float() > m_GenerateChance)
+			return;
+
+		const auto& generator = terrain.GetNoiseGenerator();
+
+		float leftX = terrain.CalcSectionStartPosition(sectionKey);
+		float rightX = leftX + terrain.GetSectionWidth();
+
+		float spawnPosX = lerp(leftX, rightX, rand_float());
+		float spawnPosY = terrain.GetHeight(spawnPosX) - m_ClusterSize - 100.0f;
+		sf::Vector2f spawnPos(spawnPosX, spawnPosY);
+
+		int resourceCount = m_MaxResourcesInCluster * rand_float();
+		for (int i = 0; i < resourceCount; ++i)
+		{
+			sf::Angle angle = lerp(sf::degrees(-180.0f), sf::degrees(180.0f), rand_float());
+			float dist = m_ClusterSize * rand_float();
+
+			sf::Vector2f position = spawnPos + ONE_LENGTH_VEC.rotatedBy(angle) * dist;
+			int amount = m_MaxResourceAmount * rand_float();
 			m_Resources.emplace_back(position, amount);
 		}
 	}

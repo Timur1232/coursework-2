@@ -93,6 +93,19 @@ namespace CW {
 			[keyPosition](const TerrainSection& section) { return section.Key == keyPosition; });
 	}
 
+	float Terrain::GetHeight(float x) const
+	{
+		int key = CalcSectionKeyPosition(x);
+		auto section = GetSection(key);
+		size_t sample = static_cast<size_t>(calcSignedSampleIndex(x, key, calcSampleWidth()));
+		if (section == m_TerrainSections.end())
+		{
+			CW_ERROR("Terrain section on position x: {}, not exist!", x);
+			return 0.0f;
+		}
+		return sampleToWorldPosition(*section, sample, CalcSectionStartPosition(key), calcSampleWidth()).y;
+	}
+
 	void Terrain::GenerateMesh(sf::ConvexShape& mesh, int keyPosition) const
 	{
 		auto section = GetSection(keyPosition);

@@ -4,7 +4,10 @@
 
 namespace CW {
 
-
+	inline float rand_float()
+	{
+		return static_cast<float>(std::rand()) / RAND_MAX;
+	}
 
 	template <class T>
 	T loop(T a, T min, T max, T delta)
@@ -75,6 +78,8 @@ namespace CW {
 		Quarter quarter(sf::Angle angle);
 
 	} // angle
+
+	extern sf::Vector2f ONE_LENGTH_VEC;
 
 	template <class T>
 	float distance(sf::Vector2<T> v1, sf::Vector2<T> v2)

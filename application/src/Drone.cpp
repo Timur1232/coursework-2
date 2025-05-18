@@ -13,8 +13,6 @@
 
 namespace CW {
 
-    static constexpr sf::Vector2f ONE_LENGTH_VEC = { 1.0f, 0.0f };
-
     DroneSettings::DroneSettings()
     {
         SetDefault();
@@ -70,7 +68,7 @@ namespace CW {
         if (m_BeaconTimerSec <= 0)
         {
             UserEventHandler::Get()
-                .AddEvent(CreateBeacon{ m_Position, opposite_target_type(m_TargetType),
+                .SendEvent(CreateBeacon{ m_Position, opposite_target_type(m_TargetType),
                     angle_to_bit_direction((m_DirectionAngle + sf::degrees(180.0f)).wrapSigned()) });
             m_BeaconTimerSec = settings.BeaconCooldownSec;
         }

@@ -6,6 +6,7 @@
 #include "engine/Object.h"
 
 #include "utils/utils.h"
+#include "Terrain.h"
 
 namespace CW {
 
@@ -41,8 +42,15 @@ namespace CW {
 
 		std::vector<Resource>& GetResources() { return m_Resources; }
 
+		void GenerateResourceOnSection(const Terrain& terrain, int sectionKey);
+
 	private:
 		std::vector<Resource> m_Resources;
+
+		float m_GenerateChance = 0.2f;
+		float m_ClusterSize = 350.0f;
+		int m_MaxResourcesInCluster = 20;
+		int m_MaxResourceAmount = 50;
 	};
 
 } // CW

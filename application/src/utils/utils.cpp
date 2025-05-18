@@ -26,4 +26,6 @@ namespace CW {
 
     }
 
+    sf::Vector2f ONE_LENGTH_VEC = { 1.0f, 0.0f };
+
 } // CW

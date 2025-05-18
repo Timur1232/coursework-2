@@ -69,6 +69,8 @@ namespace CW {
 		std::vector<TerrainSection>::iterator GetSection(int keyPosition);
 		std::vector<TerrainSection>::const_iterator GetSection(int keyPosition) const;
 
+		float GetHeight(float x) const;
+
 		void GenerateMesh(sf::ConvexShape& mesh, int keyPosition) const;
 		void GenerateAllMeshes(std::vector<sf::ConvexShape>& meshes) const;
 
@@ -105,6 +107,8 @@ namespace CW {
 
 		float CalcSectionStartPosition(int key) const;
 		[[nodiscard]] int CalcSectionKeyPosition(float xPos) const;
+
+		const NoiseGenerator& GetNoiseGenerator() const { return m_NoiseGenerator; }
 
 		// Debug
 		void SetDotScale(float size);
