@@ -12,10 +12,12 @@ namespace CW {
 
     Button::Button(Shared<ICollisionStrategy> collisionChecker,
         const std::function<bool(MouseButtonPressed&)>& onClickCallback,
-        const std::function<bool(MouseMoved&)>& onHowerCallback)
+        const std::function<bool(MouseMoved&)>& onEnterCallback,
+        const std::function<bool(MouseMoved&)>& onExitCallback)
         : m_CollisionChecker(collisionChecker),
           m_OnClickCallback(onClickCallback),
-          m_OnHowerCallback(onHowerCallback)
+          m_OnEnterCallback(onEnterCallback),
+          m_OnExitCallback(onExitCallback)
     {
     }
 
@@ -28,18 +30,33 @@ namespace CW {
         }
 
         EventDispatcher dispatcher(event);
-        dispatcher.Dispach<MouseButtonPressed>(
+        if (dispatcher.Dispach<MouseButtonPressed>(
             [this](MouseButtonPressed& e) {
                 if (m_CollisionChecker->CheckCollision(static_cast<sf::Vector2f>(e.Data.position)))
                     return m_OnClickCallback(e);
                 return false;
-            });
-        dispatcher.Dispach<MouseMoved>(
+            }))
+        {
+            return;
+        }
+        if (dispatcher.Dispach<MouseMoved>(
             [this](MouseMoved& e) {
-                if (m_CollisionChecker->CheckCollision(static_cast<sf::Vector2f>(e.Data.position)))
-                    return m_OnHowerCallback(e);
+                sf::Vector2f mousePos = static_cast<sf::Vector2f>(e.Data.position);
+                if (!m_Entered && m_CollisionChecker->CheckCollision(mousePos))
+                {
+                    m_Entered = true;
+                    return m_OnEnterCallback(e);
+                }
+                if (m_Entered && !m_CollisionChecker->CheckCollision(mousePos))
+                {
+                    m_Entered = false;
+                    return m_OnExitCallback(e);
+                }
                 return false;
-            });
+            }))
+        {
+            return;
+        }
     }
 
 } // CW

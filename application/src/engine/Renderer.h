@@ -147,11 +147,15 @@ namespace CW {
         Renderer(Renderer&&) = delete;
 
         static Renderer& Get();
-        void SetRenderTarget(Shared<sf::RenderTarget> target) { m_RenderTarget = target; }
+        void SetRenderTarget(Shared<sf::RenderTarget> target) { m_RenderTarget = target; m_DefaultView = target->getView(); }
+        const sf::RenderTarget& GetRenderTarget() const { return *m_RenderTarget; }
         void ReleaseRenderTarget() { m_RenderTarget.reset(); }
         void Draw(const sf::Drawable& target, const sf::RenderStates& states = sf::RenderStates::Default);
         void SetView(const sf::View& view) { m_RenderTarget->setView(view); }
-        void SetDefaultView() { m_RenderTarget->setView(m_RenderTarget->getDefaultView()); }
+        void ApplyDefaultView() { m_RenderTarget->setView(m_DefaultView); }
+        void SetDefaultView(const sf::View& view) { m_DefaultView = view; }
+        void SetDefaultViewSize(sf::Vector2f size) { m_DefaultView.setSize(size); }
+        void SetDefaultViewCenter(sf::Vector2f center) { m_DefaultView.setCenter(center); }
 
         /*bool Intersects(const sf::FloatRect& bounds) { return m_RenderTarget->getView().getViewport().findIntersection(bounds).has_value(); }
         bool Contains(sf::Vector2f point) { return m_RenderTarget->getView().getViewport().contains(point); }*/
@@ -167,6 +171,7 @@ namespace CW {
 
     private:
         Shared<sf::RenderTarget> m_RenderTarget;
+        sf::View m_DefaultView;
 
         RCircleShapeBuilder m_CircleShapeBuilde;
         RRectangleShapeBuilder m_RectangleShapeBuilder;

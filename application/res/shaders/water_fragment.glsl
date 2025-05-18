@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 uniform vec2 uResolution;
 uniform vec2 uCameraPosition;
@@ -46,9 +46,10 @@ void main()
     vec3 waterColor = vec3(26.0, 71.0, 128.0) / 255.0;
     vec3 deepWaterColor = vec3(0.0, 51.0, 98.0) / 255.0;
 
-    float o1 = sin(uTime * 2.0) * 0.02;
-    float o2 = sin(uTime * 0.5) * 0.02;
-    float o3 = sin(uTime) * 0.02;
+    float screenAspect = uResolution.y / uResolution.x;
+    float o1 = sin(uTime / screenAspect * 2.0) * 0.02;
+    float o2 = sin(uTime / screenAspect * 0.5) * 0.02;
+    float o3 = sin(uTime / screenAspect) * 0.02;
 
     float w1 = WaterMask(uv * vec2(1.0, 1.0), o1 + h - 0.15, uTime, 1.0);
     float w2 = WaterMask(uv * vec2(2.0, 1.0), o2 + h - 0.06, uTime * 0.5, 0.8);

@@ -90,11 +90,16 @@ namespace CW {
 				m_App->OnEvent(closed);
 				onClosed();
 			}
+			else if (auto e = event->getIf<sf::Event::Resized>())
+			{
+				WindowResized resized(*e);
+				onWindowResized(resized);
+				m_App->OnEvent(resized);
+			}
 			else
 			{
 				CW_PROFILE_SCOPE("Dispacher function");
 				dispatch_core_event<
-					WindowResized, sf::Event::Resized,
 					KeyPressed, sf::Event::KeyPressed,
 					KeyReleased, sf::Event::KeyReleased,
 					MouseWheelScrolled, sf::Event::MouseWheelScrolled,
@@ -148,6 +153,8 @@ namespace CW {
 		{
 			CW_CRITICAL("Failing initializing ImGui::SFML.");
 		}
+
+		m_App->Init();
 	}
 
 	void ProgramCore::onKeyPressed(KeyPressed& e)
@@ -156,6 +163,12 @@ namespace CW {
 		{
 			m_Window->create(sf::VideoMode(m_App->GetWindowSize()), m_App->GetTitle(), reverseState());
 		}
+	}
+
+	void ProgramCore::onWindowResized(WindowResized& e)
+	{
+		Renderer::Get().SetDefaultViewSize(static_cast<sf::Vector2f>(e.Size));
+		Renderer::Get().SetDefaultViewCenter({ static_cast<float>(e.Size.x) / 2.0f, static_cast<float>(e.Size.y) / 2.0f });
 	}
 
 	void ProgramCore::onClosed()

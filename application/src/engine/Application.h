@@ -23,6 +23,8 @@ namespace CW {
 		Application(int width, int height, const char* title);
 		virtual ~Application() = default;
 
+		virtual void Init() = 0;
+
 		virtual void PauseUpdate(float deltaTime) = 0;
 
 		void UpdateLayers(float deltaTime);

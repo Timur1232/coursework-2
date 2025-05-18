@@ -30,6 +30,7 @@ namespace CW {
 
 		void onClosed();
 		void onKeyPressed(KeyPressed& e);
+		void onWindowResized(WindowResized& e);
 
 	private:
 		Unique<Application> m_App;
