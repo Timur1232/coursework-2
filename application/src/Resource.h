@@ -8,6 +8,8 @@
 #include "utils/utils.h"
 #include "Terrain.h"
 
+#include "ResourcesSettings.h"
+
 namespace CW {
 
 	class Resource
@@ -32,6 +34,9 @@ namespace CW {
 	{
 	public:
 		ResourceManager() = default;
+		ResourceManager(const ResourcesSettings& settings);
+
+		void SetSettings(const ResourcesSettings& settings);
 
 		void DrawAllRecources();
 
@@ -46,11 +51,7 @@ namespace CW {
 
 	private:
 		std::vector<Resource> m_Resources;
-
-		float m_GenerateChance = 0.2f;
-		float m_ClusterSize = 350.0f;
-		int m_MaxResourcesInCluster = 20;
-		int m_MaxResourceAmount = 50;
+		ResourcesSettings m_Settings;
 	};
 
 } // CW

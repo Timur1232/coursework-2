@@ -83,7 +83,17 @@ namespace CW {
 	BeaconManager::BeaconManager()
 	{
 		m_Beacons.reserve(1024 * 1024);
-		//m_Mesh.setOrigin(m_Mesh.getGeometricCenter());
+	}
+
+	BeaconManager::BeaconManager(const BeaconSettings& settings)
+		: BeaconManager()
+	{
+		m_BeaconSettings = settings;
+	}
+
+	void BeaconManager::SetSettings(const BeaconSettings& settings)
+	{
+		m_BeaconSettings = settings;
 	}
 
 	void BeaconManager::DebugInterface()

@@ -29,6 +29,16 @@ namespace CW {
 	}
 
 
+	ResourceManager::ResourceManager(const ResourcesSettings& settings)
+		: m_Settings(settings)
+	{
+	}
+
+	void ResourceManager::SetSettings(const ResourcesSettings& settings)
+	{
+		m_Settings = settings;
+	}
+
 	void ResourceManager::DrawAllRecources()
 	{
 		auto validResources = m_Resources
@@ -61,7 +71,7 @@ namespace CW {
 
 	void ResourceManager::GenerateResourceOnSection(const Terrain& terrain, int sectionKey)
 	{
-		if (rand_float() > m_GenerateChance)
+		if (rand_float() > m_Settings.GenerateChance)
 			return;
 
 		const auto& generator = terrain.GetNoiseGenerator();
@@ -70,17 +80,17 @@ namespace CW {
 		float rightX = leftX + terrain.GetSectionWidth();
 
 		float spawnPosX = lerp(leftX, rightX, rand_float());
-		float spawnPosY = terrain.GetHeight(spawnPosX) - m_ClusterSize - 100.0f;
+		float spawnPosY = terrain.GetHeight(spawnPosX) - m_Settings.ClusterSize - 100.0f;
 		sf::Vector2f spawnPos(spawnPosX, spawnPosY);
 
-		int resourceCount = m_MaxResourcesInCluster * rand_float();
+		int resourceCount = m_Settings.MaxResourcesInCluster * rand_float();
 		for (int i = 0; i < resourceCount; ++i)
 		{
 			sf::Angle angle = lerp(sf::degrees(-180.0f), sf::degrees(180.0f), rand_float());
-			float dist = m_ClusterSize * rand_float();
+			float dist = m_Settings.ClusterSize * rand_float();
 
 			sf::Vector2f position = spawnPos + ONE_LENGTH_VEC.rotatedBy(angle) * dist;
-			int amount = m_MaxResourceAmount * rand_float();
+			int amount = m_Settings.MaxResourceAmount * rand_float();
 			m_Resources.emplace_back(position, amount);
 		}
 	}

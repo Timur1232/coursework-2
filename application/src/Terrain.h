@@ -6,6 +6,8 @@
 #include "debug_utils/LineShape.h"
 #include "engine/Object.h"
 
+#include "TerrainGenerationSettings.h"
+
 namespace CW {
 
 	class NoiseGenerator
@@ -17,7 +19,8 @@ namespace CW {
 
 		void SetDetailedSeed(int seed) { m_DetailedSeed = seed; }
 		void SetBaseSeed(int seed) { m_BaseSeed = seed; }
-		int GetSeed() const { return m_DetailedSeed; }
+		int GetDetailedSeed() const { return m_DetailedSeed; }
+		int GetBaseSeed() const { return m_BaseSeed; }
 
 		void SetGain(float gain) { m_Gain = gain; m_NoiseTreeDetailed->SetGain(gain); }
 		void SetWeightedStrength(float strength) { m_WeightedStrength = strength; m_NoiseTreeDetailed->SetWeightedStrength(strength); }
@@ -29,16 +32,21 @@ namespace CW {
 		int GetOctaves() const { return m_Octaves; }
 		float GetLacunarity() const { return m_Lacunarity; }
 
+		void SetBaseFrequensy(float f) { m_BaseFrequensy = f; }
+		void SetBaseFactor(float factor) { m_BaseFactor = factor; }
+		void SetDetailedFactor(float factor) { m_DetailedFactor = factor; }
+
 	private:
 		FastNoise::SmartNode<FastNoise::FractalFBm> m_NoiseTreeDetailed;
 		FastNoise::SmartNode<FastNoise::FractalFBm> m_NoiseTreeBase;
-		float m_BaseFrequensy = 0.3f;
 
+		float m_BaseFrequensy = 0.3f;
 		float m_BaseFactor = 2.6f;
 		float m_DetailedFactor = 0.8f;
 
 		int m_DetailedSeed = 69420;
 		int m_BaseSeed = 42069;
+
 		float m_Gain = 0.5f;
 		float m_WeightedStrength = 0.0f;
 		int m_Octaves = 3;
@@ -61,7 +69,10 @@ namespace CW {
 	class Terrain
 	{
 	public:
-		Terrain();
+		Terrain() = default;
+		Terrain(const TerrainGenerationSettings& settings);
+
+		void SetSettings(const TerrainGenerationSettings& settings);
 
 		bool Generate(int keyPosition);
 		void DebugDraw();
@@ -88,7 +99,7 @@ namespace CW {
 		void SetOctaves(int octaves) { m_NoiseGenerator.SetOctaves(octaves); }
 		void SetLacunarity(float lacunarity) { m_NoiseGenerator.SetLacunarity(lacunarity); }
 
-		int GetSeed() const { return m_NoiseGenerator.GetSeed(); }
+		int GetDetailedSeed() const { return m_NoiseGenerator.GetDetailedSeed(); }
 		float GetMaxHeight() const { return m_MaxHeight; }
 		float GetMappedNoiseDistance() const { return m_MapedNoiseDistance; }
 		size_t GetSamplesPerSection() const { return m_SamplesPerSection; }
@@ -110,9 +121,6 @@ namespace CW {
 
 		const NoiseGenerator& GetNoiseGenerator() const { return m_NoiseGenerator; }
 
-		// Debug
-		void SetDotScale(float size);
-
 	private:
 		[[nodiscard]] sf::Vector2f sampleToWorldPosition(
 			const TerrainSection& section, size_t sampleIndex,
@@ -133,9 +141,6 @@ namespace CW {
 		size_t m_SamplesPerSection = 15;
 		float m_SectionWidth = 1000.0f;
 		float m_YOffset = -3000.0f;
-
-		// Debug
-		sf::CircleShape m_DotMesh{3.0f, 4};
 	};
 
 } // CW

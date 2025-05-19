@@ -42,9 +42,33 @@ namespace CW {
 	}
 
 
-	Terrain::Terrain()
+	Terrain::Terrain(const TerrainGenerationSettings& settings)
 	{
-		m_DotMesh.setOrigin(m_DotMesh.getGeometricCenter());
+		SetSettings(settings);
+
+	}
+
+	void Terrain::SetSettings(const TerrainGenerationSettings& settings)
+	{
+		m_MaxHeight = settings.MaxHeight;
+		m_BellHeigth = settings.BellHeigth;
+		m_BellWidth = settings.BellWidth;
+		m_MapedNoiseDistance = settings.MappedNoiseDistance;
+		m_SamplesPerSection = settings.SamplesPerSection;
+		m_SectionWidth = settings.SectionWidth;
+		m_YOffset = settings.YOffset;
+
+		m_NoiseGenerator.SetBaseFrequensy(settings.BaseFrequensy);
+		m_NoiseGenerator.SetBaseFactor(settings.BaseFactor);
+		m_NoiseGenerator.SetDetailedFactor(settings.DetailedFactor);
+
+		m_NoiseGenerator.SetBaseSeed(settings.BaseSeed);
+		m_NoiseGenerator.SetDetailedSeed(settings.DetailedSeed);
+
+		m_NoiseGenerator.SetGain(settings.Gain);
+		m_NoiseGenerator.SetWeightedStrength(settings.WeightedStrength);
+		m_NoiseGenerator.SetOctaves(settings.Octaves);
+		m_NoiseGenerator.SetLacunarity(settings.Lacunarity);
 	}
 
 	bool CW::Terrain::Generate(int keyPosition)
@@ -187,11 +211,6 @@ namespace CW {
 		}
 
 		return false;
-	}
-
-	void Terrain::SetDotScale(float scale)
-	{
-		m_DotMesh.setScale({ scale, scale });
 	}
 
 	sf::Vector2f Terrain::sampleToWorldPosition(const TerrainSection& section, size_t sampleIndex, float sectionStartPosition, float sampleWidth) const

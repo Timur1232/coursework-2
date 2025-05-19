@@ -32,6 +32,7 @@ namespace CW {
 
         BeaconCooldownSec = 5.0f;
         WanderCooldownSec = 5.0f;
+        SpawnDroneCooldownSec = 20.0f;
 
         RandomWanderAngle = sf::degrees(25.0f);
         WanderAngleThreshold = sf::degrees(0.5f);
@@ -280,6 +281,17 @@ namespace CW {
         m_Texture = CreateUnique<sf::Texture>("res/sprites/drone_sprite.png");
         m_Sprite = CreateUnique<sf::Sprite>(*m_Texture);
         m_Sprite->setOrigin(static_cast<sf::Vector2f>(m_Texture->getSize()) / 2.0f);
+    }
+
+    DroneManager::DroneManager(const DroneSettings& settings)
+        : DroneManager()
+    {
+        m_DroneSettings = settings;
+    }
+
+    void DroneManager::SetSettings(const DroneSettings& settings)
+    {
+        m_DroneSettings = settings;
     }
 
     void DroneManager::UpdateAllDrones(

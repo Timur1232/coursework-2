@@ -4,10 +4,12 @@
 #include "Event.h"
 #include "TargetType.h"
 
+#include "SimulationSettings.h"
+
 namespace CW {
 
 	class CreateBeacon
-		: public CW::Event
+		: public Event
 	{
 	public:
 		sf::Vector2f Position;
@@ -23,7 +25,7 @@ namespace CW {
 	};
 
 	class CloseApp
-		: public CW::Event
+		: public Event
 	{
 	public:
 		CloseApp() = default;
@@ -32,12 +34,31 @@ namespace CW {
 	};
 
 	class StartSimulation
-		: public CW::Event
+		: public Event
 	{
 	public:
-		StartSimulation() = default;
+		const SimulationSettings* Settings;
+
+		StartSimulation(const SimulationSettings* settings)
+			: Settings(settings)
+		{
+		}
 		EventType GetEventType() const { return EventType::StartSimulation; }
 		static EventType GetStaticEventType() { return EventType::StartSimulation; }
+	};
+
+	class SetSimulationSettings
+		: public Event
+	{
+	public:
+		const SimulationSettings* Settings;
+
+		SetSimulationSettings(const SimulationSettings* settings)
+			: Settings(settings)
+		{
+		}
+		EventType GetEventType() const { return EventType::SetSimulationSettings; }
+		static EventType GetStaticEventType() { return EventType::SetSimulationSettings; }
 	};
 
 } // CW

@@ -11,14 +11,9 @@
 #include "TargetType.h"
 #include "BitDirection.h"
 
+#include "BeaconSettings.h"
+
 namespace CW {
-
-	struct BeaconSettings
-	{
-		float ChargeThreshold = 0.05f;
-		float DischargeRate = 0.2f;
-	};
-
 
 	class Beacon
 		: public Object
@@ -57,6 +52,9 @@ namespace CW {
 
 	public:
 		BeaconManager();
+		BeaconManager(const BeaconSettings& settings);
+
+		void SetSettings(const BeaconSettings& settings);
 
 		void Update(float deltaTime) override;
 		void DrawAllBeacons();

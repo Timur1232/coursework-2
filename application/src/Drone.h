@@ -13,31 +13,9 @@
 #include "ResourceReciever.h"
 #include "Resource.h"
 #include "Terrain.h"
+#include "DroneSettings.h"
 
 namespace CW {
-
-	struct DroneSettings
-	{
-		float Speed;
-		sf::Angle TurningSpeed;
-
-		float FOV;
-		float FOVRad;
-
-		sf::Vector2f ViewDistance;
-		float PickupDist;
-
-		float BeaconCooldownSec;
-		float WanderCooldownSec;
-
-		sf::Angle RandomWanderAngle;
-		sf::Angle WanderAngleThreshold;
-		sf::Angle MaxTurningDelta;
-
-		DroneSettings();
-		void SetDefault();
-	};
-
 
 	class Drone
 		: public Object
@@ -84,6 +62,9 @@ namespace CW {
 	{
 	public:
 		DroneManager();
+		DroneManager(const DroneSettings& settings);
+
+		void SetSettings(const DroneSettings& settings);
 
 		void UpdateAllDrones(
 			float deltaTime,

@@ -22,6 +22,8 @@
 
 #include "engine/Button.h"
 
+#include "SimulationSettings.h"
+
 #define SHADERS_FOLDER "res/shaders/"
 #define SPRITES_FOLDER "res/sprites/"
 
@@ -31,9 +33,13 @@ namespace CW {
         : public Layer
     {
     public:
-        SimulationLayer(sf::Vector2f windowSize)
+        SimulationLayer(sf::Vector2f windowSize, const SimulationSettings& settings)
             : m_Camera(0, 0, windowSize.x, windowSize.y),
-              m_WindowSize(windowSize)
+              m_WindowSize(windowSize),
+              m_Drones(settings.Drones),
+              m_Beacons(settings.Beacons),
+              m_Resources(settings.Resources),
+              m_Terrain(settings.Terrain)
         {
             m_Resources.Reserve(128);
             m_Drones.SetDefaultSettings();
@@ -65,6 +71,8 @@ namespace CW {
             m_DarkeningShader.setUniform("uResolution", windowSize);
             m_DarkeningShader.setUniform("uDarkeningFactor", 25.0f);
             m_DarkeningShader.setUniform("uYOffset", 3000.0f);
+
+            StartSim(settings.DronesCount, { settings.StartingHorizontalPosition, 0.0f });
         }
 
         void Update(float deltaTime) override
@@ -92,6 +100,7 @@ namespace CW {
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
 
             dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon));
+            dispatcher.Dispach<SetSimulationSettings>(CW_BUILD_EVENT_FUNC(OnSimSettings));
             m_Camera.OnEvent(event);
         }
 
@@ -201,6 +210,22 @@ namespace CW {
             return false;
         }
 
+        bool OnSimSettings(SetSimulationSettings& e)
+        {
+            m_Beacons.SetSettings(e.Settings->Beacons);
+            m_Drones.SetSettings(e.Settings->Drones);
+            m_Resources.SetSettings(e.Settings->Resources);
+            m_Terrain.SetSettings(e.Settings->Terrain);
+            return true;
+        }
+
+        void StartSim(size_t droneCount, sf::Vector2f startPosition)
+        {
+            m_Beacons.Clear();
+            m_Drones.Reset(droneCount, startPosition, TargetType::Recource);
+            CW_TRACE("Starting simulation with {} drones", droneCount);
+        }
+
         void RestartSim(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource)
         {
             m_Beacons.Clear();
@@ -296,7 +321,7 @@ namespace CW {
 
                 if (ImGui::TreeNode("noise settings"))
                 {
-                    static int seed = m_Terrain.GetSeed();
+                    static int seed = m_Terrain.GetDetailedSeed();
                     static float maxHeight = m_Terrain.GetMaxHeight();
                     static float mappedNoiseDistance = m_Terrain.GetMappedNoiseDistance();
                     if (ImGui::InputInt("seed", &seed))
@@ -485,20 +510,7 @@ namespace CW {
             m_ElapsedTime += deltaTime;
             if (m_SimSetting)
             {
-                ImGui::SetNextWindowSize({ 300.0f, 100.0f }, ImGuiCond_Appearing);
-                ImGui::SetNextWindowPos({ m_WindowSize.x / 2.0f - 150.0f, m_WindowSize.y / 2.0f - 200.0f }, ImGuiCond_Appearing);
-                if (ImGui::Begin("Simulation settings", &m_SimSetting, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
-                {
-                    if (ImGui::Button("Start simulation"))
-                    {
-                        UserEventHandler::Get().SendEvent(StartSimulation{});
-                        m_UpdateActive = false;
-                        m_DrawActive = false;
-                        m_SimStarted = true;
-                        m_SimSetting = false;
-                    }
-                    ImGui::End();
-                }
+                SimulationSettingsMenu();
             }
         }
 
@@ -554,6 +566,64 @@ namespace CW {
             return false;
         }
 
+        void SimulationSettingsMenu()
+        {
+            //ImGui::SetNextWindowSize({ 300.0f, 100.0f }, ImGuiCond_Appearing);
+            ImGui::SetNextWindowPos({ m_WindowSize.x / 2.0f - 150.0f, m_WindowSize.y / 2.0f - 200.0f }, ImGuiCond_Appearing);
+            if (ImGui::Begin("Simulation settings", &m_SimSetting, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse))
+            {
+                if (ImGui::CollapsingHeader("Drones"))
+                {
+
+                    ImGui::InputInt("drone count", &m_SimSettings.DronesCount);
+                    ImGui::InputFloat("starting position", &m_SimSettings.StartingHorizontalPosition);
+
+                    if (ImGui::Button("default settings##drone"))
+                        m_SimSettings.Drones.SetDefault();
+                }
+
+                if (ImGui::CollapsingHeader("Beacons"))
+                {
+
+                    if (ImGui::Button("default settings##beacon"))
+                        m_SimSettings.Beacons.SetDefault();
+                }
+
+                if (ImGui::CollapsingHeader("Terrain"))
+                {
+                    auto& terrain = m_SimSettings.Terrain;
+                    ImGui::InputFloat("y offset", &terrain.YOffset);
+                    ImGui::InputInt("samples per section", &terrain.SamplesPerSection);
+                    ImGui::InputFloat("section width", &terrain.SectionWidth);
+
+                    if (ImGui::TreeNode("noise##settings"))
+                    {
+                        ImGui::InputInt("base seed", &terrain.BaseSeed);
+                        ImGui::InputInt("detailed seed", &terrain.DetailedSeed);
+                        ImGui::InputFloat("max height", &terrain.MaxHeight);
+                        ImGui::InputFloat("mapped noise distance", &terrain.MappedNoiseDistance);
+
+                        ImGui::Spacing();
+
+                        ImGui::InputFloat("gain", &terrain.Gain);
+                        ImGui::InputFloat("weighted strength", &terrain.WeightedStrength);
+                        ImGui::InputInt("octaves", &terrain.Octaves);
+                        ImGui::InputFloat("lacunarity", &terrain.Lacunarity);
+                        ImGui::TreePop();
+                    }
+                }
+                if (ImGui::Button("Start simulation"))
+                {
+                    UserEventHandler::Get().SendEvent(StartSimulation{&m_SimSettings});
+                    m_UpdateActive = false;
+                    m_DrawActive = false;
+                    m_SimStarted = true;
+                    m_SimSetting = false;
+                }
+                ImGui::End();
+            }
+        }
+
     private:
         sf::Texture m_StartTexture;
         sf::Texture m_ExitTexture;
@@ -568,6 +638,8 @@ namespace CW {
 
         bool m_SimSetting = false;
         bool m_SimStarted = false;
+
+        SimulationSettings m_SimSettings;
     };
 
 
@@ -637,9 +709,9 @@ namespace CW {
             return true;
         }
 
-        bool OnStartSimulation(StartSimulation&)
+        bool OnStartSimulation(StartSimulation& e)
         {
-            InsertLayer<SimulationLayer>(0, static_cast<sf::Vector2f>(GetWindowSize()));
+            InsertLayer<SimulationLayer>(0, static_cast<sf::Vector2f>(GetWindowSize()), *e.Settings);
             m_ClearColor = sf::Color(135, 206, 235, 255);
             return true;
         }

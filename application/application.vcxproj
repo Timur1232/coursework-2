@@ -116,6 +116,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Beacon.h" />
+    <ClInclude Include="src\BeaconSettings.h" />
     <ClInclude Include="src\BitDirection.h" />
     <ClInclude Include="src\Camera2D.h" />
     <ClInclude Include="src\debug_utils\DotShape.h" />
@@ -123,6 +124,7 @@
     <ClInclude Include="src\debug_utils\Log.h" />
     <ClInclude Include="src\debug_utils\Profiler.h" />
     <ClInclude Include="src\Drone.h" />
+    <ClInclude Include="src\DroneSettings.h" />
     <ClInclude Include="src\engine\Application.h" />
     <ClInclude Include="src\Chunks.h" />
     <ClInclude Include="src\engine\Button.h" />
@@ -138,6 +140,7 @@
     <ClInclude Include="src\engine\Object.h" />
     <ClInclude Include="src\engine\ProgramCore.h" />
     <ClInclude Include="src\engine\Renderer.h" />
+    <ClInclude Include="src\SimulationSettings.h" />
     <ClInclude Include="src\engine\Types.h" />
     <ClInclude Include="src\engine\Events\UserEventHandler.h" />
     <ClInclude Include="src\engine\Events\UserEvents.h" />
@@ -145,8 +148,10 @@
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Resource.h" />
     <ClInclude Include="src\ResourceReciever.h" />
+    <ClInclude Include="src\ResourcesSettings.h" />
     <ClInclude Include="src\TargetType.h" />
     <ClInclude Include="src\Terrain.h" />
+    <ClInclude Include="src\TerrainGenerationSettings.h" />
     <ClInclude Include="src\utils\utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
