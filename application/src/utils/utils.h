@@ -77,6 +77,16 @@ namespace CW {
 
 		Quarter quarter(sf::Angle angle);
 
+		constexpr float to_radians(float degrees)
+		{
+			return sf::degrees(degrees).asRadians();
+		}
+
+		constexpr float to_degrees(float radiand)
+		{
+			return sf::radians(radiand).asDegrees();
+		}
+
 	} // angle
 
 	extern sf::Vector2f ONE_LENGTH_VEC;

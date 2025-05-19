@@ -14,6 +14,7 @@ namespace CW {
 
 		float MappedNoiseDistance;
 		float BaseFrequensy;
+		float DetailedFrequensy;
 		float BaseFactor;
 		float DetailedFactor;
 		int DetailedSeed;
@@ -36,6 +37,7 @@ namespace CW {
 
 			MappedNoiseDistance = 0.5f;
 			BaseFrequensy = 0.3f;
+			DetailedFrequensy = 1.0f;
 			BaseFactor = 2.6f;
 			DetailedFactor = 0.8f;
 			DetailedSeed = 69420;

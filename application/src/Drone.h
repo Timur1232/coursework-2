@@ -103,6 +103,8 @@ namespace CW {
 		Unique<sf::Sprite> m_Sprite;
 		Unique<sf::Texture> m_Texture;
 
+		float FOVRadPrecalc;
+
 		// Debug
 		bool m_DrawViewDistance = false;
 		bool m_DrawDirection = false;

@@ -33,6 +33,7 @@ namespace CW {
 		float GetLacunarity() const { return m_Lacunarity; }
 
 		void SetBaseFrequensy(float f) { m_BaseFrequensy = f; }
+		void SetDetailedFrequensy(float f) { m_DetailedFrequensy = f; }
 		void SetBaseFactor(float factor) { m_BaseFactor = factor; }
 		void SetDetailedFactor(float factor) { m_DetailedFactor = factor; }
 
@@ -41,6 +42,7 @@ namespace CW {
 		FastNoise::SmartNode<FastNoise::FractalFBm> m_NoiseTreeBase;
 
 		float m_BaseFrequensy = 0.3f;
+		float m_DetailedFrequensy = 1.0f;
 		float m_BaseFactor = 2.6f;
 		float m_DetailedFactor = 0.8f;
 

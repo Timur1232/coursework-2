@@ -6,10 +6,9 @@ namespace CW {
 	struct DroneSettings
 	{
 		float Speed;
-		sf::Angle TurningSpeed;
+		float TurningSpeed;
 
 		float FOV;
-		float FOVRad;
 
 		sf::Vector2f ViewDistance;
 		float PickupDist;
@@ -18,9 +17,9 @@ namespace CW {
 		float WanderCooldownSec;
 		float SpawnDroneCooldownSec;
 
-		sf::Angle RandomWanderAngle;
-		sf::Angle WanderAngleThreshold;
-		sf::Angle MaxTurningDelta;
+		float RandomWanderAngleRad;
+		float WanderAngleThresholdDeg;
+		float MaxTurningDeltaRad;
 
 		DroneSettings();
 		void SetDefault();

@@ -10,7 +10,7 @@ namespace CW {
 	float NoiseGenerator::GenSingle2D(float x, float y) const
 	{
 		return m_NoiseTreeBase->GenSingle2D(x * m_BaseFrequensy, y * m_BaseFrequensy, m_BaseSeed) * m_BaseFactor
-			+ m_NoiseTreeDetailed->GenSingle2D(x, y, m_DetailedSeed) * m_DetailedFactor;
+			+ m_NoiseTreeDetailed->GenSingle2D(x * m_DetailedFrequensy, y * m_DetailedFrequensy, m_DetailedSeed) * m_DetailedFactor;
 	}
 
 
@@ -45,7 +45,6 @@ namespace CW {
 	Terrain::Terrain(const TerrainGenerationSettings& settings)
 	{
 		SetSettings(settings);
-
 	}
 
 	void Terrain::SetSettings(const TerrainGenerationSettings& settings)
@@ -59,6 +58,7 @@ namespace CW {
 		m_YOffset = settings.YOffset;
 
 		m_NoiseGenerator.SetBaseFrequensy(settings.BaseFrequensy);
+		m_NoiseGenerator.SetDetailedFrequensy(settings.DetailedFrequensy);
 		m_NoiseGenerator.SetBaseFactor(settings.BaseFactor);
 		m_NoiseGenerator.SetDetailedFactor(settings.DetailedFactor);
 

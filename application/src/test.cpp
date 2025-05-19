@@ -568,50 +568,22 @@ namespace CW {
 
         void SimulationSettingsMenu()
         {
-            //ImGui::SetNextWindowSize({ 300.0f, 100.0f }, ImGuiCond_Appearing);
-            ImGui::SetNextWindowPos({ m_WindowSize.x / 2.0f - 150.0f, m_WindowSize.y / 2.0f - 200.0f }, ImGuiCond_Appearing);
+            ImGui::SetNextWindowSize({ 550.0f, 500.0f }, ImGuiCond_Appearing);
+            ImGui::SetNextWindowPos({ m_WindowSize.x / 2.0f - 275.0f, m_WindowSize.y / 2.0f - 250.0f }, ImGuiCond_Appearing);
             if (ImGui::Begin("Simulation settings", &m_SimSetting, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse))
             {
-                if (ImGui::CollapsingHeader("Drones"))
-                {
+                /*auto size = ImGui::GetWindowSize();
+                ImGui::Text("window size: (%.2f, %.2f)", size.x, size.y);*/
+                float height = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+                ImGui::BeginChild("SturtupSettings", ImVec2(ImGui::GetContentRegionAvail().x, -height));
+                
+                DroneSetupInterface();
+                BeaconSetupInterface();
+                TerrainSetupInterface();
 
-                    ImGui::InputInt("drone count", &m_SimSettings.DronesCount);
-                    ImGui::InputFloat("starting position", &m_SimSettings.StartingHorizontalPosition);
+                ImGui::EndChild();
 
-                    if (ImGui::Button("default settings##drone"))
-                        m_SimSettings.Drones.SetDefault();
-                }
-
-                if (ImGui::CollapsingHeader("Beacons"))
-                {
-
-                    if (ImGui::Button("default settings##beacon"))
-                        m_SimSettings.Beacons.SetDefault();
-                }
-
-                if (ImGui::CollapsingHeader("Terrain"))
-                {
-                    auto& terrain = m_SimSettings.Terrain;
-                    ImGui::InputFloat("y offset", &terrain.YOffset);
-                    ImGui::InputInt("samples per section", &terrain.SamplesPerSection);
-                    ImGui::InputFloat("section width", &terrain.SectionWidth);
-
-                    if (ImGui::TreeNode("noise##settings"))
-                    {
-                        ImGui::InputInt("base seed", &terrain.BaseSeed);
-                        ImGui::InputInt("detailed seed", &terrain.DetailedSeed);
-                        ImGui::InputFloat("max height", &terrain.MaxHeight);
-                        ImGui::InputFloat("mapped noise distance", &terrain.MappedNoiseDistance);
-
-                        ImGui::Spacing();
-
-                        ImGui::InputFloat("gain", &terrain.Gain);
-                        ImGui::InputFloat("weighted strength", &terrain.WeightedStrength);
-                        ImGui::InputInt("octaves", &terrain.Octaves);
-                        ImGui::InputFloat("lacunarity", &terrain.Lacunarity);
-                        ImGui::TreePop();
-                    }
-                }
+                ImGui::Separator();
                 if (ImGui::Button("Start simulation"))
                 {
                     UserEventHandler::Get().SendEvent(StartSimulation{&m_SimSettings});
@@ -621,6 +593,94 @@ namespace CW {
                     m_SimSetting = false;
                 }
                 ImGui::End();
+            }
+        }
+
+        void TerrainSetupInterface()
+        {
+            if (ImGui::CollapsingHeader("Terrain"))
+            {
+                ImGui::Separator();
+                auto& terrain = m_SimSettings.Terrain;
+                ImGui::InputFloat("Y offset (deepness)", &terrain.YOffset);
+                ImGui::InputInt("Samples per section", &terrain.SamplesPerSection);
+                ImGui::InputFloat("Section width", &terrain.SectionWidth);
+                ImGui::InputFloat("Max height", &terrain.MaxHeight, 10.0f, 100.0f);
+
+                if (ImGui::TreeNode("Noise##settings"))
+                {
+                    ImGui::SeparatorText("\"Bell\" function");
+                    ImGui::InputFloat("Bell height", &terrain.BellHeigth, 10.0f, 100.0f);
+                    ImGui::InputFloat("Bell width", &terrain.BellWidth, 10.0f, 100.0f);
+
+                    ImGui::SeparatorText("Noise generator");
+                    ImGui::InputInt("Base seed", &terrain.BaseSeed, 1, 10);
+                    ImGui::InputInt("Detailed seed", &terrain.DetailedSeed, 1, 10);
+                    ImGui::InputFloat("Base frequensy", &terrain.BaseFrequensy, 0.01f, 0.1f);
+                    ImGui::InputFloat("Detailed frequensy", &terrain.DetailedFrequensy, 0.01f, 0.1f);
+                    ImGui::InputFloat("Base factor", &terrain.BaseFactor, 0.01f, 0.1f);
+                    ImGui::InputFloat("Detailed factor", &terrain.DetailedFactor, 0.1f, 0.2f);
+                    ImGui::InputFloat("Mapped noise distance", &terrain.MappedNoiseDistance, 0.1f, 0.2f);
+
+                    ImGui::Spacing();
+
+                    ImGui::InputFloat("Gain", &terrain.Gain);
+                    ImGui::InputFloat("Weighted strength", &terrain.WeightedStrength);
+                    ImGui::InputInt("Octaves", &terrain.Octaves);
+                    ImGui::InputFloat("Lacunarity", &terrain.Lacunarity);
+                    ImGui::TreePop();
+                }
+                if (ImGui::Button("set default##terrain"))
+                    terrain.SetDefault();
+                ImGui::Separator();
+            }
+        }
+
+        void BeaconSetupInterface()
+        {
+            if (ImGui::CollapsingHeader("Beacons"))
+            {
+                ImGui::Separator();
+                auto& beacons = m_SimSettings.Beacons;
+                ImGui::InputFloat("Discharge rate", &beacons.DischargeRate, 0.1f, 0.2f);
+                ImGui::InputFloat("Charge threshold", &beacons.ChargeThreshold, 0.01f, 0.1f);
+
+                if (ImGui::Button("set default##beacon"))
+                    beacons.SetDefault();
+                ImGui::Separator();
+            }
+        }
+
+        void DroneSetupInterface()
+        {
+            if (ImGui::CollapsingHeader("Drones"))
+            {
+                auto& drones = m_SimSettings.Drones;
+                ImGui::Separator();
+                ImGui::InputInt("Drones count", &m_SimSettings.DronesCount);
+                ImGui::InputFloat("Starting position", &m_SimSettings.StartingHorizontalPosition);
+                ImGui::Spacing();
+
+                ImGui::InputFloat("Drone spawn cooldown", &drones.BeaconCooldownSec, 1.0f, 10.0f);
+                ImGui::Spacing();
+                ImGui::InputFloat("Speed", &drones.Speed, 10.0f, 100.0f);
+                ImGui::SliderAngle("Turning speed", &drones.TurningSpeed, 1.0f, 180.0f);
+                ImGui::InputFloat("FOV", &drones.FOV, 0.01f, 0.1f);
+                ImGui::InputFloat2("View distance", &drones.ViewDistance.x);
+                ImGui::InputFloat("Pickup distance", &drones.PickupDist, 1.0f, 10.0f);
+                ImGui::Spacing();
+                ImGui::InputFloat("Beacon spawn cooldown", &drones.BeaconCooldownSec, 0.5f, 1.0f);
+                ImGui::InputFloat("Wander cooldown", &drones.BeaconCooldownSec, 0.5f, 1.0f);
+                ImGui::Spacing();
+                ImGui::SliderAngle("Random wander angle", &drones.RandomWanderAngleRad, 1.0f, 180.0f);
+                ImGui::SliderFloat("Wander angle threashold", &drones.WanderAngleThresholdDeg, 0.0f, 15.0f);
+                ImGui::SliderAngle("Max turning delta", &drones.MaxTurningDeltaRad, 1.0f, 180.0f);
+
+                if (ImGui::Button("set default##drone"))
+                {
+                    drones.SetDefault();
+                }
+                ImGui::Separator();
             }
         }
 

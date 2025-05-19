@@ -23,10 +23,9 @@ namespace CW {
         ViewDistance = { 70.0f, 250.0f };
 
         Speed = 100.0f;
-        TurningSpeed = sf::degrees(15.0f);
+        TurningSpeed = angle::to_radians(15.0f);
 
         FOV = 0.5f;
-        FOVRad = std::acos(FOV);
 
         PickupDist = 70.0f;
 
@@ -34,9 +33,9 @@ namespace CW {
         WanderCooldownSec = 5.0f;
         SpawnDroneCooldownSec = 20.0f;
 
-        RandomWanderAngle = sf::degrees(25.0f);
-        WanderAngleThreshold = sf::degrees(0.5f);
-        MaxTurningDelta = sf::degrees(30.0f);
+        RandomWanderAngleRad = angle::to_radians(25.0f);
+        WanderAngleThresholdDeg = 0.5f;
+        MaxTurningDeltaRad = angle::to_radians(30.0f);
     }
 
 
@@ -50,7 +49,7 @@ namespace CW {
     void Drone::Update(float deltaTime, const DroneSettings& settings, std::vector<Resource>& resources)
     {
         CW_PROFILE_FUNCTION();
-        turn(deltaTime, settings.TurningSpeed, settings.MaxTurningDelta);
+        turn(deltaTime, sf::radians(settings.TurningSpeed), sf::radians(settings.MaxTurningDeltaRad));
         m_Position += ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle) * settings.Speed * deltaTime;
 
         if (m_Position.y < 250.0f)
@@ -74,7 +73,7 @@ namespace CW {
             m_BeaconTimerSec = settings.BeaconCooldownSec;
         }
 
-        wander(deltaTime, settings.WanderAngleThreshold, settings.RandomWanderAngle, resources);
+        wander(deltaTime, sf::degrees(settings.WanderAngleThresholdDeg), sf::radians(settings.RandomWanderAngleRad), resources);
 
         if (m_TargetResourceIndex && resources.at(*m_TargetResourceIndex).IsCarried())
         {
@@ -281,17 +280,19 @@ namespace CW {
         m_Texture = CreateUnique<sf::Texture>("res/sprites/drone_sprite.png");
         m_Sprite = CreateUnique<sf::Sprite>(*m_Texture);
         m_Sprite->setOrigin(static_cast<sf::Vector2f>(m_Texture->getSize()) / 2.0f);
+        SetSettings(m_DroneSettings);
     }
 
     DroneManager::DroneManager(const DroneSettings& settings)
         : DroneManager()
     {
-        m_DroneSettings = settings;
+        SetSettings(settings);
     }
 
     void DroneManager::SetSettings(const DroneSettings& settings)
     {
         m_DroneSettings = settings;
+        FOVRadPrecalc = std::acos(settings.FOV);
     }
 
     void DroneManager::UpdateAllDrones(
@@ -392,11 +393,11 @@ namespace CW {
 
     void DroneManager::DebugInterface()
     {
-        ImGui::Checkbox("show view distance", &m_DrawViewDistance);
+        /*ImGui::Checkbox("show view distance", &m_DrawViewDistance);
         ImGui::Checkbox("show direction", &m_DrawDirection);
         if (ImGui::SliderFloat("fov", &m_DroneSettings.FOV, 0.0f, 1.0f))
         {
-            m_DroneSettings.FOVRad = std::acos(m_DroneSettings.FOV);
+            FOVRadPrecalc = std::acos(m_DroneSettings.FOV);
         }
         ImGui::SliderFloat("speed", &m_DroneSettings.Speed, 50.0f, 200.0f);
 
@@ -405,22 +406,22 @@ namespace CW {
         if (ImGui::SliderAngle("turning speed", &tmp, 0.5f, 180.0f))
             m_DroneSettings.TurningSpeed = sf::radians(tmp);
 
-        tmp = m_DroneSettings.RandomWanderAngle.asRadians();
+        tmp = m_DroneSettings.RandomWanderAngleRad.asRadians();
         if (ImGui::SliderAngle("random wander angle", &tmp, 0.0f, 180.0f))
-            m_DroneSettings.RandomWanderAngle = sf::radians(tmp);
+            m_DroneSettings.RandomWanderAngleRad = sf::radians(tmp);
 
-        tmp = m_DroneSettings.WanderAngleThreshold.asRadians();
+        tmp = m_DroneSettings.WanderAngleThresholdDeg.asRadians();
         if (ImGui::SliderAngle("wander angle threshold", &tmp, 0.01f, 10.0f))
-            m_DroneSettings.WanderAngleThreshold = sf::radians(tmp);
+            m_DroneSettings.WanderAngleThresholdDeg = sf::radians(tmp);
 
-        tmp = m_DroneSettings.MaxTurningDelta.asRadians();
+        tmp = m_DroneSettings.MaxTurningDeltaRad.asRadians();
         if (ImGui::SliderAngle("max turning delta", &tmp, 1.0f, 180.0f))
-            m_DroneSettings.MaxTurningDelta = sf::radians(tmp);
+            m_DroneSettings.MaxTurningDeltaRad = sf::radians(tmp);
 
         ImGui::SliderFloat2("view distanse", &m_DroneSettings.ViewDistance.x, 0.0f, 500.0f);
 
         ImGui::SliderFloat("beacon spawn cooldown", &m_DroneSettings.BeaconCooldownSec, 0.1f, 50.0f);
-        ImGui::SliderFloat("wander cooldown", &m_DroneSettings.WanderCooldownSec, 0.1f, 50.0f);
+        ImGui::SliderFloat("wander cooldown", &m_DroneSettings.WanderCooldownSec, 0.1f, 50.0f);*/
     }
 
     void DroneManager::SetDefaultSettings()
@@ -456,11 +457,11 @@ namespace CW {
                 .Length(m_DroneSettings.ViewDistance.y)
                 .Position(position);
             FOVVisualBuilder
-                .SetRotationByP1(sf::radians(m_DroneSettings.FOVRad))
+                .SetRotationByP1(sf::radians(FOVRadPrecalc))
                 .RotateByP1(directionAngle)
                 .Draw();
             FOVVisualBuilder.Position(position)
-                .SetRotationByP1(sf::radians(-m_DroneSettings.FOVRad))
+                .SetRotationByP1(sf::radians(-FOVRadPrecalc))
                 .RotateByP1(directionAngle)
                 .Draw();
             FOVVisualBuilder.SetDefault();
