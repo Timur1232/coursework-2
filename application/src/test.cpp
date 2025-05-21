@@ -39,7 +39,8 @@ namespace CW {
               m_Drones(settings.Drones),
               m_Beacons(settings.Beacons),
               m_Resources(settings.Resources),
-              m_Terrain(settings.Terrain)
+              m_Terrain(settings.Terrain),
+              m_ResourceReciever(settings.Drones)
         {
             m_Resources.Reserve(128);
             m_Drones.SetDefaultSettings();
@@ -81,6 +82,9 @@ namespace CW {
             GenerateChunksForDrones();
 
             UpdateInterface();
+            
+            m_ResourceReciever.Update(deltaTime);
+
             {
                 CW_PROFILE_SCOPE("beacons update");
                 m_Beacons.Update(deltaTime);
@@ -102,6 +106,7 @@ namespace CW {
             dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon));
             dispatcher.Dispach<SetSimulationSettings>(CW_BUILD_EVENT_FUNC(OnSimSettings));
             m_Camera.OnEvent(event);
+            m_Drones.OnEvent(event);
         }
 
         void Draw() override
@@ -446,7 +451,7 @@ namespace CW {
         BeaconManager m_Beacons;
         DroneManager m_Drones;
         ResourceManager m_Resources;
-        ResourceReciever m_ResourceReciever{ {0.0f, 0.0f} };
+        ResourceReciever m_ResourceReciever;
 
         Terrain m_Terrain;
         sf::Vector2i m_GeneratedRange{-5, 5};

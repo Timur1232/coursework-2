@@ -7,6 +7,8 @@
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"
 #include "engine/Object.h"
+#include "engine/Events/EventInterface.h"
+#include "engine/Events/UserEvents.h"
 #include "Chunks.h"
 
 #include "Beacon.h"
@@ -59,6 +61,7 @@ namespace CW {
 
 
 	class DroneManager
+		: public IOnEvent
 	{
 	public:
 		DroneManager();
@@ -75,10 +78,12 @@ namespace CW {
 
 		void DrawAllDrones();
 
+		void OnEvent(Event& event) override;
+
 		void Clear();
 		void Reset(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource);
 
-		void CreateDrone(sf::Vector2f position, sf::Angle directionAngle, TargetType target);
+		void CreateDrone(sf::Vector2f position, sf::Angle directionAngle, TargetType target = TargetType::Recource);
 
 		[[nodiscard]] size_t Size() const { return m_Drones.size(); }
 		[[nodiscard]] size_t Capacity() const { return m_Drones.capacity(); }
@@ -91,6 +96,7 @@ namespace CW {
 		sf::Vector2f GetFurthestHorizontalReach() const { return m_FurthestHorizontalReach; }
 
 	private:
+		bool OnSpawnDrone(SpawnDrone& e);
 		// Debug
 		inline void debugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const;
 		inline void debugDrawViewDistance(sf::Vector2f position, sf::Angle directionAngle) const;
@@ -103,7 +109,7 @@ namespace CW {
 		Unique<sf::Sprite> m_Sprite;
 		Unique<sf::Texture> m_Texture;
 
-		float FOVRadPrecalc;
+		float m_FOVRadPrecalc;
 
 		// Debug
 		bool m_DrawViewDistance = false;

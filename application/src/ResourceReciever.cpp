@@ -3,11 +3,19 @@
 
 #include "debug_utils/Log.h"
 #include "engine/Renderer.h"
+#include "engine/Events/UserEventHandler.h"
 
 namespace CW {
 
-	ResourceReciever::ResourceReciever(sf::Vector2f position)
-		: Object(position), m_RecieveRadius(300.f), m_BroadcastRadius(1000.f)
+	ResourceReciever::ResourceReciever(sf::Vector2f position, int droneCost, float spawnCooldown)
+		: Object(position), m_RecieveRadius(300.f), m_BroadcastRadius(1000.f),
+		  m_DroneSpawnCooldown(spawnCooldown), m_DroneCost(droneCost)
+	{
+		m_DroneSpawnTimer = m_DroneSpawnCooldown;
+	}
+
+	ResourceReciever::ResourceReciever(const DroneSettings& settings)
+		: ResourceReciever(settings.BasePosition, settings.DroneCost, settings.DroneSpawnCooldown)
 	{
 	}
 
@@ -41,6 +49,18 @@ namespace CW {
 			.OutlineThickness(1.0f)
 			.OutlineColor(sf::Color::Red)
 			.Draw();
+	}
+
+	void ResourceReciever::Update(float deltaTime)
+	{
+		m_DroneSpawnTimer -= deltaTime;
+		if (m_DroneSpawnTimer <= 0.0f && m_ResourceCount >= m_DroneCost)
+		{
+			m_ResourceCount -= m_DroneCost;
+			UserEventHandler::Get().SendEvent(SpawnDrone{ m_Position });
+			m_DroneSpawnTimer = m_DroneSpawnCooldown;
+			CW_TRACE("Drone spawned");
+		}
 	}
 
 	int ResourceReciever::GetResources() const

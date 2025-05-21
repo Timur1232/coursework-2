@@ -6,6 +6,9 @@
 
 #include "SimulationSettings.h"
 
+#define CW_BULD_EVENT_TYPE(type) EventType GetEventType() const { return EventType::type; } \
+static EventType GetStaticEventType() { return EventType::type; }
+
 namespace CW {
 
 	class CreateBeacon
@@ -20,8 +23,7 @@ namespace CW {
 			: Position(position), Type(type), BitDirection(bitDirection)
 		{
 		}
-		EventType GetEventType() const { return EventType::CreateBeacon; }
-		static EventType GetStaticEventType() { return EventType::CreateBeacon; }
+		CW_BULD_EVENT_TYPE(CreateBeacon)
 	};
 
 	class CloseApp
@@ -29,8 +31,7 @@ namespace CW {
 	{
 	public:
 		CloseApp() = default;
-		EventType GetEventType() const { return EventType::CloseApp; }
-		static EventType GetStaticEventType() { return EventType::CloseApp; }
+		CW_BULD_EVENT_TYPE(CloseApp)
 	};
 
 	class StartSimulation
@@ -43,8 +44,7 @@ namespace CW {
 			: Settings(settings)
 		{
 		}
-		EventType GetEventType() const { return EventType::StartSimulation; }
-		static EventType GetStaticEventType() { return EventType::StartSimulation; }
+		CW_BULD_EVENT_TYPE(StartSimulation)
 	};
 
 	class SetSimulationSettings
@@ -57,8 +57,20 @@ namespace CW {
 			: Settings(settings)
 		{
 		}
-		EventType GetEventType() const { return EventType::SetSimulationSettings; }
-		static EventType GetStaticEventType() { return EventType::SetSimulationSettings; }
+		CW_BULD_EVENT_TYPE(SetSimulationSettings)
+	};
+
+	class SpawnDrone
+		: public Event
+	{
+	public:
+		sf::Vector2f Position;
+
+		SpawnDrone(sf::Vector2f position)
+			: Position(position)
+		{
+		}
+		CW_BULD_EVENT_TYPE(SpawnDrone)
 	};
 
 } // CW

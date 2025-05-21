@@ -36,6 +36,10 @@ namespace CW {
         RandomWanderAngleRad = angle::to_radians(25.0f);
         WanderAngleThresholdDeg = 0.5f;
         MaxTurningDeltaRad = angle::to_radians(30.0f);
+
+        DroneCost = 10;
+        DroneSpawnCooldown = 25.0f;
+        BasePosition = sf::Vector2f(0.0f, 0.0f);
     }
 
 
@@ -292,7 +296,7 @@ namespace CW {
     void DroneManager::SetSettings(const DroneSettings& settings)
     {
         m_DroneSettings = settings;
-        FOVRadPrecalc = std::acos(settings.FOV);
+        m_FOVRadPrecalc = std::acos(settings.FOV);
     }
 
     void DroneManager::UpdateAllDrones(
@@ -346,6 +350,12 @@ namespace CW {
         }
     }
 
+    void DroneManager::OnEvent(Event& event)
+    {
+        EventDispatcher dispatcher(event);
+        dispatcher.Dispach<SpawnDrone>(CW_BUILD_EVENT_FUNC(OnSpawnDrone));
+    }
+
     void DroneManager::Clear()
     {
         m_Drones.clear();
@@ -397,7 +407,7 @@ namespace CW {
         ImGui::Checkbox("show direction", &m_DrawDirection);
         if (ImGui::SliderFloat("fov", &m_DroneSettings.FOV, 0.0f, 1.0f))
         {
-            FOVRadPrecalc = std::acos(m_DroneSettings.FOV);
+            m_FOVRadPrecalc = std::acos(m_DroneSettings.FOV);
         }
         ImGui::SliderFloat("speed", &m_DroneSettings.Speed, 50.0f, 200.0f);
 
@@ -431,6 +441,13 @@ namespace CW {
         m_DrawDirection = false;
     }
 
+    bool DroneManager::OnSpawnDrone(SpawnDrone& e)
+    {
+        sf::Angle randAngle = sf::degrees(lerp(0.0f, 180.0f, rand_float()));
+        CreateDrone(e.Position, randAngle);
+        return true;
+    }
+
     inline void DroneManager::debugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const
     {
         if (m_DrawDirection)
@@ -457,11 +474,11 @@ namespace CW {
                 .Length(m_DroneSettings.ViewDistance.y)
                 .Position(position);
             FOVVisualBuilder
-                .SetRotationByP1(sf::radians(FOVRadPrecalc))
+                .SetRotationByP1(sf::radians(m_FOVRadPrecalc))
                 .RotateByP1(directionAngle)
                 .Draw();
             FOVVisualBuilder.Position(position)
-                .SetRotationByP1(sf::radians(-FOVRadPrecalc))
+                .SetRotationByP1(sf::radians(-m_FOVRadPrecalc))
                 .RotateByP1(directionAngle)
                 .Draw();
             FOVVisualBuilder.SetDefault();

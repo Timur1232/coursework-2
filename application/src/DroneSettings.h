@@ -21,6 +21,10 @@ namespace CW {
 		float WanderAngleThresholdDeg;
 		float MaxTurningDeltaRad;
 
+		int DroneCost;
+		float DroneSpawnCooldown;
+		sf::Vector2f BasePosition;
+
 		DroneSettings();
 		void SetDefault();
 	};
