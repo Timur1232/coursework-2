@@ -4,11 +4,11 @@
 
 #include "engine/IDrawable.h"
 #include "engine/Object.h"
-
 #include "utils/utils.h"
-#include "Terrain.h"
 
+#include "Terrain.h"
 #include "ResourcesSettings.h"
+#include "SimState.h"
 
 namespace CW {
 
@@ -35,6 +35,8 @@ namespace CW {
 	public:
 		ResourceManager() = default;
 		ResourceManager(const ResourcesSettings& settings);
+
+		void CollectState(SimulationState& state);
 
 		void SetSettings(const ResourcesSettings& settings);
 

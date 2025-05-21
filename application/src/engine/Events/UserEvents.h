@@ -73,4 +73,20 @@ namespace CW {
 		CW_BULD_EVENT_TYPE(SpawnDrone)
 	};
 
+	class SwitchMenu
+		: public Event
+	{
+	public:
+		SwitchMenu() = default;
+		CW_BULD_EVENT_TYPE(SwitchMenu)
+	};
+
+	class SwitchDebugMenu
+		: public Event
+	{
+	public:
+		SwitchDebugMenu() = default;
+		CW_BULD_EVENT_TYPE(SwitchDebugMenu)
+	};
+
 } // CW

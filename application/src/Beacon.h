@@ -5,13 +5,13 @@
 #include "engine/IUpdate.h"
 #include "engine/IDrawable.h"
 #include "engine/Object.h"
-#include "Chunks.h"
 #include "utils/utils.h"
 
+#include "Chunks.h"
 #include "TargetType.h"
 #include "BitDirection.h"
-
 #include "BeaconSettings.h"
+#include "SimState.h"
 
 namespace CW {
 
@@ -30,6 +30,7 @@ namespace CW {
 
 		void Revive(sf::Vector2f newPosition, TargetType newType, uint8_t bitDirection);
 
+		float GetCharge() const { return m_Charge; }
 		[[nodiscard]] TargetType GetType() const { return m_Type; }
 		[[nodiscard]] uint8_t GetBitDirection() const { return m_BitDirection; }
 		[[nodiscard]] sf::Angle GetDirectionAngle() const;
@@ -53,6 +54,8 @@ namespace CW {
 	public:
 		BeaconManager();
 		BeaconManager(const BeaconSettings& settings);
+
+		void CollectState(SimulationState& state);
 
 		void SetSettings(const BeaconSettings& settings);
 

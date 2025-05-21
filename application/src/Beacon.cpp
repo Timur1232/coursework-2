@@ -91,6 +91,16 @@ namespace CW {
 		m_BeaconSettings = settings;
 	}
 
+	void BeaconManager::CollectState(SimulationState& state)
+	{
+		for (const auto& beacon : m_Beacons)
+		{
+			state.BeaconsPositions.push_back(beacon->GetPos());
+			state.BeaconsTypes.push_back(beacon->GetType());
+			state.BeaconsCharges.push_back(beacon->GetCharge());
+		}
+	}
+
 	void BeaconManager::SetSettings(const BeaconSettings& settings)
 	{
 		m_BeaconSettings = settings;

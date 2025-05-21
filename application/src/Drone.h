@@ -16,6 +16,7 @@
 #include "Resource.h"
 #include "Terrain.h"
 #include "DroneSettings.h"
+#include "SimState.h"
 
 namespace CW {
 
@@ -66,6 +67,8 @@ namespace CW {
 	public:
 		DroneManager();
 		DroneManager(const DroneSettings& settings);
+
+		void CollectState(SimulationState& state);
 
 		void SetSettings(const DroneSettings& settings);
 

@@ -166,6 +166,8 @@ namespace CW {
         RConvexShapeSetter BeginConvexShapeSetting(sf::ConvexShape& mesh) { return RConvexShapeSetter(mesh); }
         RDotBuilder& BeginDotShape() { return m_DotBuilder; }
 
+        sf::Vector2f GetWindowSize() const { return (sf::Vector2f) m_RenderTarget->getSize(); }
+
     private:
         Renderer() = default;
 

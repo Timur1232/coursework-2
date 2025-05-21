@@ -34,6 +34,15 @@ namespace CW {
 	{
 	}
 
+	void ResourceManager::CollectState(SimulationState& state)
+	{
+		for (const auto& resource : m_Resources)
+		{
+			state.ResourcesPositions.push_back(resource.GetPos());
+			state.ResourcesAmounts.push_back(resource.GetResources());
+		}
+	}
+
 	void ResourceManager::SetSettings(const ResourcesSettings& settings)
 	{
 		m_Settings = settings;

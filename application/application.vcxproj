@@ -140,6 +140,7 @@
     <ClInclude Include="src\engine\Object.h" />
     <ClInclude Include="src\engine\ProgramCore.h" />
     <ClInclude Include="src\engine\Renderer.h" />
+    <ClInclude Include="src\SimState.h" />
     <ClInclude Include="src\SimulationSettings.h" />
     <ClInclude Include="src\engine\Types.h" />
     <ClInclude Include="src\engine\Events\UserEventHandler.h" />

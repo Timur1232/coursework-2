@@ -51,6 +51,9 @@ namespace CW {
         float GetRadius() const { return m_Radius; }
         void SetRadius(float radius) { m_Radius = radius; }
 
+        sf::Vector2f GetPos() const { return m_Position; }
+        void SetPos(sf::Vector2f position) { m_Position = position; }
+
     private:
         sf::Vector2f m_Position;
         float m_Radius = 1.0f;

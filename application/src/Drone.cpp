@@ -293,6 +293,15 @@ namespace CW {
         SetSettings(settings);
     }
 
+    void DroneManager::CollectState(SimulationState& state)
+    {
+        for (const auto& drone : m_Drones)
+        {
+            state.DronesPositions.push_back(drone.GetPos());
+            state.DronesDirections.push_back(drone.GetDirection());
+        }
+    }
+
     void DroneManager::SetSettings(const DroneSettings& settings)
     {
         m_DroneSettings = settings;
@@ -365,7 +374,7 @@ namespace CW {
     {
         Clear();
         m_Drones.reserve(droneCount);
-        float angleStep = 2.0f * angle::PI / (float)droneCount;
+        float angleStep = angle::PI / (float) droneCount;
         float angle = 0.0f;
         for (size_t i = 0; i < droneCount; ++i, angle += angleStep)
         {

@@ -6,6 +6,7 @@
 #include "engine/Events/UserEvents.h"
 #include "engine/Renderer.h"
 #include "engine/Events/UserEventHandler.h"
+#include "engine/Button.h"
 
 #include "debug_utils/Log.h"
 #include "debug_utils/Profiler.h"
@@ -15,14 +16,10 @@
 #include "Camera2D.h"
 #include "Beacon.h"
 #include "Drone.h"
-
 #include "BitDirection.h"
-
 #include "Terrain.h"
-
-#include "engine/Button.h"
-
 #include "SimulationSettings.h"
+#include "SimState.h"
 
 #define SHADERS_FOLDER "res/shaders/"
 #define SPRITES_FOLDER "res/sprites/"
@@ -35,7 +32,6 @@ namespace CW {
     public:
         SimulationLayer(sf::Vector2f windowSize, const SimulationSettings& settings)
             : m_Camera(0, 0, windowSize.x, windowSize.y),
-              m_WindowSize(windowSize),
               m_Drones(settings.Drones),
               m_Beacons(settings.Beacons),
               m_Resources(settings.Resources),
@@ -81,7 +77,8 @@ namespace CW {
             GenerateChunksInCameraView();
             GenerateChunksForDrones();
 
-            UpdateInterface();
+            if (m_DebugIsOpen)
+                UpdateInterface();
             
             m_ResourceReciever.Update(deltaTime);
 
@@ -103,8 +100,12 @@ namespace CW {
             dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
 
-            dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon));
-            dispatcher.Dispach<SetSimulationSettings>(CW_BUILD_EVENT_FUNC(OnSimSettings));
+            if (dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon)))
+                return;
+            if (dispatcher.Dispach<SetSimulationSettings>(CW_BUILD_EVENT_FUNC(OnSimSettings)))
+                return;
+            if (dispatcher.Dispach<SwitchDebugMenu>(CW_BUILD_EVENT_FUNC(OnSwitchDebugMenu)))
+                return;
             m_Camera.OnEvent(event);
             m_Drones.OnEvent(event);
         }
@@ -123,7 +124,7 @@ namespace CW {
             renderer.ApplyDefaultView();
             renderer.BeginRectangleShape()
                 .DefaultAfterDraw()
-                .Size(m_WindowSize)
+                .Size(renderer.GetWindowSize())
                 .Shader(&m_WaterShader)
                 .Draw();
             renderer.SetView(m_Camera.GetView());
@@ -166,6 +167,16 @@ namespace CW {
             }
         }
 
+        void CollectState(SimulationState& state)
+        {
+            //state.Clear();
+            m_Drones.CollectState(state);
+            m_Beacons.CollectState(state);
+            m_Resources.CollectState(state);
+            state.ResieverPosition = m_ResourceReciever.GetPos();
+            state.ResourceCount = m_ResourceReciever.GetResources();
+        }
+
     private:
         bool OnMouseButtonPressed(MouseButtonPressed& e)
         {
@@ -205,7 +216,6 @@ namespace CW {
         bool OnWindowResized(WindowResized& e)
         {
             m_WaterShader.setUniform("uResolution", static_cast<sf::Vector2f>(e.Size));
-            m_WindowSize = static_cast<sf::Vector2f>(e.Size);
             return false;
         }
 
@@ -237,6 +247,12 @@ namespace CW {
             m_Drones.Reset(droneCount, startPosition, target);
             m_Resources.Clear();
             CW_TRACE("Restarting simulation with {} drones", droneCount);
+        }
+
+        bool OnSwitchDebugMenu(SwitchDebugMenu&)
+        {
+            m_DebugIsOpen = !m_DebugIsOpen;
+            return true;
         }
         
         void UpdateInterface() 
@@ -459,13 +475,14 @@ namespace CW {
         std::vector<sf::ConvexShape> m_TerrainSectionMeshes;
         sf::Texture m_TerrainTexture;
 
-        sf::Vector2f m_WindowSize;
         float m_ElapsedTime = 0.0f;
 
         sf::Shader m_WaterShader;
         sf::Shader m_DarkeningShader;
 
         // Debug
+        bool m_DebugIsOpen = false;
+
         bool m_BeaconsInfo = false;
         bool m_DronesInfo = false;
         bool m_DrawBeacons = true;
@@ -482,8 +499,7 @@ namespace CW {
     public:
         MainMenuLayer(sf::Vector2f windowSize)
             : m_StartButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f - 100.0f }, sf::Vector2f{ 100.0f, 50.0f })),
-              m_ExitButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f }, sf::Vector2f{ 100.0f, 50.0f })),
-              m_WindowSize(windowSize)
+              m_ExitButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f }, sf::Vector2f{ 100.0f, 50.0f }))
         {
             m_StartSimButton.SetCollisionChecker(m_StartButtonCollision);
             m_ExitButton.SetCollisionChecker(m_ExitButtonCollision);
@@ -507,7 +523,7 @@ namespace CW {
                 CW_ERROR("Unable to load exit button texture!");
             if (!m_BackgroundShader.loadFromFile(SHADERS_FOLDER "main_menu_fragment.glsl", sf::Shader::Type::Fragment))
                 CW_ERROR("Unable to load main menu shader!");
-            m_BackgroundShader.setUniform("iResolution", m_WindowSize);
+            m_BackgroundShader.setUniform("iResolution", windowSize);
         }
 
         void Update(float deltaTime) override
@@ -527,7 +543,7 @@ namespace CW {
             renderer.ApplyDefaultView();
             renderer.BeginRectangleShape()
                 .DefaultAfterDraw()
-                .Size(m_WindowSize)
+                .Size(renderer.GetWindowSize())
                 .Shader(&m_BackgroundShader)
                 .Draw();
             // Start sim
@@ -564,17 +580,17 @@ namespace CW {
     private:
         bool OnWindowResized(WindowResized& e)
         {
-            m_WindowSize = static_cast<sf::Vector2f>(e.Size);
-            m_StartButtonCollision->SetRect(sf::FloatRect({ m_WindowSize.x / 2.0f - 50.0f, m_WindowSize.y / 2.0f - 100.0f }, { 100.0f, 50.0f }));
-            m_ExitButtonCollision->SetRect(sf::FloatRect({ m_WindowSize.x / 2.0f - 50.0f, m_WindowSize.y / 2.0f }, { 100.0f, 50.0f }));
-            m_BackgroundShader.setUniform("iResolution", m_WindowSize);
+            m_StartButtonCollision->SetRect(sf::FloatRect({ e.Size.x / 2.0f - 50.0f, e.Size.y / 2.0f - 100.0f }, { 100.0f, 50.0f }));
+            m_ExitButtonCollision->SetRect(sf::FloatRect({ e.Size.x / 2.0f - 50.0f, e.Size.y / 2.0f }, { 100.0f, 50.0f }));
+            m_BackgroundShader.setUniform("iResolution", (sf::Vector2f) e.Size);
             return false;
         }
 
         void SimulationSettingsMenu()
         {
+            sf::Vector2f windowSize = Renderer::Get().GetWindowSize();
             ImGui::SetNextWindowSize({ 550.0f, 500.0f }, ImGuiCond_Appearing);
-            ImGui::SetNextWindowPos({ m_WindowSize.x / 2.0f - 275.0f, m_WindowSize.y / 2.0f - 250.0f }, ImGuiCond_Appearing);
+            ImGui::SetNextWindowPos({ windowSize.x / 2.0f - 275.0f, windowSize.y / 2.0f - 250.0f}, ImGuiCond_Appearing);
             if (ImGui::Begin("Simulation settings", &m_SimSetting, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse))
             {
                 /*auto size = ImGui::GetWindowSize();
@@ -692,7 +708,6 @@ namespace CW {
     private:
         sf::Texture m_StartTexture;
         sf::Texture m_ExitTexture;
-        sf::Vector2f m_WindowSize;
         float m_ElapsedTime = 0.0f;
         sf::Shader m_BackgroundShader;
 
@@ -708,6 +723,77 @@ namespace CW {
     };
 
 
+    class InterfaceLayer
+        : public Layer
+    {
+    public:
+        InterfaceLayer(sf::Vector2f windowSize)
+            : m_MenuButtonCollision(CreateShared<CircleCollision>(sf::Vector2f{windowSize.x - 35.0f, 35.0f}, 25.0f)),
+              m_DebugMenuButtonCollision(CreateShared<CircleCollision>(sf::Vector2f{ windowSize.x - 35.0f, 95.0f }, 25.0f))
+        {
+            m_MenuButton.SetCollisionChecker(m_MenuButtonCollision);
+            m_DebugMenuButton.SetCollisionChecker(m_DebugMenuButtonCollision);
+
+            m_MenuButton.SetOnClickCallback(
+                [](MouseButtonPressed&) {
+                    UserEventHandler::Get().SendEvent(SwitchMenu{});
+                    return true;
+                });
+            m_DebugMenuButton.SetOnClickCallback(
+                [](MouseButtonPressed&) {
+                    UserEventHandler::Get().SendEvent(SwitchDebugMenu{});
+                    return true;
+                });
+
+            m_UpdateActive = false;
+        }
+
+        void Update(float) override {}
+
+        void Draw() override
+        {
+            auto& renderer = Renderer::Get();
+            renderer.ApplyDefaultView();
+            // menu button
+            renderer.BeginCircleShape()
+                .Radius(m_MenuButtonCollision->GetRadius())
+                .Position(m_MenuButtonCollision->GetPos())
+                .Color({ 220, 220, 220 })
+                .Draw();
+            // debug menu button
+            renderer.BeginCircleShape()
+                .Radius(m_DebugMenuButtonCollision->GetRadius())
+                .Position(m_DebugMenuButtonCollision->GetPos())
+                .Color({ 150, 150, 150 })
+                .Draw()
+                .SetDefault();
+        }
+        
+        void OnEvent(Event& event) override
+        {
+            EventDispatcher dispatcher(event);
+            if (dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized)))
+                return;
+            m_MenuButton.OnEvent(event);
+            m_DebugMenuButton.OnEvent(event);
+        }
+
+    private:
+        bool OnWindowResized(WindowResized& e)
+        {
+            m_MenuButtonCollision->SetPos({ e.Size.x - 35.0f, 35.0f });
+            m_DebugMenuButtonCollision->SetPos({ e.Size.x - 35.0f, 95.0f });
+            return false;
+        }
+
+    private:
+        Button m_MenuButton;
+        Button m_DebugMenuButton;
+        Shared<CircleCollision> m_MenuButtonCollision;
+        Shared<CircleCollision> m_DebugMenuButtonCollision;
+    };
+
+
     class MyApp
         : public Application
     {
@@ -715,19 +801,20 @@ namespace CW {
         MyApp()
             : Application(800, 600, "test")
         {
-            //m_ClearColor = sf::Color(84, 87, 91, 255);
             m_ClearColor = sf::Color(0, 0, 0, 255);
         }
 
         void Init() override
         {
-            PushLayer<MainMenuLayer>(static_cast<sf::Vector2f>(GetWindowSize()));
+            PushLayer<InterfaceLayer>((sf::Vector2f) GetWindowSize());
+            PushLayer<MainMenuLayer>((sf::Vector2f) GetWindowSize());
         }
 
         void Update(float deltaTime) override
         {
             CW_PROFILE_FUNCTION();
-            UpdateInterface();
+            if (m_DebugIsOpen)
+                UpdateInterface();
             UpdateLayers(deltaTime);
         }
 
@@ -747,6 +834,8 @@ namespace CW {
             if (dispatcher.Dispach<CloseApp>(CW_BUILD_EVENT_FUNC(OnCloseApp)))
                 return;
             if (dispatcher.Dispach<StartSimulation>(CW_BUILD_EVENT_FUNC(OnStartSimulation)))
+                return;
+            if (dispatcher.Dispach<SwitchDebugMenu>(CW_BUILD_EVENT_FUNC(OnSwitchDebugMenu)))
                 return;
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
             OnEventLayers(event);
@@ -778,6 +867,13 @@ namespace CW {
         {
             InsertLayer<SimulationLayer>(0, static_cast<sf::Vector2f>(GetWindowSize()), *e.Settings);
             m_ClearColor = sf::Color(135, 206, 235, 255);
+            m_DebugIsOpen = false;
+            return true;
+        }
+
+        bool OnSwitchDebugMenu(SwitchDebugMenu&)
+        {
+            m_DebugIsOpen = !m_DebugIsOpen;
             return true;
         }
 
@@ -800,6 +896,9 @@ namespace CW {
             }
             ImGui::End();
         }
+
+    private:
+        bool m_DebugIsOpen = false;
     };
 
 } // CW
