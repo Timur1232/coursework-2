@@ -111,7 +111,7 @@
     <ClCompile Include="src\ResourceReciever.cpp" />
     <ClCompile Include="src\TargetType.cpp" />
     <ClCompile Include="src\Terrain.cpp" />
-    <ClCompile Include="src\test.cpp" />
+    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\utils\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
