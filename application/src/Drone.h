@@ -26,6 +26,9 @@ namespace CW {
 		Drone() = default;
 		Drone(sf::Vector2f position, sf::Angle directionAngle = sf::Angle::Zero, TargetType target = TargetType::Recource);
 
+		void WriteToFile(std::ofstream& file) const;
+		void ReadFromFile(std::ifstream& file);
+
 		void ResetTarget() { m_TargetResourceIndex = {}; }
 
 		[[nodiscard]] sf::Angle GetDirection() const { return m_DirectionAngle; }
@@ -33,6 +36,7 @@ namespace CW {
 		[[nodiscard]] float GetBeaconSpawnTimer() const { return m_BeaconTimerSec; }
 		[[nodiscard]] int GetCarriedResources() const { return m_CarriedResources; }
 		[[nodiscard]] std::optional<size_t> GetTargetResourceIndex() const { return m_TargetResourceIndex; }
+		TargetType GetTarget() const { return m_TargetType; }
 
 		void SetDirection(sf::Angle angle) { m_DirectionAngle = angle; }
 		void SetAttraction(sf::Angle angle) { m_AttractionAngle = angle; }
@@ -54,12 +58,12 @@ namespace CW {
 		sf::Angle m_DirectionAngle = sf::Angle::Zero;
 		sf::Angle m_AttractionAngle = sf::Angle::Zero;
 
-		TargetType m_TargetType = TargetType::Recource;
-		std::optional<size_t> m_TargetResourceIndex{};
-
 		int m_CarriedResources = 0;
 		float m_BeaconTimerSec = 0.0f;
 		float m_WanderTimer = 0.0f;
+
+		TargetType m_TargetType = TargetType::Recource;
+		std::optional<size_t> m_TargetResourceIndex{};
 	};
 
 
@@ -74,6 +78,8 @@ namespace CW {
 		DroneManager(const DroneSettings& settings);
 
 		void SetState(FullSimulationState& state);
+
+		const std::vector<Drone>& GetDrones() const { return m_Drones; }
 
 		void CollectState(SimulationState& state) const;
 		void CollectState(FullSimulationState& state) const;

@@ -51,6 +51,42 @@ namespace CW {
     {
     }
 
+    void Drone::WriteToFile(std::ofstream& file) const
+    {
+        file.write(reinterpret_cast<const char*>(&m_Position), sizeof(m_Position));
+
+        float directionRad = m_DirectionAngle.asRadians();
+        float attractionRad = m_AttractionAngle.asRadians();
+        file.write(reinterpret_cast<const char*>(&directionRad), sizeof(directionRad));
+        file.write(reinterpret_cast<const char*>(&attractionRad), sizeof(attractionRad));
+
+        file.write(reinterpret_cast<const char*>(&m_CarriedResources), sizeof(m_CarriedResources));
+        file.write(reinterpret_cast<const char*>(&m_BeaconTimerSec), sizeof(m_BeaconTimerSec));
+        file.write(reinterpret_cast<const char*>(&m_WanderTimer), sizeof(m_WanderTimer));
+
+        int typeInt = static_cast<int>(m_TargetType);
+        file.write(reinterpret_cast<const char*>(&typeInt), sizeof(typeInt));
+    }
+
+    void Drone::ReadFromFile(std::ifstream& file)
+    {
+        file.read(reinterpret_cast<char*>(&m_Position), sizeof(sf::Vector2f));
+
+        float directionRad, attractionRad;
+        file.read(reinterpret_cast<char*>(&directionRad), sizeof(directionRad));
+        file.read(reinterpret_cast<char*>(&attractionRad), sizeof(attractionRad));
+        m_DirectionAngle = sf::radians(directionRad);
+        m_AttractionAngle = sf::radians(attractionRad);
+
+        file.read(reinterpret_cast<char*>(&m_CarriedResources), sizeof(m_CarriedResources));
+        file.read(reinterpret_cast<char*>(&m_BeaconTimerSec), sizeof(m_BeaconTimerSec));
+        file.read(reinterpret_cast<char*>(&m_WanderTimer), sizeof(m_WanderTimer));
+
+        int typeInt;
+        file.read(reinterpret_cast<char*>(&typeInt), sizeof(typeInt));
+        m_TargetType = static_cast<TargetType>(typeInt);
+    }
+
     void Drone::Update(float deltaTime, const DroneSettings& settings, std::vector<Resource>& resources)
     {
         CW_PROFILE_FUNCTION();

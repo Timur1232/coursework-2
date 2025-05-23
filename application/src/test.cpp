@@ -26,6 +26,9 @@
 
 namespace CW {
 
+    char g_FilePathBuff[512] = "";
+
+
     class SimulationLayer
         : public Layer
     {
@@ -38,6 +41,25 @@ namespace CW {
               m_Resources(settings.Resources),
               m_Terrain(settings.Terrain),
               m_ResourceReciever(settings.Drones)
+        {
+            Init(windowSize);
+            StartSim(settings.DronesCount, { settings.StartingHorizontalPosition, 0.0f });
+        }
+
+        SimulationLayer(FullSimulationState& state, sf::Vector2f windowSize)
+            : m_Camera(0, 0, windowSize.x, windowSize.y)
+        {
+            m_Settings = state.Settings;
+            m_Drones.SetState(state);
+            m_Beacons.SetState(state);
+            m_Resources.SetState(state);
+            m_ResourceReciever.SetData(state.RecieverData);
+            m_Terrain.SetSettings(state.Settings.Terrain);
+            m_GeneratedRange = state.GeneratedRange;
+            Init(windowSize);
+        }
+
+        void Init(const sf::Vector2f& windowSize)
         {
             m_Resources.Reserve(128);
             m_Drones.SetDefaultSettings();
@@ -69,8 +91,6 @@ namespace CW {
             m_DarkeningShader.setUniform("uResolution", windowSize);
             m_DarkeningShader.setUniform("uDarkeningFactor", 25.0f);
             m_DarkeningShader.setUniform("uYOffset", 3000.0f);
-
-            StartSim(settings.DronesCount, { settings.StartingHorizontalPosition, 0.0f });
         }
 
         void Update(float deltaTime) override
@@ -78,8 +98,8 @@ namespace CW {
             GenerateChunksInCameraView();
             GenerateChunksForDrones();
 
-            if (m_DebugIsOpen)
-                UpdateInterface();
+            /*if (m_DebugIsOpen)
+                UpdateInterface();*/
             
             m_ResourceReciever.Update(deltaTime);
 
@@ -101,11 +121,9 @@ namespace CW {
                 return;
             if (dispatcher.Dispach<SetSimulationSettings>(CW_BUILD_EVENT_FUNC(OnSimSettings)))
                 return;
-            if (dispatcher.Dispach<SwitchDebugMenu>(CW_BUILD_EVENT_FUNC(OnSwitchDebugMenu)))
-                return;
+            /*if (dispatcher.Dispach<SwitchDebugMenu>(CW_BUILD_EVENT_FUNC(OnSwitchDebugMenu)))
+                return;*/
             if (dispatcher.Dispach<SaveSimulation>(CW_BUILD_EVENT_FUNC(OnSaveSimulation)))
-                return;
-            if (dispatcher.Dispach<LoadSimulation>(CW_BUILD_EVENT_FUNC(OnLoadSimulation)))
                 return;
             dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed));
             dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
@@ -174,12 +192,21 @@ namespace CW {
 
         void CollectState(SimulationState& state)
         {
-            //state.Clear();
             m_Drones.CollectState(state);
             m_Beacons.CollectState(state);
             m_Resources.CollectState(state);
             state.ResieverPosition = m_ResourceReciever.GetPos();
             state.ResourceCount = m_ResourceReciever.GetResources();
+        }
+
+        void CollectState(FullSimulationState& state)
+        {
+            m_Drones.CollectState(state);
+            m_Beacons.CollectState(state);
+            m_Resources.CollectState(state);
+            state.GeneratedRange = m_GeneratedRange;
+            state.RecieverData = m_ResourceReciever.GetData();
+            state.Settings = m_Settings;
         }
 
     private:
@@ -255,15 +282,15 @@ namespace CW {
             CW_TRACE("Restarting simulation with {} drones", droneCount);
         }
 
-        bool OnSwitchDebugMenu(SwitchDebugMenu&)
+        /*bool OnSwitchDebugMenu(SwitchDebugMenu&)
         {
             m_DebugIsOpen = !m_DebugIsOpen;
             return true;
-        }
+        }*/
         
         bool OnSaveSimulation(SaveSimulation& e)
         {
-            std::ofstream file(e.FilePath);
+            std::ofstream file(e.FilePath, std::ios::binary);
             if (!file)
             {
                 CW_ERROR("Unable to open file for saving!");
@@ -271,102 +298,40 @@ namespace CW {
             }
 
             FullSimulationState state;
-            m_Drones.CollectState(state);
-            m_Beacons.CollectState(state);
-            m_Resources.CollectState(state);
-            state.GeneratedRange = m_GeneratedRange;
-            state.RecieverData = m_ResourceReciever.GetData();
-            state.Settings = m_Settings;
+            CollectState(state);
 
             // reciever
-            file.write((const char*) &state.RecieverData, sizeof(RecieverData));
+            file.write(reinterpret_cast<const char*>(&state.RecieverData), sizeof(state.RecieverData));
 
             // terrain
-            file.write((const char*) &state.GeneratedRange, sizeof(sf::Vector2f));
+            file.write(reinterpret_cast<const char*>(&state.GeneratedRange), sizeof(state.GeneratedRange));
 
             // settings
-            file.write((const char*) &state.Settings, sizeof(SimulationSettings));
+            file.write(reinterpret_cast<const char*>(&state.Settings), sizeof(state.Settings));
 
-
-            size_t size = state.Drones.size();
             // drones
-            file.write((const char*) &size, sizeof(size_t));
-            file.write((const char*) state.Drones.data(), state.Drones.size() * sizeof(Drone));
+            size_t size = state.Drones.size();
+            file.write(reinterpret_cast<const char*>(&size), sizeof(size_t));
+            for (const auto& drone : state.Drones)
+            {
+                drone.WriteToFile(file);
+            }
 
             // beacons
             size = state.Beacons.size();
-            file.write((const char*) &size, sizeof(size_t));
-            file.write((const char*) state.Beacons.data(), state.Beacons.size() * sizeof(Beacon));
+            file.write(reinterpret_cast<const char*>(&size), sizeof(size_t));
+            for (const auto& beacon : state.Beacons)
+            {
+                beacon.WriteToFile(file);
+            }
 
             // resources
             size = state.Resources.size();
-            file.write((const char*) &size, sizeof(size_t));
-            file.write((const char*) state.Resources.data(), state.Resources.size() * sizeof(Resource));
-
-
-            return true;
-        }
-
-        bool OnLoadSimulation(LoadSimulation& e)
-        {
-            std::ifstream file(e.FilePath);
-            if (!file)
+            file.write(reinterpret_cast<const char*>(&size), sizeof(size_t));
+            for (const auto& resource : state.Resources)
             {
-                CW_ERROR("Unable to open file for loading!");
-                return true;
+                resource.WriteToFile(file);
             }
-
-            FullSimulationState state;
-
-            // reciever
-            file.read((char*) &state.RecieverData, sizeof(RecieverData));
-
-            // terrain
-            file.read((char*) &state.GeneratedRange, sizeof(sf::Vector2f));
-            
-            // settings
-            file.read((char*) &state.Settings, sizeof(SimulationSettings));
-
-            size_t size = 0;
-
-            // drones
-            file.read((char*) &size, sizeof(size_t));
-            Drone drone;
-            for (size_t i = 0; i < size; ++i)
-            {
-                file.read((char*) &drone, sizeof(Drone));
-                state.Drones.push_back(drone);
-            }
-
-            // beacons
-            file.read((char*) &size, sizeof(size_t));
-            Beacon beacon;
-            for (size_t i = 0; i < size; ++i)
-            {
-                file.read((char*) &beacon, sizeof(Beacon));
-                state.Beacons.push_back(beacon);
-            }
-            
-            // resources
-            file.read((char*) &size, sizeof(size_t));
-            Resource resource;
-            for (size_t i = 0; i < size; ++i)
-            {
-                file.read((char*) &resource, sizeof(Resource));
-                state.Resources.push_back(resource);
-            }
-
-            // TODO: не работает
-
-            // apply
-            m_Settings = state.Settings;
-            m_Drones.SetState(state);
-            m_Beacons.SetState(state);
-            m_Resources.SetState(state);
-            m_ResourceReciever.SetData(state.RecieverData);
-            m_Terrain.SetSettings(state.Settings.Terrain);
-            m_GeneratedRange = state.GeneratedRange;
-            GenerateChunkRange(m_GeneratedRange.x, m_GeneratedRange.y);
 
             return true;
         }
@@ -599,7 +564,7 @@ namespace CW {
         sf::Shader m_DarkeningShader;
 
         // Debug
-        bool m_DebugIsOpen = false;
+        //bool m_DebugIsOpen = false;
 
         bool m_BeaconsInfo = false;
         bool m_DronesInfo = false;
@@ -615,17 +580,33 @@ namespace CW {
         : public Layer
     {
     public:
+        enum class MenuStatus
+        {
+            None = 0,
+            SimSetting,
+            LoadSim
+        };
+
+    public:
         MainMenuLayer(sf::Vector2f windowSize)
             : m_StartButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f - 100.0f }, sf::Vector2f{ 100.0f, 50.0f })),
-              m_ExitButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f }, sf::Vector2f{ 100.0f, 50.0f }))
+              m_LoadButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f }, sf::Vector2f{ 100.0f, 50.0f })),
+              m_ExitButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f + 100.0f }, sf::Vector2f{ 100.0f, 50.0f }))
         {
             m_StartSimButton.SetCollisionChecker(m_StartButtonCollision);
+            m_LoadButton.SetCollisionChecker(m_LoadButtonCollision);
             m_ExitButton.SetCollisionChecker(m_ExitButtonCollision);
 
             m_StartSimButton.SetOnClickCallback(
                 [this](MouseButtonPressed& e) {
                     if (e.Data.button == sf::Mouse::Button::Left)
-                        m_SimSetting = true;
+                        m_MenuStatus = MenuStatus::SimSetting;
+                    return true;
+                });
+            m_LoadButton.SetOnClickCallback(
+                [this](MouseButtonPressed& e) {
+                    if (e.Data.button == sf::Mouse::Button::Left)
+                        m_MenuStatus = MenuStatus::LoadSim;
                     return true;
                 });
             m_ExitButton.SetOnClickCallback(
@@ -639,6 +620,8 @@ namespace CW {
                 CW_ERROR("Unable to load start button texture!");
             if (!m_ExitTexture.loadFromFile(SPRITES_FOLDER "exit_button.png"))
                 CW_ERROR("Unable to load exit button texture!");
+            if (!m_LoadTexture.loadFromFile(SPRITES_FOLDER "load_button.png"))
+                CW_ERROR("Unable to load load button texture!");
             if (!m_BackgroundShader.loadFromFile(SHADERS_FOLDER "main_menu_fragment.glsl", sf::Shader::Type::Fragment))
                 CW_ERROR("Unable to load main menu shader!");
             m_BackgroundShader.setUniform("iResolution", windowSize);
@@ -647,9 +630,11 @@ namespace CW {
         void Update(float deltaTime) override
         {
             m_ElapsedTime += deltaTime;
-            if (m_SimSetting)
+            switch (m_MenuStatus)
             {
-                SimulationSettingsMenu();
+            case MenuStatus::SimSetting: SimulationSettingsMenu(); break;
+            case MenuStatus::LoadSim:    LoadSimulationInterface(); break;
+            default: break;
             }
         }
 
@@ -672,6 +657,14 @@ namespace CW {
                 .OutlineThickness(2.0f)
                 .OutlineColor({ 25, 240, 25 })
                 .Draw();
+            // Load
+            renderer.BeginRectangleShape()
+            .Size(m_LoadButtonCollision->GetSize())
+                .Position(m_LoadButtonCollision->GetPos())
+                .Texture(&m_LoadTexture)
+                .OutlineThickness(2.0f)
+                .OutlineColor({ 14, 77, 148 })
+                .Draw();
             // Exit
             renderer.BeginRectangleShape()
                 .Size(m_ExitButtonCollision->GetSize())
@@ -688,18 +681,17 @@ namespace CW {
             EventDispatcher dispatcher(event);
             if (dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized)))
                 return;
-            if (!m_SimStarted)
-            {
-                m_StartSimButton.OnEvent(event);
-                m_ExitButton.OnEvent(event);
-            }
+            m_StartSimButton.OnEvent(event);
+            m_LoadButton.OnEvent(event);
+            m_ExitButton.OnEvent(event);
         }
 
     private:
         bool OnWindowResized(WindowResized& e)
         {
             m_StartButtonCollision->SetRect(sf::FloatRect({ e.Size.x / 2.0f - 50.0f, e.Size.y / 2.0f - 100.0f }, { 100.0f, 50.0f }));
-            m_ExitButtonCollision->SetRect(sf::FloatRect({ e.Size.x / 2.0f - 50.0f, e.Size.y / 2.0f }, { 100.0f, 50.0f }));
+            m_LoadButtonCollision->SetRect(sf::FloatRect({ e.Size.x / 2.0f - 50.0f, e.Size.y / 2.0f }, { 100.0f, 50.0f }));
+            m_ExitButtonCollision->SetRect(sf::FloatRect({ e.Size.x / 2.0f - 50.0f, e.Size.y / 2.0f + 100.0f }, { 100.0f, 50.0f }));
             m_BackgroundShader.setUniform("iResolution", (sf::Vector2f) e.Size);
             return false;
         }
@@ -709,7 +701,8 @@ namespace CW {
             sf::Vector2f windowSize = Renderer::Get().GetWindowSize();
             ImGui::SetNextWindowSize({ 550.0f, 500.0f }, ImGuiCond_Appearing);
             ImGui::SetNextWindowPos({ windowSize.x / 2.0f - 275.0f, windowSize.y / 2.0f - 250.0f}, ImGuiCond_Appearing);
-            if (ImGui::Begin("Simulation settings", &m_SimSetting, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse))
+            bool simSetWind = (m_MenuStatus == MenuStatus::SimSetting) ? true : false;
+            if (ImGui::Begin("Simulation settings", &simSetWind, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse))
             {
                 /*auto size = ImGui::GetWindowSize();
                 ImGui::Text("window size: (%.2f, %.2f)", size.x, size.y);*/
@@ -726,13 +719,11 @@ namespace CW {
                 if (ImGui::Button("Start simulation"))
                 {
                     UserEventHandler::Get().SendEvent(StartSimulation{&m_SimSettings});
-                    m_UpdateActive = false;
-                    m_DrawActive = false;
-                    m_SimStarted = true;
-                    m_SimSetting = false;
                 }
                 ImGui::End();
             }
+            if (!simSetWind)
+                m_MenuStatus = MenuStatus::None;
         }
 
         void TerrainSetupInterface()
@@ -823,19 +814,37 @@ namespace CW {
             }
         }
 
+        void LoadSimulationInterface()
+        {
+            bool simLoadWind = (m_MenuStatus == MenuStatus::LoadSim) ? true : false;
+            if (ImGui::Begin("Load save", &simLoadWind))
+            {
+                ImGui::InputText("Path", g_FilePathBuff, sizeof(g_FilePathBuff) / sizeof(*g_FilePathBuff));
+                if (ImGui::Button("Load"))
+                {
+                    UserEventHandler::Get().SendEvent(LoadSimulation{ g_FilePathBuff });
+                }
+                ImGui::End();
+            }
+            if (!simLoadWind)
+                m_MenuStatus = MenuStatus::None;
+        }
+
     private:
         sf::Texture m_StartTexture;
+        sf::Texture m_LoadTexture;
         sf::Texture m_ExitTexture;
         float m_ElapsedTime = 0.0f;
         sf::Shader m_BackgroundShader;
 
         Shared<RectCollision> m_StartButtonCollision;
         Shared<RectCollision> m_ExitButtonCollision;
+        Shared<RectCollision> m_LoadButtonCollision;
         Button m_StartSimButton;
+        Button m_LoadButton;
         Button m_ExitButton;
 
-        bool m_SimSetting = false;
-        bool m_SimStarted = false;
+        MenuStatus m_MenuStatus = MenuStatus::None;
 
         SimulationSettings m_SimSettings;
     };
@@ -930,6 +939,16 @@ namespace CW {
         void Update(float deltaTime) override
         {
             CW_PROFILE_FUNCTION();
+            if (m_ExitFlag)
+            {
+                PopLayer();
+                PopLayer();
+                m_ExitFlag = false;
+                PushLayer<MainMenuLayer>((sf::Vector2f)GetWindowSize());
+                m_ClearColor = sf::Color(0, 0, 0, 255);
+                return;
+            }
+
             if (m_DebugIsOpen)
                 UpdateDebugInterface();
             if (m_MenuIsOpen)
@@ -957,6 +976,8 @@ namespace CW {
             if (dispatcher.Dispach<SwitchDebugMenu>(CW_BUILD_EVENT_FUNC(OnSwitchDebugMenu)))
                 return;
             if (dispatcher.Dispach<SwitchMenu>(CW_BUILD_EVENT_FUNC(OnSwitchMenu)))
+                return;
+            if (dispatcher.Dispach<LoadSimulation>(CW_BUILD_EVENT_FUNC(OnLoadSimulation)))
                 return;
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
             OnEventLayers(event);
@@ -986,8 +1007,10 @@ namespace CW {
 
         bool OnStartSimulation(StartSimulation& e)
         {
-            PushLayer<SimulationLayer>(static_cast<sf::Vector2f>(GetWindowSize()), *e.Settings);
-            PushLayer<InterfaceLayer>((sf::Vector2f)GetWindowSize());
+            auto settings = *e.Settings;
+            PopLayer();
+            PushLayer<SimulationLayer>((sf::Vector2f) GetWindowSize(), settings);
+            PushLayer<InterfaceLayer>((sf::Vector2f) GetWindowSize());
             m_ClearColor = sf::Color(135, 206, 235, 255);
             m_DebugIsOpen = false;
             return true;
@@ -1002,6 +1025,65 @@ namespace CW {
         bool OnSwitchMenu(SwitchMenu&)
         {
             m_MenuIsOpen = !m_MenuIsOpen;
+            return true;
+        }
+
+        bool OnLoadSimulation(LoadSimulation& e)
+        {
+            std::ifstream file(e.FilePath, std::ios::binary);
+            if (!file)
+            {
+                CW_ERROR("Unable to open file for loading!");
+                return true;
+            }
+
+            FullSimulationState state;
+
+            // reciever
+            file.read(reinterpret_cast<char*>(&state.RecieverData), sizeof(state.RecieverData));
+
+            // terrain
+            file.read(reinterpret_cast<char*>(&state.GeneratedRange), sizeof(state.GeneratedRange));
+
+            // settings
+            file.read(reinterpret_cast<char*>(&state.Settings), sizeof(state.Settings));
+
+            size_t size = 0;
+
+            // drones
+            file.read(reinterpret_cast<char*>(&size), sizeof(size_t));
+            Drone drone;
+            for (size_t i = 0; i < size; ++i)
+            {
+                drone.ReadFromFile(file);
+                state.Drones.push_back(drone);
+            }
+
+            // beacons
+            file.read(reinterpret_cast<char*>(&size), sizeof(size_t));
+            Beacon beacon;
+            for (size_t i = 0; i < size; ++i)
+            {
+                beacon.ReadFromFile(file);
+                state.Beacons.push_back(beacon);
+            }
+
+            // resources
+            file.read(reinterpret_cast<char*>(&size), sizeof(size_t));
+            Resource resource;
+            for (size_t i = 0; i < size; ++i)
+            {
+                resource.ReadFromFile(file);
+                state.Resources.push_back(resource);
+            }
+
+            EraseLayer(0);
+            PushLayer<SimulationLayer>(state, (sf::Vector2f) GetWindowSize());
+            PushLayer<InterfaceLayer>((sf::Vector2f) GetWindowSize());
+            m_ClearColor = sf::Color(135, 206, 235, 255);
+            m_DebugIsOpen = false;
+            m_CurrentFilePath = e.FilePath;
+
             return true;
         }
 
@@ -1028,23 +1110,27 @@ namespace CW {
         void UpdateMenuInterface()
         {
             ImGui::Begin("Menu");
-            ImGui::InputText("Path", m_FilePathBuff, sizeof(m_FilePathBuff) / sizeof(*m_FilePathBuff));
+            ImGui::InputText("Path", g_FilePathBuff, sizeof(g_FilePathBuff) / sizeof(*g_FilePathBuff));
             if (ImGui::Button("Save"))
             {
-                UserEventHandler::Get().SendEvent(SaveSimulation{m_FilePathBuff});
+                m_CurrentFilePath = g_FilePathBuff;
+                UserEventHandler::Get().SendEvent(SaveSimulation{ g_FilePathBuff });
             }
-            if (ImGui::Button("Load"))
+            if (ImGui::Button("Save and Exit"))
             {
-                UserEventHandler::Get().SendEvent(LoadSimulation{ m_FilePathBuff });
+                UserEventHandler::Get().SendEvent(SaveSimulation{ m_CurrentFilePath.c_str()});
+                m_ExitFlag = true;
+                m_MenuIsOpen = false;
+                m_DebugIsOpen = false;
             }
             ImGui::End();
         }
 
     private:
-        char m_FilePathBuff[256] = "";
-
         bool m_MenuIsOpen = false;
         bool m_DebugIsOpen = false;
+        bool m_ExitFlag = false;
+        std::string m_CurrentFilePath = "";
     };
 
 } // CW

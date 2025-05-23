@@ -21,6 +21,9 @@ namespace CW {
 		Beacon() = default;
 		Beacon(sf::Vector2f position, TargetType type, uint8_t bitDirection, float charge = 1.0f);
 
+		void WriteToFile(std::ofstream& file) const;
+		void ReadFromFile(std::ifstream& file);
+
 		void InfoInterface(size_t index) const;
 
 		void Update(float deltaTime, const BeaconSettings& bs);
@@ -58,6 +61,8 @@ namespace CW {
 		BeaconManager(const BeaconSettings& settings);
 
 		void SetState(FullSimulationState& state);
+
+		const std::vector<IndexedBeacon>& GetIndexedBeacons() const { return m_Beacons; }
 
 		void CollectState(SimulationState& state) const;
 		void CollectState(FullSimulationState& state) const;

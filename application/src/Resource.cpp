@@ -13,6 +13,18 @@ namespace CW {
 	{
 	}
 
+	void Resource::WriteToFile(std::ofstream& file) const
+	{
+		file.write(reinterpret_cast<const char*>(&m_Position), sizeof(m_Position));
+		file.write(reinterpret_cast<const char*>(&m_Amount), sizeof(m_Amount));
+	}
+
+	void Resource::ReadFromFile(std::ifstream& file)
+	{
+		file.read(reinterpret_cast<char*>(&m_Position), sizeof(m_Position));
+		file.read(reinterpret_cast<char*>(&m_Amount), sizeof(m_Amount));
+	}
+
 	void Resource::Pickup()
 	{
 		if (m_IsCarried)

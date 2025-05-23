@@ -15,6 +15,25 @@ namespace CW {
 	{
 	}
 
+	void Beacon::WriteToFile(std::ofstream& file) const
+	{
+		file.write(reinterpret_cast<const char*>(&m_Position), sizeof(m_Position));
+		int typeInt = static_cast<int>(m_Type);
+		file.write(reinterpret_cast<const char*>(&typeInt), sizeof(typeInt));
+		file.write(reinterpret_cast<const char*>(&m_Charge), sizeof(m_Charge));
+		file.write(reinterpret_cast<const char*>(&m_BitDirection), sizeof(m_BitDirection));
+	}
+
+	void Beacon::ReadFromFile(std::ifstream& file)
+	{
+		file.read(reinterpret_cast<char*>(&m_Position), sizeof(m_Position));
+		int typeInt;
+		file.read(reinterpret_cast<char*>(&typeInt), sizeof(typeInt));
+		m_Type = static_cast<TargetType>(typeInt);
+		file.read(reinterpret_cast<char*>(&m_Charge), sizeof(m_Charge));
+		file.read(reinterpret_cast<char*>(&m_BitDirection), sizeof(m_BitDirection));
+	}
+
 	void Beacon::InfoInterface(size_t index) const
 	{
 		ImGui::Separator();

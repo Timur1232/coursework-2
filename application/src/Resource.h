@@ -18,6 +18,9 @@ namespace CW {
 		Resource() = default;
 		Resource(sf::Vector2f position, int amount = 10);
 
+		void WriteToFile(std::ofstream& file) const;
+		void ReadFromFile(std::ifstream& file);
+
 		inline int GetResources() const { return m_Amount; }
 		inline bool IsCarried() const { return m_IsCarried; }
 
