@@ -1,10 +1,11 @@
 #pragma once
 #include "pch.h"
 
+#include "TargetType.h"
 #include "Drone.h"
 #include "Beacon.h"
 #include "Resource.h"
-#include "Terrain.h"
+#include "TerrainGenerationSettings.h"
 
 namespace CW {
 
@@ -46,11 +47,12 @@ namespace CW {
         std::vector<Drone> Drones;
         std::vector<Beacon> Beacons;
         std::vector<Resource> Resources;
-        ResourceReciever Reciever;
+        RecieverData RecieverData;
 
-        Terrain Terrain;
+        SimulationSettings Settings;
         sf::Vector2i GeneratedRange;
 
+        FullSimulationState() = default;
         void Clear()
         {
             Drones.clear();

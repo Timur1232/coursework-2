@@ -11,7 +11,6 @@
 #include "TargetType.h"
 #include "BitDirection.h"
 #include "BeaconSettings.h"
-#include "SimState.h"
 
 namespace CW {
 
@@ -20,7 +19,7 @@ namespace CW {
 	{
 	public:
 		Beacon() = default;
-		Beacon(sf::Vector2f position, TargetType type, uint8_t bitDirection);
+		Beacon(sf::Vector2f position, TargetType type, uint8_t bitDirection, float charge = 1.0f);
 
 		void InfoInterface(size_t index) const;
 
@@ -28,7 +27,7 @@ namespace CW {
 
 		[[nodiscard]] bool IsAlive() const { return m_Alive; }
 
-		void Revive(sf::Vector2f newPosition, TargetType newType, uint8_t bitDirection);
+		void Revive(sf::Vector2f newPosition, TargetType newType, uint8_t bitDirection, float charge = 1.0f);
 
 		float GetCharge() const { return m_Charge; }
 		[[nodiscard]] TargetType GetType() const { return m_Type; }
@@ -45,6 +44,9 @@ namespace CW {
 	};
 
 
+	struct SimulationState;
+	struct FullSimulationState;
+
 	class BeaconManager
 		: public IUpdate
 	{
@@ -55,13 +57,16 @@ namespace CW {
 		BeaconManager();
 		BeaconManager(const BeaconSettings& settings);
 
-		void CollectState(SimulationState& state);
+		void SetState(FullSimulationState& state);
+
+		void CollectState(SimulationState& state) const;
+		void CollectState(FullSimulationState& state) const;
 
 		void SetSettings(const BeaconSettings& settings);
 
 		void Update(float deltaTime) override;
 		void DrawAllBeacons();
-		void CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection);
+		void CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection, float charge = 1.0f);
 		void Clear();
 
 		[[nodiscard]] const ChunkHandler<Beacon>& GetChuncks() const { return m_Chunks; }
@@ -77,7 +82,6 @@ namespace CW {
 		size_t m_DeadBeacons = 0;
 
 		BeaconSettings m_BeaconSettings;
-		//sf::CircleShape m_Mesh{10.0f, 4};
 
 		static constexpr size_t BEACONS_RESERVE = 1024 * 1024;
 	};

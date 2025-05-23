@@ -24,6 +24,28 @@ namespace CW {
 		ImGui::Text("resources amount: %d", m_ResourceCount);
 	}
 
+	RecieverData ResourceReciever::GetData() const
+	{
+		return RecieverData{
+			.ResourceCount = m_ResourceCount,
+			.RecieveRadius = m_RecieveRadius,
+			.BroadcastRadius = m_BroadcastRadius,
+			.DroneCost = m_DroneCost,
+			.DroneSpawnTimer = m_DroneSpawnTimer,
+			.DroneSpawnCooldown = m_DroneSpawnCooldown,
+		};
+	}
+
+	void ResourceReciever::SetData(const RecieverData& data)
+	{
+		m_ResourceCount = data.ResourceCount;
+		m_RecieveRadius = data.RecieveRadius;
+		m_BroadcastRadius = data.BroadcastRadius;
+		m_DroneCost = data.DroneCost;
+		m_DroneSpawnTimer = data.DroneSpawnTimer;
+		m_DroneSpawnCooldown = data.DroneSpawnCooldown;
+	}
+
 	void ResourceReciever::Draw()
 	{
 		auto& circleBuilder = Renderer::Get().BeginCircleShape();

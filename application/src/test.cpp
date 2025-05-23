@@ -13,13 +13,13 @@
 #include "utils/ArenaAllocator.h"
 #include "ObjectPallete.h"
 
+#include "SimState.h"
 #include "Camera2D.h"
 #include "Beacon.h"
 #include "Drone.h"
 #include "BitDirection.h"
 #include "Terrain.h"
 #include "SimulationSettings.h"
-#include "SimState.h"
 
 #define SHADERS_FOLDER "res/shaders/"
 #define SPRITES_FOLDER "res/sprites/"
@@ -32,6 +32,7 @@ namespace CW {
     public:
         SimulationLayer(sf::Vector2f windowSize, const SimulationSettings& settings)
             : m_Camera(0, 0, windowSize.x, windowSize.y),
+              m_Settings(settings),
               m_Drones(settings.Drones),
               m_Beacons(settings.Beacons),
               m_Resources(settings.Resources),
@@ -96,16 +97,20 @@ namespace CW {
         void OnEvent(Event& event) override
         {
             EventDispatcher dispatcher(event);
-            dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed));
-            dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
-            dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
-
             if (dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon)))
                 return;
             if (dispatcher.Dispach<SetSimulationSettings>(CW_BUILD_EVENT_FUNC(OnSimSettings)))
                 return;
             if (dispatcher.Dispach<SwitchDebugMenu>(CW_BUILD_EVENT_FUNC(OnSwitchDebugMenu)))
                 return;
+            if (dispatcher.Dispach<SaveSimulation>(CW_BUILD_EVENT_FUNC(OnSaveSimulation)))
+                return;
+            if (dispatcher.Dispach<LoadSimulation>(CW_BUILD_EVENT_FUNC(OnLoadSimulation)))
+                return;
+            dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed));
+            dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
+            dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
+
             m_Camera.OnEvent(event);
             m_Drones.OnEvent(event);
         }
@@ -227,6 +232,7 @@ namespace CW {
 
         bool OnSimSettings(SetSimulationSettings& e)
         {
+            m_Settings = *e.Settings;
             m_Beacons.SetSettings(e.Settings->Beacons);
             m_Drones.SetSettings(e.Settings->Drones);
             m_Resources.SetSettings(e.Settings->Resources);
@@ -255,6 +261,116 @@ namespace CW {
             return true;
         }
         
+        bool OnSaveSimulation(SaveSimulation& e)
+        {
+            std::ofstream file(e.FilePath);
+            if (!file)
+            {
+                CW_ERROR("Unable to open file for saving!");
+                return true;
+            }
+
+            FullSimulationState state;
+            m_Drones.CollectState(state);
+            m_Beacons.CollectState(state);
+            m_Resources.CollectState(state);
+            state.GeneratedRange = m_GeneratedRange;
+            state.RecieverData = m_ResourceReciever.GetData();
+            state.Settings = m_Settings;
+
+            // reciever
+            file.write((const char*) &state.RecieverData, sizeof(RecieverData));
+
+            // terrain
+            file.write((const char*) &state.GeneratedRange, sizeof(sf::Vector2f));
+
+            // settings
+            file.write((const char*) &state.Settings, sizeof(SimulationSettings));
+
+
+            size_t size = state.Drones.size();
+            // drones
+            file.write((const char*) &size, sizeof(size_t));
+            file.write((const char*) state.Drones.data(), state.Drones.size() * sizeof(Drone));
+
+            // beacons
+            size = state.Beacons.size();
+            file.write((const char*) &size, sizeof(size_t));
+            file.write((const char*) state.Beacons.data(), state.Beacons.size() * sizeof(Beacon));
+
+            // resources
+            size = state.Resources.size();
+            file.write((const char*) &size, sizeof(size_t));
+            file.write((const char*) state.Resources.data(), state.Resources.size() * sizeof(Resource));
+
+
+            return true;
+        }
+
+        bool OnLoadSimulation(LoadSimulation& e)
+        {
+            std::ifstream file(e.FilePath);
+            if (!file)
+            {
+                CW_ERROR("Unable to open file for loading!");
+                return true;
+            }
+
+            FullSimulationState state;
+
+            // reciever
+            file.read((char*) &state.RecieverData, sizeof(RecieverData));
+
+            // terrain
+            file.read((char*) &state.GeneratedRange, sizeof(sf::Vector2f));
+            
+            // settings
+            file.read((char*) &state.Settings, sizeof(SimulationSettings));
+
+            size_t size = 0;
+
+            // drones
+            file.read((char*) &size, sizeof(size_t));
+            Drone drone;
+            for (size_t i = 0; i < size; ++i)
+            {
+                file.read((char*) &drone, sizeof(Drone));
+                state.Drones.push_back(drone);
+            }
+
+            // beacons
+            file.read((char*) &size, sizeof(size_t));
+            Beacon beacon;
+            for (size_t i = 0; i < size; ++i)
+            {
+                file.read((char*) &beacon, sizeof(Beacon));
+                state.Beacons.push_back(beacon);
+            }
+            
+            // resources
+            file.read((char*) &size, sizeof(size_t));
+            Resource resource;
+            for (size_t i = 0; i < size; ++i)
+            {
+                file.read((char*) &resource, sizeof(Resource));
+                state.Resources.push_back(resource);
+            }
+
+            // TODO: не работает
+
+            // apply
+            m_Settings = state.Settings;
+            m_Drones.SetState(state);
+            m_Beacons.SetState(state);
+            m_Resources.SetState(state);
+            m_ResourceReciever.SetData(state.RecieverData);
+            m_Terrain.SetSettings(state.Settings.Terrain);
+            m_GeneratedRange = state.GeneratedRange;
+            GenerateChunkRange(m_GeneratedRange.x, m_GeneratedRange.y);
+
+            return true;
+        }
+
         void UpdateInterface() 
         {
             ImGui::Begin("Debug");
@@ -463,6 +579,8 @@ namespace CW {
     private:
         Camera2D m_Camera;
         bool m_Hold = false;
+
+        SimulationSettings m_Settings;
 
         BeaconManager m_Beacons;
         DroneManager m_Drones;
@@ -806,7 +924,6 @@ namespace CW {
 
         void Init() override
         {
-            PushLayer<InterfaceLayer>((sf::Vector2f) GetWindowSize());
             PushLayer<MainMenuLayer>((sf::Vector2f) GetWindowSize());
         }
 
@@ -814,7 +931,9 @@ namespace CW {
         {
             CW_PROFILE_FUNCTION();
             if (m_DebugIsOpen)
-                UpdateInterface();
+                UpdateDebugInterface();
+            if (m_MenuIsOpen)
+                UpdateMenuInterface();
             UpdateLayers(deltaTime);
         }
 
@@ -836,6 +955,8 @@ namespace CW {
             if (dispatcher.Dispach<StartSimulation>(CW_BUILD_EVENT_FUNC(OnStartSimulation)))
                 return;
             if (dispatcher.Dispach<SwitchDebugMenu>(CW_BUILD_EVENT_FUNC(OnSwitchDebugMenu)))
+                return;
+            if (dispatcher.Dispach<SwitchMenu>(CW_BUILD_EVENT_FUNC(OnSwitchMenu)))
                 return;
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
             OnEventLayers(event);
@@ -865,7 +986,8 @@ namespace CW {
 
         bool OnStartSimulation(StartSimulation& e)
         {
-            InsertLayer<SimulationLayer>(0, static_cast<sf::Vector2f>(GetWindowSize()), *e.Settings);
+            PushLayer<SimulationLayer>(static_cast<sf::Vector2f>(GetWindowSize()), *e.Settings);
+            PushLayer<InterfaceLayer>((sf::Vector2f)GetWindowSize());
             m_ClearColor = sf::Color(135, 206, 235, 255);
             m_DebugIsOpen = false;
             return true;
@@ -877,7 +999,13 @@ namespace CW {
             return true;
         }
 
-        void UpdateInterface()
+        bool OnSwitchMenu(SwitchMenu&)
+        {
+            m_MenuIsOpen = !m_MenuIsOpen;
+            return true;
+        }
+
+        void UpdateDebugInterface()
         {
             ImGui::Begin("Debug");
             if (ImGui::CollapsingHeader("App-statistics"))
@@ -897,7 +1025,25 @@ namespace CW {
             ImGui::End();
         }
 
+        void UpdateMenuInterface()
+        {
+            ImGui::Begin("Menu");
+            ImGui::InputText("Path", m_FilePathBuff, sizeof(m_FilePathBuff) / sizeof(*m_FilePathBuff));
+            if (ImGui::Button("Save"))
+            {
+                UserEventHandler::Get().SendEvent(SaveSimulation{m_FilePathBuff});
+            }
+            if (ImGui::Button("Load"))
+            {
+                UserEventHandler::Get().SendEvent(LoadSimulation{ m_FilePathBuff });
+            }
+            ImGui::End();
+        }
+
     private:
+        char m_FilePathBuff[256] = "";
+
+        bool m_MenuIsOpen = false;
         bool m_DebugIsOpen = false;
     };
 

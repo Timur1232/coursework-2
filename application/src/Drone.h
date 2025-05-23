@@ -16,7 +16,6 @@
 #include "Resource.h"
 #include "Terrain.h"
 #include "DroneSettings.h"
-#include "SimState.h"
 
 namespace CW {
 
@@ -24,7 +23,10 @@ namespace CW {
 		: public Object
 	{
 	public:
+		Drone() = default;
 		Drone(sf::Vector2f position, sf::Angle directionAngle = sf::Angle::Zero, TargetType target = TargetType::Recource);
+
+		void ResetTarget() { m_TargetResourceIndex = {}; }
 
 		[[nodiscard]] sf::Angle GetDirection() const { return m_DirectionAngle; }
 		[[nodiscard]] sf::Angle GetAttraction() const { return m_AttractionAngle; }
@@ -50,7 +52,7 @@ namespace CW {
 
 	private:
 		sf::Angle m_DirectionAngle = sf::Angle::Zero;
-		sf::Angle m_AttractionAngle;
+		sf::Angle m_AttractionAngle = sf::Angle::Zero;
 
 		TargetType m_TargetType = TargetType::Recource;
 		std::optional<size_t> m_TargetResourceIndex{};
@@ -61,6 +63,9 @@ namespace CW {
 	};
 
 
+	struct SimulationState;
+	struct FullSimulationState;
+
 	class DroneManager
 		: public IOnEvent
 	{
@@ -68,7 +73,10 @@ namespace CW {
 		DroneManager();
 		DroneManager(const DroneSettings& settings);
 
-		void CollectState(SimulationState& state);
+		void SetState(FullSimulationState& state);
+
+		void CollectState(SimulationState& state) const;
+		void CollectState(FullSimulationState& state) const;
 
 		void SetSettings(const DroneSettings& settings);
 

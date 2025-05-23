@@ -8,7 +8,6 @@
 
 #include "Terrain.h"
 #include "ResourcesSettings.h"
-#include "SimState.h"
 
 namespace CW {
 
@@ -16,6 +15,7 @@ namespace CW {
 		: public Object
 	{
 	public:
+		Resource() = default;
 		Resource(sf::Vector2f position, int amount = 10);
 
 		inline int GetResources() const { return m_Amount; }
@@ -30,13 +30,19 @@ namespace CW {
 	};
 
 
+	struct SimulationState;
+	struct FullSimulationState;
+
 	class ResourceManager
 	{
 	public:
 		ResourceManager() = default;
 		ResourceManager(const ResourcesSettings& settings);
+		
+		void SetState(FullSimulationState& state);
 
-		void CollectState(SimulationState& state);
+		void CollectState(SimulationState& state) const;
+		void CollectState(FullSimulationState& state) const;
 
 		void SetSettings(const ResourcesSettings& settings);
 

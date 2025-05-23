@@ -6,10 +6,12 @@
 #include "BitDirection.h"
 #include "engine/Renderer.h"
 
+#include "SimState.h"
+
 namespace CW {
 
-	Beacon::Beacon(sf::Vector2f position, TargetType type, uint8_t bitDirection)
-		: Object(position), m_Type(type), m_BitDirection(bitDirection)
+	Beacon::Beacon(sf::Vector2f position, TargetType type, uint8_t bitDirection, float charge)
+		: Object(position), m_Type(type), m_BitDirection(bitDirection), m_Charge(charge)
 	{
 	}
 
@@ -39,12 +41,13 @@ namespace CW {
 		}
 	}
 
-	void Beacon::Revive(sf::Vector2f newPosition, TargetType newType, uint8_t bitDirection)
+	void Beacon::Revive(sf::Vector2f newPosition, TargetType newType, uint8_t bitDirection, float charge)
 	{
 		m_Charge = 1.0f;
 		m_Position = newPosition;
 		m_Type = newType;
 		m_Alive = true;
+		m_Charge = charge;
 		m_BitDirection = bitDirection;
 	}
 
@@ -91,7 +94,17 @@ namespace CW {
 		m_BeaconSettings = settings;
 	}
 
-	void BeaconManager::CollectState(SimulationState& state)
+	void BeaconManager::SetState(FullSimulationState& state)
+	{
+		Clear();
+		m_BeaconSettings = state.Settings.Beacons;
+		for (const auto& beacon : state.Beacons)
+		{
+			CreateBeacon(beacon.GetPos(), beacon.GetType(), beacon.GetBitDirection(), beacon.GetCharge());
+		}
+	}
+
+	void BeaconManager::CollectState(SimulationState& state) const
 	{
 		for (const auto& beacon : m_Beacons)
 		{
@@ -99,6 +112,13 @@ namespace CW {
 			state.BeaconsTypes.push_back(beacon->GetType());
 			state.BeaconsCharges.push_back(beacon->GetCharge());
 		}
+	}
+
+	void BeaconManager::CollectState(FullSimulationState& state) const
+	{
+		for (const auto& beacon : m_Beacons)
+			if (beacon->IsAlive())
+				state.Beacons.push_back(beacon.Object);
 	}
 
 	void BeaconManager::SetSettings(const BeaconSettings& settings)
@@ -141,21 +161,18 @@ namespace CW {
 				circleBuilder.Position(beacon->GetPos())
 					.Color(beacon->BeaconColor())
 					.Draw();
-				/*m_Mesh.setPosition(beacon->GetPos());
-				m_Mesh.setFillColor(beacon->BeaconColor());
-				render.draw(m_Mesh);*/
 			}
 		}
 		circleBuilder.SetDefault();
 	}
 
-	void BeaconManager::CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection)
+	void BeaconManager::CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection, float charge)
 	{
 		CW_PROFILE_FUNCTION();
 		if (m_DeadBeacons)
 		{
 			IndexedBeacon& beacon = m_Beacons[m_Beacons.size() - m_DeadBeacons];
-			beacon->Revive(position, type, bitDirection);
+			beacon->Revive(position, type, bitDirection, charge);
 			m_Chunks.AddObject(beacon);
 			--m_DeadBeacons;
 		}
@@ -169,7 +186,7 @@ namespace CW {
 					m_Chunks.ForgetObject(beacon);
 				}
 			}
-			m_Beacons.emplace_back(position, type, bitDirection);
+			m_Beacons.emplace_back(position, type, bitDirection, charge);
 			if (realloc)
 			{
 				for (size_t i = 0; i < m_Beacons.size() - 1; ++i)

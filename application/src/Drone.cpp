@@ -10,6 +10,7 @@
 #include "debug_utils/Log.h"
 
 #include "BitDirection.h"
+#include "SimState.h"
 
 namespace CW {
 
@@ -293,13 +294,28 @@ namespace CW {
         SetSettings(settings);
     }
 
-    void DroneManager::CollectState(SimulationState& state)
+    void DroneManager::SetState(FullSimulationState& state)
+    {
+        m_DroneSettings = state.Settings.Drones;
+        m_Drones = std::move(state.Drones);
+        for (auto& drone : m_Drones)
+        {
+            drone.ResetTarget();
+        }
+    }
+
+    void DroneManager::CollectState(SimulationState& state) const
     {
         for (const auto& drone : m_Drones)
         {
             state.DronesPositions.push_back(drone.GetPos());
             state.DronesDirections.push_back(drone.GetDirection());
         }
+    }
+
+    void DroneManager::CollectState(FullSimulationState& state) const
+    {
+        state.Drones = m_Drones;
     }
 
     void DroneManager::SetSettings(const DroneSettings& settings)

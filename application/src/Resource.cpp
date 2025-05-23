@@ -4,6 +4,7 @@
 #include "debug_utils/Log.h"
 #include "engine/Renderer.h"
 #include "utils/utils.h"
+#include "SimState.h"
 
 namespace CW {
 
@@ -34,13 +35,26 @@ namespace CW {
 	{
 	}
 
-	void ResourceManager::CollectState(SimulationState& state)
+	void ResourceManager::SetState(FullSimulationState& state)
+	{
+		m_Settings = state.Settings.Resources;
+		m_Resources = std::move(state.Resources);
+	}
+
+	void ResourceManager::CollectState(SimulationState& state) const
 	{
 		for (const auto& resource : m_Resources)
 		{
 			state.ResourcesPositions.push_back(resource.GetPos());
 			state.ResourcesAmounts.push_back(resource.GetResources());
 		}
+	}
+
+	void ResourceManager::CollectState(FullSimulationState& state) const
+	{
+		for (const auto& resource : m_Resources)
+			if (!resource.IsCarried())
+				state.Resources.push_back(resource);
 	}
 
 	void ResourceManager::SetSettings(const ResourcesSettings& settings)

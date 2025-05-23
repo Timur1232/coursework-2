@@ -89,4 +89,24 @@ namespace CW {
 		CW_BULD_EVENT_TYPE(SwitchDebugMenu)
 	};
 
+	class SaveSimulation
+		: public Event
+	{
+	public:
+		const char* FilePath;
+
+		SaveSimulation(const char* path) : FilePath(path) {}
+		CW_BULD_EVENT_TYPE(SaveSimulation)
+	};
+
+	class LoadSimulation
+		: public Event
+	{
+	public:
+		const char* FilePath;
+
+		LoadSimulation(const char* path) : FilePath(path) {}
+		CW_BULD_EVENT_TYPE(LoadSimulation)
+	};
+
 } // CW
