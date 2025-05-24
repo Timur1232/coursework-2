@@ -109,4 +109,14 @@ namespace CW {
 		CW_BULD_EVENT_TYPE(LoadSimulation)
 	};
 
+	class SwitchThread
+		: public Event
+	{
+	public:
+		int TargetUps;
+
+		SwitchThread(int targetUPS) : TargetUps(targetUPS) {}
+		CW_BULD_EVENT_TYPE(SwitchThread)
+	};
+
 } // CW

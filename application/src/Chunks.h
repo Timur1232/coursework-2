@@ -116,8 +116,13 @@ namespace CW {
 		void ForgetObject(Indexed<T>& object)
 		{
 			size_t index = object.Index;
+			if (index >= m_Objects.size())
+			{
+				CW_ERROR("Non-valid object index in chunk! index: {}, size: {}", index, m_Objects.size());
+				return;
+			}
 			m_Objects[index] = nullptr;
-			if (m_Objects.size() - m_DeadPtrs > 2 && index != m_Objects.size() - m_DeadPtrs - 1)
+			if (((m_Objects.size() - m_DeadPtrs) > 2) && (index != (m_Objects.size() - m_DeadPtrs - 1)))
 			{
 				std::swap(m_Objects[index], m_Objects[m_Objects.size() - m_DeadPtrs - 1]);
 				m_Objects[index]->Index = index;

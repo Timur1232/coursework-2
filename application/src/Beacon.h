@@ -14,6 +14,8 @@
 
 namespace CW {
 
+	[[nodiscard]] sf::Color beacon_color(TargetType type, float charge);
+
 	class Beacon
 		: public Object
 	{
@@ -36,8 +38,6 @@ namespace CW {
 		[[nodiscard]] TargetType GetType() const { return m_Type; }
 		[[nodiscard]] uint8_t GetBitDirection() const { return m_BitDirection; }
 		[[nodiscard]] sf::Angle GetDirectionAngle() const;
-
-		[[nodiscard]] sf::Color BeaconColor() const;
 
 	private:
 		TargetType m_Type = TargetType::None;

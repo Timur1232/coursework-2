@@ -12,6 +12,7 @@ namespace CW {
 
         void Wait() const;
         void SetUPS(size_t ups);
+        void Reset();
 
     private:
         std::chrono::microseconds m_LimitTime;

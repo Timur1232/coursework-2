@@ -69,6 +69,9 @@
     <ClCompile Include="src\engine\Button.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\UPSLimiter.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\debug_utils\LineShape.h">
@@ -186,6 +189,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="src\SimState.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\UPSLimiter.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

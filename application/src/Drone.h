@@ -19,6 +19,8 @@
 
 namespace CW {
 
+	using BeaconComponents = std::tuple<sf::Vector2f, TargetType, u8>;
+
 	class Drone
 		: public Object
 	{
@@ -41,7 +43,7 @@ namespace CW {
 		void SetDirection(sf::Angle angle) { m_DirectionAngle = angle; }
 		void SetAttraction(sf::Angle angle) { m_AttractionAngle = angle; }
 
-		void Update(float deltaTime, const DroneSettings& settings, std::vector<Resource>& resources);
+		bool Update(float deltaTime, const DroneSettings& settings, std::vector<Resource>& resources, BeaconComponents& components);
 
 		void ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec, float FOV, sf::Vector2f viewDistance);
 		[[nodiscard]] bool ReactToResourceReciver(ResourceReciever& reciever, float wanderCooldownSec);
@@ -71,7 +73,7 @@ namespace CW {
 	struct FullSimulationState;
 
 	class DroneManager
-		: public IOnEvent
+		//: public IOnEvent
 	{
 	public:
 		DroneManager();
@@ -86,16 +88,16 @@ namespace CW {
 
 		void SetSettings(const DroneSettings& settings);
 
-		void UpdateAllDrones(
+		std::vector<BeaconComponents> UpdateAllDrones(
 			float deltaTime,
 			std::vector<Resource>& resources,
 			const ChunkHandler<Beacon>& beacons,
 			ResourceReciever& reciever,
-			const Terrain& terrain);
+			const TerrainGenerator& terrain);
 
-		void DrawAllDrones();
+		//void DrawAllDrones();
 
-		void OnEvent(Event& event) override;
+		//void OnEvent(Event& event) override;
 
 		void Clear();
 		void Reset(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource);
@@ -113,7 +115,7 @@ namespace CW {
 		sf::Vector2f GetFurthestHorizontalReach() const { return m_FurthestHorizontalReach; }
 
 	private:
-		bool OnSpawnDrone(SpawnDrone& e);
+		//bool OnSpawnDrone(SpawnDrone& e);
 		// Debug
 		inline void debugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const;
 		inline void debugDrawViewDistance(sf::Vector2f position, sf::Angle directionAngle) const;
@@ -122,9 +124,6 @@ namespace CW {
 		std::vector<Drone> m_Drones;
 		DroneSettings m_DroneSettings;
 		sf::Vector2f m_FurthestHorizontalReach;
-
-		Unique<sf::Sprite> m_Sprite;
-		Unique<sf::Texture> m_Texture;
 
 		float m_FOVRadPrecalc;
 

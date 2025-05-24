@@ -87,9 +87,11 @@ namespace CW {
         m_TargetType = static_cast<TargetType>(typeInt);
     }
 
-    void Drone::Update(float deltaTime, const DroneSettings& settings, std::vector<Resource>& resources)
+    bool Drone::Update(float deltaTime, const DroneSettings& settings, std::vector<Resource>& resources, BeaconComponents& components)
     {
         CW_PROFILE_FUNCTION();
+        bool beaconSpawn = false;
+
         turn(deltaTime, sf::radians(settings.TurningSpeed), sf::radians(settings.MaxTurningDeltaRad));
         m_Position += ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle) * settings.Speed * deltaTime;
 
@@ -108,9 +110,12 @@ namespace CW {
         m_BeaconTimerSec -= deltaTime;
         if (m_BeaconTimerSec <= 0)
         {
-            UserEventHandler::Get()
+            beaconSpawn = true;
+            components = { m_Position, opposite_target_type(m_TargetType),
+                    angle_to_bit_direction((m_DirectionAngle + sf::degrees(180.0f)).wrapSigned()) };
+            /*UserEventHandler::Get()
                 .SendEvent(CreateBeacon{ m_Position, opposite_target_type(m_TargetType),
-                    angle_to_bit_direction((m_DirectionAngle + sf::degrees(180.0f)).wrapSigned()) });
+                    angle_to_bit_direction((m_DirectionAngle + sf::degrees(180.0f)).wrapSigned()) });*/
             m_BeaconTimerSec = settings.BeaconCooldownSec;
         }
 
@@ -130,6 +135,8 @@ namespace CW {
             resources.at(*m_TargetResourceIndex).Pickup();
             m_TargetResourceIndex = {};
         }
+
+        return beaconSpawn;
     }
 
     void Drone::ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec, float FOV, sf::Vector2f viewDistance)
@@ -315,12 +322,13 @@ namespace CW {
         return { furthestBeacon, furthestDistSq };
     }
 
+    //======================================[DroneManager]======================================//
 
     DroneManager::DroneManager()
     {
-        m_Texture = CreateUnique<sf::Texture>("res/sprites/drone_sprite.png");
+        /*m_Texture = CreateUnique<sf::Texture>("res/sprites/drone_sprite.png");
         m_Sprite = CreateUnique<sf::Sprite>(*m_Texture);
-        m_Sprite->setOrigin(static_cast<sf::Vector2f>(m_Texture->getSize()) / 2.0f);
+        m_Sprite->setOrigin(static_cast<sf::Vector2f>(m_Texture->getSize()) / 2.0f);*/
         SetSettings(m_DroneSettings);
     }
 
@@ -360,16 +368,21 @@ namespace CW {
         m_FOVRadPrecalc = std::acos(settings.FOV);
     }
 
-    void DroneManager::UpdateAllDrones(
+    std::vector<BeaconComponents> DroneManager::UpdateAllDrones(
         float deltaTime,
         std::vector<Resource>& resources,
         const ChunkHandler<Beacon>& beacons,
         ResourceReciever& reciever,
-        const Terrain& terrain)
+        const TerrainGenerator& terrain)
     {
+        BeaconComponents components;
+        std::vector<BeaconComponents> componentsVec;
         for (auto& drone : m_Drones)
         {
-            drone.Update(deltaTime, m_DroneSettings, resources);
+            if (drone.Update(deltaTime, m_DroneSettings, resources, components))
+            {
+                componentsVec.emplace_back(components);
+            }
 
             // Подсчет максимальной достигнутой горизонтальной позиции
             if (drone.GetPos().x < m_FurthestHorizontalReach.x)
@@ -388,9 +401,10 @@ namespace CW {
             if (!drone.ReactToResourceReciver(reciever, m_DroneSettings.WanderCooldownSec))
                 drone.ReactToBeacons(beacons, m_DroneSettings.WanderCooldownSec, m_DroneSettings.FOV, m_DroneSettings.ViewDistance);
         }
+        return componentsVec;
     }
 
-    void DroneManager::DrawAllDrones()
+    /*void DroneManager::DrawAllDrones()
     {
         for (auto& drone : m_Drones)
         {
@@ -409,13 +423,13 @@ namespace CW {
             m_Sprite->setRotation(drone.GetDirection());
             Renderer::Get().Draw(*m_Sprite);
         }
-    }
+    }*/
 
-    void DroneManager::OnEvent(Event& event)
+    /*void DroneManager::OnEvent(Event& event)
     {
         EventDispatcher dispatcher(event);
         dispatcher.Dispach<SpawnDrone>(CW_BUILD_EVENT_FUNC(OnSpawnDrone));
-    }
+    }*/
 
     void DroneManager::Clear()
     {
@@ -436,6 +450,10 @@ namespace CW {
 
     void DroneManager::CreateDrone(sf::Vector2f position, sf::Angle directionAngle, TargetType target)
     {
+        if (m_Drones.size() == m_Drones.capacity())
+        {
+            CW_INFO("Drones realloc");
+        }
         m_Drones.emplace_back(position, directionAngle, target);
     }
 
@@ -502,12 +520,12 @@ namespace CW {
         m_DrawDirection = false;
     }
 
-    bool DroneManager::OnSpawnDrone(SpawnDrone& e)
+    /*bool DroneManager::OnSpawnDrone(SpawnDrone& e)
     {
         sf::Angle randAngle = sf::degrees(lerp(0.0f, 180.0f, rand_float()));
         CreateDrone(e.Position, randAngle);
         return true;
-    }
+    }*/
 
     inline void DroneManager::debugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const
     {

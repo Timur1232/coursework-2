@@ -79,28 +79,6 @@ namespace CW {
 		return DIRECTION_ANGLE_TABLE.at(m_BitDirection);
 	}
 
-	sf::Color Beacon::BeaconColor() const
-	{
-		sf::Color color;
-		switch (m_Type)
-		{
-		case TargetType::Navigation:	color = sf::Color::White; break;
-		case TargetType::Recource:		color = sf::Color::Green; break;
-		default:						color = sf::Color::Red; break;
-		}
-
-		if (m_Alive)
-		{
-			color.a = (uint8_t)(m_Charge * 255);
-		}
-		else
-		{
-			color.a = 0;
-		}
-
-		return color;
-	}
-
 
 	BeaconManager::BeaconManager()
 	{
@@ -178,7 +156,7 @@ namespace CW {
 			if (beacon->IsAlive())
 			{
 				circleBuilder.Position(beacon->GetPos())
-					.Color(beacon->BeaconColor())
+					.Color(beacon_color(beacon->GetType(), beacon->GetCharge()))
 					.Draw();
 			}
 		}
@@ -204,6 +182,7 @@ namespace CW {
 				{
 					m_Chunks.ForgetObject(beacon);
 				}
+				CW_INFO("Beacon buffer realloc");
 			}
 			m_Beacons.emplace_back(position, type, bitDirection, charge);
 			if (realloc)
@@ -236,6 +215,19 @@ namespace CW {
 			++index;
 		}
 		ImGui::End();
+	}
+
+	sf::Color beacon_color(TargetType type, float charge)
+	{
+		sf::Color color;
+		switch (type)
+		{
+		case TargetType::Navigation:	color = sf::Color::White; break;
+		case TargetType::Recource:		color = sf::Color::Green; break;
+		default:						color = sf::Color::Red; break;
+		}
+		color.a = (uint8_t) (charge * 255);
+		return color;
 	}
 
 } // CW

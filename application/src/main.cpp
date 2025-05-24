@@ -7,6 +7,7 @@
 #include "engine/Renderer.h"
 #include "engine/Events/UserEventHandler.h"
 #include "engine/Button.h"
+#include "engine/UPSLimiter.h"
 
 #include "debug_utils/Log.h"
 #include "debug_utils/Profiler.h"
@@ -33,30 +34,52 @@ namespace CW {
         : public Layer
     {
     public:
-        SimulationLayer(sf::Vector2f windowSize, const SimulationSettings& settings)
+        SimulationLayer(sf::Vector2f windowSize, const SimulationSettings& settings, FullSimulationState* state = nullptr)
             : m_Camera(0, 0, windowSize.x, windowSize.y),
               m_Settings(settings),
               m_Drones(settings.Drones),
               m_Beacons(settings.Beacons),
               m_Resources(settings.Resources),
-              m_Terrain(settings.Terrain),
+              m_Terrain(settings.TerrainGenerator),
               m_ResourceReciever(settings.Drones)
         {
+            m_DroneTexture = CreateUnique<sf::Texture>("res/sprites/drone_sprite.png");
+            m_DroneSprite = CreateUnique<sf::Sprite>(*m_DroneTexture);
+            m_DroneSprite->setOrigin(static_cast<sf::Vector2f>(m_DroneTexture->getSize()) / 2.0f);
+            if (state)
+            {
+                m_Settings = state->Settings;
+                m_Drones.SetState(*state);
+                m_Beacons.SetState(*state);
+                m_Resources.SetState(*state);
+                m_ResourceReciever.SetData(state->RecieverData);
+                m_Terrain.SetSettings(state->Settings.TerrainGenerator);
+                m_GeneratedRange = state->GeneratedRange;
+            }
             Init(windowSize);
-            StartSim(settings.DronesCount, { settings.StartingHorizontalPosition, 0.0f });
+            if (!state)
+                InitNewSim(settings.DronesCount, { settings.StartingHorizontalPosition, 0.0f });
         }
 
-        SimulationLayer(FullSimulationState& state, sf::Vector2f windowSize)
-            : m_Camera(0, 0, windowSize.x, windowSize.y)
+        ~SimulationLayer()
         {
-            m_Settings = state.Settings;
-            m_Drones.SetState(state);
-            m_Beacons.SetState(state);
-            m_Resources.SetState(state);
-            m_ResourceReciever.SetData(state.RecieverData);
-            m_Terrain.SetSettings(state.Settings.Terrain);
-            m_GeneratedRange = state.GeneratedRange;
-            Init(windowSize);
+            if (!m_RunSingleThread)
+                SyncStopSimulationThread();
+        }
+
+        void SpawnSimulationThread()
+        {
+            m_SimulationThread = std::thread(
+                [this] {
+                    this->SimulationCycle();
+                });
+        }
+
+        void SyncStopSimulationThread()
+        {
+            m_SimulationStopRequest = true;
+            m_SimulationThread.join();
+            m_SimulationStopRequest = false;
         }
 
         void Init(const sf::Vector2f& windowSize)
@@ -83,6 +106,9 @@ namespace CW {
             }
 
             GenerateChunkRange(m_GeneratedRange.x, m_GeneratedRange.y);
+            GenerateMeshes(m_Terrain.GetTerrain(), m_GeneratedRange);
+            m_LeftGeneratedSections.x = m_LeftGeneratedSections.y = m_GeneratedRange.x;
+            m_RightGeneratedSections.x = m_RightGeneratedSections.y = m_GeneratedRange.y;
 
             m_WaterShader.setUniform("uResolution", windowSize);
             m_WaterShader.setUniform("uDeepDarkFactor", 3.5f);
@@ -95,49 +121,55 @@ namespace CW {
 
         void Update(float deltaTime) override
         {
-            GenerateChunksInCameraView();
-            GenerateChunksForDrones();
-
-            /*if (m_DebugIsOpen)
-                UpdateInterface();*/
-            
-            m_ResourceReciever.Update(deltaTime);
-
-            {
-                CW_PROFILE_SCOPE("beacons update");
-                m_Beacons.Update(deltaTime);
-            }
-            {
-                CW_PROFILE_SCOPE("drones update");
-                m_Drones.UpdateAllDrones(deltaTime, m_Resources.GetResources(), m_Beacons.GetChuncks(), m_ResourceReciever, m_Terrain);
-            }
-            m_ElapsedTime += deltaTime;
+            if (m_RunSingleThread)
+                OneIteration(deltaTime);
         }
 
         void OnEvent(Event& event) override
         {
             EventDispatcher dispatcher(event);
-            if (dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon)))
-                return;
+            /*if (dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon)))
+                return;*/
             if (dispatcher.Dispach<SetSimulationSettings>(CW_BUILD_EVENT_FUNC(OnSimSettings)))
                 return;
-            /*if (dispatcher.Dispach<SwitchDebugMenu>(CW_BUILD_EVENT_FUNC(OnSwitchDebugMenu)))
-                return;*/
             if (dispatcher.Dispach<SaveSimulation>(CW_BUILD_EVENT_FUNC(OnSaveSimulation)))
+                return;
+            if (dispatcher.Dispach<SwitchThread>(CW_BUILD_EVENT_FUNC(OnSwitchThread)))
                 return;
             dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed));
             dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
 
             m_Camera.OnEvent(event);
-            m_Drones.OnEvent(event);
+            //m_Drones.OnEvent(event);
         }
 
         void Draw() override
         {
+            return;
+            m_RenderState.Clear();
+
+            // синхронизация для копирования состояния
+            if (!m_RunSingleThread)
+                SyncStopSimulationThread();
+
+            GenerateChunksInCameraView();
+
+            CollectState(m_RenderState);
+            sf::Vector2i leftGen = m_LeftGeneratedSections;
+            sf::Vector2i rightGen = m_RightGeneratedSections;
+            m_LeftGeneratedSections.y = m_LeftGeneratedSections.x;
+            m_RightGeneratedSections.x = m_RightGeneratedSections.y;
+
+            float elapsedTime = m_ElapsedTime;
+
+            if (!m_RunSingleThread)
+                SpawnSimulationThread();
+
+
             m_WaterShader.setUniform("uCameraPosition", m_Camera.GetView().getCenter());
             m_WaterShader.setUniform("uZoomFactor", m_Camera.GetZoomFactor());
-            m_WaterShader.setUniform("uTime", m_ElapsedTime);
+            m_WaterShader.setUniform("uTime", elapsedTime);
 
             m_DarkeningShader.setUniform("uZoomFactor", m_Camera.GetZoomFactor());
             m_DarkeningShader.setUniform("uCameraPosition", m_Camera.GetView().getCenter());
@@ -152,7 +184,7 @@ namespace CW {
                 .Draw();
             renderer.SetView(m_Camera.GetView());
 
-            if (m_DrawChunks)
+            /*if (m_DrawChunks)
             {
                 auto& chunkMeshBuilder = renderer.BeginRectangleShape();
                 chunkMeshBuilder.Size({ 500.0f, 500.0f })
@@ -166,27 +198,95 @@ namespace CW {
                         .Draw();
                 }
                 chunkMeshBuilder.SetDefault();
+            }*/
+
+            
+
+            //m_ResourceReciever.Draw();
+            auto& circleBuilder = Renderer::Get().BeginCircleShape();
+            // body
+            circleBuilder.DefaultAfterDraw()
+                .Radius(100.0f)
+                .Position(m_RenderState.ResieverPosition)
+                .Color(sf::Color::Magenta)
+                .Draw();
+            // recieve radius
+            //circleBuilder.DefaultAfterDraw()
+            //    .Radius(m_RenderState.Re)
+            //    .Position(m_RenderState.ResieverPosition)
+            //    .Color(sf::Color::Transparent)
+            //    .OutlineThickness(1.0f)
+            //    .OutlineColor(sf::Color::Green)
+            //    .Draw();
+            //// broadcast radius
+            //circleBuilder.DefaultAfterDraw()
+            //    .Radius(m_BroadcastRadius)
+            //    .Position(m_Position)
+            //    .Color(sf::Color::Transparent)
+            //    .OutlineThickness(1.0f)
+            //    .OutlineColor(sf::Color::Red)
+            //    .Draw();
+
+            //m_Resources.DrawAllRecources();
+            for (size_t i = 0; i < m_RenderState.ResourcesPositions.size(); ++i)
+            {
+                Renderer::Get().BeginCircleShape()
+                    .DefaultAfterDraw()
+                    .Radius(20.0f)
+                    .Color(sf::Color::Cyan)
+                    .Position(m_RenderState.ResourcesPositions[i])
+                    .Draw();
             }
-
-            m_ResourceReciever.Draw();
-
-            m_Resources.DrawAllRecources();
 
             if (m_DrawBeacons)
             {
                 CW_PROFILE_SCOPE("beacons draw");
-                m_Beacons.DrawAllBeacons();
+                //m_Beacons.DrawAllBeacons();
+                auto& circleBuilder = Renderer::Get().BeginCircleShape();
+                circleBuilder.PointCount(4)
+                    .Radius(10.0f);
+                for (size_t i = 0; i < m_RenderState.BeaconsPositions.size(); ++i)
+                {
+                    circleBuilder.Position(m_RenderState.BeaconsPositions[i])
+                        .Color(beacon_color(m_RenderState.BeaconsTypes[i], m_RenderState.BeaconsCharges[i]))
+                        .Draw();
+                }
+                circleBuilder.SetDefault();
             }
 
             {
                 CW_PROFILE_SCOPE("drones draw");
-                m_Drones.DrawAllDrones();
-            }
+                //m_Drones.DrawAllDrones();
+                for (size_t i = 0; i < m_RenderState.DronesDirections.size(); ++i)
+                {
+                    /*debugDrawDirectionVisuals(drone.GetPos(), drone.GetDirection(), drone.GetAttraction());
+                    debugDrawViewDistance(drone.GetPos(), drone.GetDirection());*/
 
-            for (const auto& mesh : m_TerrainSectionMeshes)
+                    m_DroneSprite->setPosition(m_RenderState.DronesPositions[i]);
+                    if (abs(m_RenderState.DronesDirections[i].asRadians()) > angle::PI_2)
+                    {
+                        m_DroneSprite->setScale({ 1.0f, -1.0f });
+                    }
+                    else
+                    {
+                        m_DroneSprite->setScale({ 1.0f, 1.0f });
+                    }
+                    m_DroneSprite->setRotation(m_RenderState.DronesDirections[i]);
+                    Renderer::Get().Draw(*m_DroneSprite);
+                }
+            }
+          
             {
-                renderer.Draw(mesh);
-                renderer.Draw(mesh, &m_DarkeningShader);
+                CW_PROFILE_SCOPE("terrain draw");
+                // генерация нового меша
+                GenerateMeshes(m_RenderState.Terrain, leftGen);
+                GenerateMeshes(m_RenderState.Terrain, rightGen);
+                
+                for (const auto& mesh : m_TerrainSectionMeshes)
+                {
+                    renderer.Draw(mesh);
+                    renderer.Draw(mesh, &m_DarkeningShader);
+                }
             }
         }
 
@@ -197,6 +297,7 @@ namespace CW {
             m_Resources.CollectState(state);
             state.ResieverPosition = m_ResourceReciever.GetPos();
             state.ResourceCount = m_ResourceReciever.GetResources();
+            state.Terrain = m_Terrain.GetTerrain();
         }
 
         void CollectState(FullSimulationState& state)
@@ -210,9 +311,47 @@ namespace CW {
         }
 
     private:
+        void OneIteration(float deltaTime)
+        {
+            GenerateChunksForDrones();
+
+            if (m_ResourceReciever.Update(deltaTime))
+            {
+                // создание дрона
+                sf::Angle randAngle = sf::degrees(lerp(0.0f, 180.0f, rand_float()));
+                m_Drones.CreateDrone(m_ResourceReciever.GetPos(), randAngle);
+                CW_TRACE("Drone spawned: count {}", m_Drones.Size());
+            }
+
+            {
+                CW_PROFILE_SCOPE("beacons update");
+                m_Beacons.Update(deltaTime);
+            }
+            {
+                CW_PROFILE_SCOPE("drones update");
+                std::vector<BeaconComponents> componentsVec = m_Drones.UpdateAllDrones(deltaTime, m_Resources.GetResources(),
+                    m_Beacons.GetChuncks(), m_ResourceReciever, m_Terrain);
+                for (auto [pos, type, bitDir] : componentsVec)
+                {
+                    // создание маяков
+                    m_Beacons.CreateBeacon(pos, type, bitDir);
+                }
+            }
+            m_ElapsedTime += deltaTime;
+        }
+
+        void SimulationCycle()
+        {
+            while (!m_SimulationStopRequest)
+            {
+                OneIteration(c_FixedDeltaTime);
+                m_Limiter.Wait();
+            }
+        }
+
         bool OnMouseButtonPressed(MouseButtonPressed& e)
         {
-            if (!m_Hold && !ImGui::GetIO().WantCaptureMouse && e.Data.button == sf::Mouse::Button::Left)
+            /*if (!m_Hold && !ImGui::GetIO().WantCaptureMouse && e.Data.button == sf::Mouse::Button::Left)
             {
                 switch (m_ObjPallete.GetCurrentType())
                 {
@@ -235,7 +374,7 @@ namespace CW {
                 }
                 }
                 m_Hold = true;
-            }
+            }*/
             return false;
         }
 
@@ -251,11 +390,11 @@ namespace CW {
             return false;
         }
 
-        bool OnCreateBeacon(CreateBeacon& e)
+        /*bool OnCreateBeacon(CreateBeacon& e)
         {
             m_Beacons.CreateBeacon(e.Position, e.Type, e.BitDirection);
             return false;
-        }
+        }*/
 
         bool OnSimSettings(SetSimulationSettings& e)
         {
@@ -263,11 +402,11 @@ namespace CW {
             m_Beacons.SetSettings(e.Settings->Beacons);
             m_Drones.SetSettings(e.Settings->Drones);
             m_Resources.SetSettings(e.Settings->Resources);
-            m_Terrain.SetSettings(e.Settings->Terrain);
+            m_Terrain.SetSettings(e.Settings->TerrainGenerator);
             return true;
         }
 
-        void StartSim(size_t droneCount, sf::Vector2f startPosition)
+        void InitNewSim(size_t droneCount, sf::Vector2f startPosition)
         {
             m_Beacons.Clear();
             m_Drones.Reset(droneCount, startPosition, TargetType::Recource);
@@ -281,12 +420,6 @@ namespace CW {
             m_Resources.Clear();
             CW_TRACE("Restarting simulation with {} drones", droneCount);
         }
-
-        /*bool OnSwitchDebugMenu(SwitchDebugMenu&)
-        {
-            m_DebugIsOpen = !m_DebugIsOpen;
-            return true;
-        }*/
         
         bool OnSaveSimulation(SaveSimulation& e)
         {
@@ -298,7 +431,9 @@ namespace CW {
             }
 
             FullSimulationState state;
+            SyncStopSimulationThread();
             CollectState(state);
+            SpawnSimulationThread();
 
             // reciever
             file.write(reinterpret_cast<const char*>(&state.RecieverData), sizeof(state.RecieverData));
@@ -336,7 +471,24 @@ namespace CW {
             return true;
         }
 
-        void UpdateInterface() 
+        bool OnSwitchThread(SwitchThread& e)
+        {
+            if (m_RunSingleThread)
+            {
+                m_RunSingleThread = false;
+                m_Limiter.SetUPS(e.TargetUps);
+                m_Limiter.Reset();
+                SpawnSimulationThread();
+            }
+            else
+            {
+                m_RunSingleThread = true;
+                SyncStopSimulationThread();
+            }
+            return true;
+        }
+
+        /*void UpdateInterface() 
         {
             ImGui::Begin("Debug");
             if (ImGui::CollapsingHeader("Simulation-info"))
@@ -481,7 +633,7 @@ namespace CW {
 
             if (m_DronesInfo)
                 m_Drones.InfoInterface(&m_DronesInfo);
-        }
+        }*/
 
         void GenerateChunksInCameraView()
         {
@@ -498,12 +650,14 @@ namespace CW {
             if (leftBorderKey < m_GeneratedRange.x && cameraViewRect.contains({ leftBorderX, cameraViewRect.getCenter().y }))
             {
                 GenerateChunkRange(leftBorderKey, m_GeneratedRange.x);
+                m_LeftGeneratedSections.x = leftBorderKey;
                 m_GeneratedRange.x = leftBorderKey;
             }
             if (rightBorderKey >= m_GeneratedRange.y && cameraViewRect.contains({ rightBorderX, cameraViewRect.getCenter().y }))
             {
                 rightBorderKey += 1;
                 GenerateChunkRange(m_GeneratedRange.y, rightBorderKey);
+                m_RightGeneratedSections.y = rightBorderKey;
                 m_GeneratedRange.y = rightBorderKey;
             }
         }
@@ -514,12 +668,20 @@ namespace CW {
             {
                 if (!m_Terrain.Generate(key))
                     continue;
-                auto& mesh = m_TerrainSectionMeshes.emplace_back();
-                m_Terrain.GenerateMesh(mesh, key);
-                mesh.setTexture(&m_TerrainTexture);
-                mesh.setTextureRect({ {0, 0}, static_cast<sf::Vector2i>(mesh.getLocalBounds().size) });
-
+                //GenerateMesh(key);
                 m_Resources.GenerateResourceOnSection(m_Terrain, key);
+            }
+        }
+
+        void GenerateMeshes(const Terrain& terrain, sf::Vector2i range)
+        {
+            while (range.x < range.y)
+            {
+                auto& mesh = m_TerrainSectionMeshes.emplace_back();
+                generate_mesh(terrain, mesh, range.x);
+                mesh.setTexture(&m_TerrainTexture);
+                mesh.setTextureRect({ { 0, 0 }, static_cast<sf::Vector2i>(mesh.getLocalBounds().size) });
+                range.x += 1;
             }
         }
 
@@ -528,20 +690,40 @@ namespace CW {
             auto [leftBorderX, rightBorderX] = m_Drones.GetFurthestHorizontalReach();
             int leftBorderKey = m_Terrain.CalcSectionKeyPosition(leftBorderX - m_Terrain.GetSectionWidth());
             int rightBorderKey = m_Terrain.CalcSectionKeyPosition(rightBorderX + m_Terrain.GetSectionWidth());
+
             if (leftBorderKey < m_GeneratedRange.x)
             {
                 GenerateChunkRange(leftBorderKey, m_GeneratedRange.x);
+                m_LeftGeneratedSections.x = leftBorderKey;
                 m_GeneratedRange.x = leftBorderKey;
             }
             if (rightBorderKey >= m_GeneratedRange.y)
             {
                 rightBorderKey += 1;
                 GenerateChunkRange(m_GeneratedRange.y, rightBorderKey);
+                m_RightGeneratedSections.y = rightBorderKey;
                 m_GeneratedRange.y = rightBorderKey;
             }
+
+            //for (int key = genRangeLeft; key < genRangeRight; ++key)
+            //{
+            //    if (!m_Terrain.Generate(key))
+            //        continue;
+            //    //GenerateMesh(key);
+            //    m_Resources.GenerateResourceOnSection(m_Terrain, key);
+            //}
         }
 
     private:
+        std::thread m_SimulationThread;
+        const float c_FixedDeltaTime = 1.0f / 60.0f;
+        std::atomic<bool> m_SimulationStopRequest = false;
+
+        UPSLimiter m_Limiter{ 120 };
+        bool m_RunSingleThread = true;
+
+        SimulationState m_RenderState;
+
         Camera2D m_Camera;
         bool m_Hold = false;
 
@@ -552,8 +734,10 @@ namespace CW {
         ResourceManager m_Resources;
         ResourceReciever m_ResourceReciever;
 
-        Terrain m_Terrain;
+        TerrainGenerator m_Terrain;
         sf::Vector2i m_GeneratedRange{-5, 5};
+        sf::Vector2i m_LeftGeneratedSections{ 0, 0 };
+        sf::Vector2i m_RightGeneratedSections{ 0, 0 };
 
         std::vector<sf::ConvexShape> m_TerrainSectionMeshes;
         sf::Texture m_TerrainTexture;
@@ -563,9 +747,10 @@ namespace CW {
         sf::Shader m_WaterShader;
         sf::Shader m_DarkeningShader;
 
-        // Debug
-        //bool m_DebugIsOpen = false;
+        Unique<sf::Sprite> m_DroneSprite;
+        Unique<sf::Texture> m_DroneTexture;
 
+        // Debug
         bool m_BeaconsInfo = false;
         bool m_DronesInfo = false;
         bool m_DrawBeacons = true;
@@ -731,7 +916,7 @@ namespace CW {
             if (ImGui::CollapsingHeader("Terrain"))
             {
                 ImGui::Separator();
-                auto& terrain = m_SimSettings.Terrain;
+                auto& terrain = m_SimSettings.TerrainGenerator;
                 ImGui::InputFloat("Y offset (deepness)", &terrain.YOffset);
                 ImGui::InputInt("Samples per section", &terrain.SamplesPerSection);
                 ImGui::InputFloat("Section width", &terrain.SectionWidth);
@@ -1033,7 +1218,7 @@ namespace CW {
             std::ifstream file(e.FilePath, std::ios::binary);
             if (!file)
             {
-                CW_ERROR("Unable to open file for loading!");
+                CW_ERROR("Unable to open file for loading: {}", e.FilePath);
                 return true;
             }
 
@@ -1078,11 +1263,13 @@ namespace CW {
             }
 
             EraseLayer(0);
-            PushLayer<SimulationLayer>(state, (sf::Vector2f) GetWindowSize());
+            PushLayer<SimulationLayer>((sf::Vector2f) GetWindowSize(), state.Settings, &state);
             PushLayer<InterfaceLayer>((sf::Vector2f) GetWindowSize());
             m_ClearColor = sf::Color(135, 206, 235, 255);
             m_DebugIsOpen = false;
             m_CurrentFilePath = e.FilePath;
+
+            CW_TRACE("Simulation loaded successfully: {}", m_CurrentFilePath);
 
             return true;
         }
@@ -1103,6 +1290,15 @@ namespace CW {
                 ImGui::Text("render target view size: (%.2f, %.2f)", render.getView().getSize().x, render.getView().getSize().y);
                 ImGui::Text("render target view center: (%.2f, %.2f)", render.getView().getCenter().x, render.getView().getCenter().y);
                 ImGui::Spacing();
+            }
+            if (!m_VirtualTime)
+            {
+                ImGui::SliderInt("Traget UPS", &m_TargetUPS, 60, 1024);
+            }
+            if (ImGui::Button("Switch virtual time"))
+            {
+                m_VirtualTime = !m_VirtualTime;
+                UserEventHandler::Get().SendEvent(SwitchThread{ m_TargetUPS });
             }
             ImGui::End();
         }
@@ -1130,6 +1326,8 @@ namespace CW {
         bool m_MenuIsOpen = false;
         bool m_DebugIsOpen = false;
         bool m_ExitFlag = false;
+        bool m_VirtualTime = false;
+        int m_TargetUPS = 60;
         std::string m_CurrentFilePath = "";
     };
 

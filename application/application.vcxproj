@@ -102,6 +102,7 @@
     <ClCompile Include="src\engine\ProgramCore.cpp" />
     <ClCompile Include="src\engine\Events\UserEventHandler.cpp" />
     <ClCompile Include="src\engine\Renderer.cpp" />
+    <ClCompile Include="src\engine\UPSLimiter.cpp" />
     <ClCompile Include="src\ObjectPallete.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -140,6 +141,7 @@
     <ClInclude Include="src\engine\Object.h" />
     <ClInclude Include="src\engine\ProgramCore.h" />
     <ClInclude Include="src\engine\Renderer.h" />
+    <ClInclude Include="src\engine\UPSLimiter.h" />
     <ClInclude Include="src\SimState.h" />
     <ClInclude Include="src\SimulationSettings.h" />
     <ClInclude Include="src\engine\Types.h" />

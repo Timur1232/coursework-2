@@ -68,11 +68,45 @@ namespace CW {
 	};
 
 
-	class Terrain
+	struct Terrain
+	{
+		std::vector<TerrainSection> TerrainSections;
+		size_t SamplesPerSection = 15;
+		float SectionWidth = 1000.0f;
+		float YOffset = -3000.0f;
+
+		Terrain() = default;
+		size_t Size() const { return TerrainSections.size(); }
+		bool Generate(int keyPosition, const NoiseGenerator& gen,
+			float maxHeight, float mapNoiseDistance, float bellWidth, float bellHeight);
+		void RegenerateExisting(const NoiseGenerator& gen,
+			float maxHeight, float mapNoiseDistance, float bellWidth, float bellHeight);
+
+		std::vector<TerrainSection>::iterator GetSection(int keyPosition);
+		std::vector<TerrainSection>::const_iterator GetSection(int keyPosition) const;
+
+		float GetHeight(float x) const;
+
+		[[nodiscard]] bool IsNear(const Object& object, float distThreashold, int range = 3) const;
+
+		float CalcSectionStartPosition(int key) const;
+		[[nodiscard]] int CalcSectionKeyPosition(float xPos) const;
+
+		[[nodiscard]] sf::Vector2f SampleToWorldPosition(
+			const TerrainSection& section, size_t sampleIndex,
+			float sectionStartPosition, float sampleWidth) const;
+		[[nodiscard]] float CalcSampleWidth() const;
+		int CalcSignedSampleIndex(float xPos, int sectionKeyPosition, float sampleWidth) const;
+	};
+
+
+	class TerrainGenerator
 	{
 	public:
-		Terrain() = default;
-		Terrain(const TerrainGenerationSettings& settings);
+		TerrainGenerator() = default;
+		TerrainGenerator(const TerrainGenerationSettings& settings);
+
+		const Terrain& GetTerrain() const { return m_Terrain; }
 
 		void SetSettings(const TerrainGenerationSettings& settings);
 
@@ -84,17 +118,14 @@ namespace CW {
 
 		float GetHeight(float x) const;
 
-		void GenerateMesh(sf::ConvexShape& mesh, int keyPosition) const;
-		void GenerateAllMeshes(std::vector<sf::ConvexShape>& meshes) const;
-
-		void SetYOffset(float offset) { m_YOffset = offset; }
-		float GetYOffset() const { return m_YOffset; }
+		void SetYOffset(float offset) { m_Terrain.YOffset = offset; }
+		float GetYOffset() const { return m_Terrain.YOffset; }
 
 		void SetMaxHeight(float value) { m_MaxHeight = value; }
 		void SetMapedNoiseDistance(float value) { m_MapedNoiseDistance = value; }
 		void SetDetailedSeed(int seed) { m_NoiseGenerator.SetDetailedSeed(seed); }
-		void SetSamplesPerSection(size_t samplesCount) { m_SamplesPerSection = samplesCount; }
-		void SetSectionWidth(float sectionWidth) { m_SectionWidth = sectionWidth; }
+		void SetSamplesPerSection(size_t samplesCount) { m_Terrain.SamplesPerSection = samplesCount; }
+		void SetSectionWidth(float sectionWidth) { m_Terrain.SectionWidth = sectionWidth; }
 
 		void SetGain(float gain) { m_NoiseGenerator.SetGain(gain); }
 		void SetWeightedStrength(float strength) { m_NoiseGenerator.SetWeightedStrength(strength); }
@@ -104,10 +135,10 @@ namespace CW {
 		int GetDetailedSeed() const { return m_NoiseGenerator.GetDetailedSeed(); }
 		float GetMaxHeight() const { return m_MaxHeight; }
 		float GetMappedNoiseDistance() const { return m_MapedNoiseDistance; }
-		size_t GetSamplesPerSection() const { return m_SamplesPerSection; }
-		float GetSectionWidth() const { return m_SectionWidth; }
+		size_t GetSamplesPerSection() const { return m_Terrain.SamplesPerSection; }
+		float GetSectionWidth() const { return m_Terrain.SectionWidth; }
 
-		size_t GetSectionsCount() const { return m_TerrainSections.size(); }
+		size_t GetSectionsCount() const { return m_Terrain.Size(); }
 
 		float GetGain() const { return m_NoiseGenerator.GetGain(); }
 		float GetWeightedStrength() const { return m_NoiseGenerator.GetWeightedStrength(); }
@@ -123,15 +154,14 @@ namespace CW {
 
 		const NoiseGenerator& GetNoiseGenerator() const { return m_NoiseGenerator; }
 
-	private:
-		[[nodiscard]] sf::Vector2f sampleToWorldPosition(
+		[[nodiscard]] sf::Vector2f SampleToWorldPosition(
 			const TerrainSection& section, size_t sampleIndex,
 			float sectionStartPosition, float sampleWidth) const;
-		[[nodiscard]] float calcSampleWidth() const;
-		int calcSignedSampleIndex(float xPos, int sectionKeyPosition, float sampleWidth) const;
+		[[nodiscard]] float CalcSampleWidth() const;
+		int CalcSignedSampleIndex(float xPos, int sectionKeyPosition, float sampleWidth) const;
 
 	private:
-		std::vector<TerrainSection> m_TerrainSections;
+		Terrain m_Terrain;
 
 		NoiseGenerator m_NoiseGenerator;
 
@@ -139,10 +169,9 @@ namespace CW {
 		float m_BellHeigth = 8000.0f;
 		float m_BellWidth = 15000.0f;
 		float m_MapedNoiseDistance = 0.5f;
-
-		size_t m_SamplesPerSection = 15;
-		float m_SectionWidth = 1000.0f;
-		float m_YOffset = -3000.0f;
 	};
+
+	void generate_mesh(const Terrain& terrain, sf::ConvexShape& mesh, int keyPosition);
+	void generate_all_meshes(const Terrain& terrain, std::vector<sf::ConvexShape>& meshes);
 
 } // CW

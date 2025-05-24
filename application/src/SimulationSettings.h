@@ -13,7 +13,7 @@ namespace CW {
         DroneSettings Drones;
         BeaconSettings Beacons;
         ResourcesSettings Resources;
-        TerrainGenerationSettings Terrain;
+        TerrainGenerationSettings TerrainGenerator;
 
         int DronesCount;
         float StartingHorizontalPosition;
@@ -24,7 +24,7 @@ namespace CW {
             Drones.SetDefault();
             Beacons.SetDefault();
             Resources.SetDefault();
-            Terrain.SetDefault();
+            TerrainGenerator.SetDefault();
             DronesCount = 100;
             StartingHorizontalPosition = 0.0f;
         }

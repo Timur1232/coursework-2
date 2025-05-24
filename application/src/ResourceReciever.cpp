@@ -73,16 +73,17 @@ namespace CW {
 			.Draw();
 	}
 
-	void ResourceReciever::Update(float deltaTime)
+	bool ResourceReciever::Update(float deltaTime)
 	{
 		m_DroneSpawnTimer -= deltaTime;
 		if (m_DroneSpawnTimer <= 0.0f && m_ResourceCount >= m_DroneCost)
 		{
 			m_ResourceCount -= m_DroneCost;
-			UserEventHandler::Get().SendEvent(SpawnDrone{ m_Position });
+			//UserEventHandler::Get().SendEvent(SpawnDrone{ m_Position });
 			m_DroneSpawnTimer = m_DroneSpawnCooldown;
-			CW_TRACE("Drone spawned");
+			return true;
 		}
+		return false;
 	}
 
 	int ResourceReciever::GetResources() const

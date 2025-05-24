@@ -58,7 +58,7 @@ namespace CW {
 
 		std::vector<Resource>& GetResources() { return m_Resources; }
 
-		void GenerateResourceOnSection(const Terrain& terrain, int sectionKey);
+		void GenerateResourceOnSection(const TerrainGenerator& terrain, int sectionKey);
 
 	private:
 		std::vector<Resource> m_Resources;

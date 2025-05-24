@@ -25,6 +25,8 @@ namespace CW {
         std::vector<sf::Vector2f> ResourcesPositions;
         std::vector<int> ResourcesAmounts;
 
+        Terrain Terrain;
+
         // ResourceReciever
         sf::Vector2f ResieverPosition;
         int ResourceCount;
@@ -38,6 +40,7 @@ namespace CW {
             BeaconsCharges.clear();
             ResourcesPositions.clear();
             ResourcesAmounts.clear();
+            Terrain.TerrainSections.clear();
         }
     };
 

@@ -9,9 +9,9 @@ namespace CW {
     }
 
     UPSLimiter::UPSLimiter(size_t ups)
-        : m_LimitTime(1'000'000 / ups),
-        m_NextPoint(std::chrono::high_resolution_clock::now() + m_LimitTime)
+        : m_LimitTime(1'000'000 / ups)
     {
+        Reset();
     }
 
     void UPSLimiter::Wait() const
@@ -27,6 +27,11 @@ namespace CW {
     void UPSLimiter::SetUPS(size_t ups)
     {
         m_LimitTime = std::chrono::microseconds(1'000'000 / ups);
+    }
+
+    void UPSLimiter::Reset()
+    {
+        m_NextPoint = std::chrono::high_resolution_clock::now() + m_LimitTime;
     }
 
 } // CW

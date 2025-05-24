@@ -57,8 +57,11 @@ namespace CW {
 	{
 		for (const auto& resource : m_Resources)
 		{
-			state.ResourcesPositions.push_back(resource.GetPos());
-			state.ResourcesAmounts.push_back(resource.GetResources());
+			if (!resource.IsCarried())
+			{
+				state.ResourcesPositions.push_back(resource.GetPos());
+				state.ResourcesAmounts.push_back(resource.GetResources());
+			}
 		}
 	}
 
@@ -104,7 +107,7 @@ namespace CW {
 		}
 	}
 
-	void ResourceManager::GenerateResourceOnSection(const Terrain& terrain, int sectionKey)
+	void ResourceManager::GenerateResourceOnSection(const TerrainGenerator& terrain, int sectionKey)
 	{
 		if (rand_float() > m_Settings.GenerateChance)
 			return;
@@ -118,14 +121,14 @@ namespace CW {
 		float spawnPosY = terrain.GetHeight(spawnPosX) - m_Settings.ClusterSize - 100.0f;
 		sf::Vector2f spawnPos(spawnPosX, spawnPosY);
 
-		int resourceCount = m_Settings.MaxResourcesInCluster * rand_float();
+		int resourceCount = (int) (m_Settings.MaxResourcesInCluster * rand_float());
 		for (int i = 0; i < resourceCount; ++i)
 		{
 			sf::Angle angle = lerp(sf::degrees(-180.0f), sf::degrees(180.0f), rand_float());
 			float dist = m_Settings.ClusterSize * rand_float();
 
 			sf::Vector2f position = spawnPos + ONE_LENGTH_VEC.rotatedBy(angle) * dist;
-			int amount = m_Settings.MaxResourceAmount * rand_float();
+			int amount = (int) (m_Settings.MaxResourceAmount * rand_float());
 			m_Resources.emplace_back(position, amount);
 		}
 	}

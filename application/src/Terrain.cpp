@@ -7,6 +7,8 @@
 
 namespace CW {
 
+	//==================================[NoiseGenerator]===================================//
+
 	float NoiseGenerator::GenSingle2D(float x, float y) const
 	{
 		return m_NoiseTreeBase->GenSingle2D(x * m_BaseFrequensy, y * m_BaseFrequensy, m_BaseSeed) * m_BaseFactor
@@ -41,21 +43,134 @@ namespace CW {
 		}
 	}
 
+	//==================================[Terrain]===================================//
 
-	Terrain::Terrain(const TerrainGenerationSettings& settings)
+	bool Terrain::Generate(int keyPosition, const NoiseGenerator& gen,
+		float maxHeight, float mapNoiseDistance, float bellWidth, float bellHeight)
+	{
+		if (GetSection(keyPosition) != TerrainSections.end())
+		{
+			CW_WARN("Trying to generate existing terrain section on position: {}", keyPosition);
+			return false;
+		}
+
+		TerrainSections.emplace_back(keyPosition, SamplesPerSection + 1);
+		TerrainSections.back().Generate(gen, maxHeight, mapNoiseDistance, SectionWidth, bellWidth, bellHeight);
+		return true;
+	}
+
+	void Terrain::RegenerateExisting(const NoiseGenerator& gen,
+		float maxHeight, float mapNoiseDistance, float bellWidth, float bellHeight)
+	{
+		for (auto& section : TerrainSections)
+		{
+			section.Samples.resize(SamplesPerSection + 1);
+			section.Generate(gen, maxHeight, mapNoiseDistance, SectionWidth, bellWidth, bellHeight);
+		}
+	}
+
+	std::vector<TerrainSection>::iterator Terrain::GetSection(int keyPosition)
+	{
+		return std::ranges::find_if(TerrainSections.begin(), TerrainSections.end(),
+			[keyPosition](const TerrainSection& section) { return section.Key == keyPosition; });
+	}
+
+	std::vector<TerrainSection>::const_iterator Terrain::GetSection(int keyPosition) const
+	{
+		return std::ranges::find_if(TerrainSections.begin(), TerrainSections.end(),
+			[keyPosition](const TerrainSection& section) { return section.Key == keyPosition; });
+	}
+
+	float Terrain::GetHeight(float x) const
+	{
+		int key = CalcSectionKeyPosition(x);
+		auto section = GetSection(key);
+		size_t sample = static_cast<size_t>(CalcSignedSampleIndex(x, key, CalcSampleWidth()));
+		if (section == TerrainSections.end())
+		{
+			CW_ERROR("Terrain section on position x: {}, not exist!", x);
+			return 0.0f;
+		}
+		return SampleToWorldPosition(*section, sample, CalcSectionStartPosition(key), CalcSampleWidth()).y;
+	}
+
+	bool Terrain::IsNear(const Object& object, float distThreashold, int range) const
+	{
+		int sectionKey = CalcSectionKeyPosition(object.GetPos().x);
+		float sampleWidth = CalcSampleWidth();
+		int sampleIndex = CalcSignedSampleIndex(object.GetPos().x, sectionKey, sampleWidth);
+
+		auto section = GetSection(sectionKey);
+		if (section == TerrainSections.end())
+		{
+			return false;
+		}
+
+		// TODO: определение коллизии на границах секций
+
+		float sectionStartPosition = CalcSectionStartPosition(section->Key);
+
+		for (int i = -range; i <= range; ++i)
+		{
+			if (sampleIndex + i < 0 || sampleIndex + i >= SamplesPerSection)
+				continue;
+
+			sf::Vector2f samplePos = SampleToWorldPosition(*section, sampleIndex + i, sectionStartPosition, sampleWidth);
+			if (distance_squared(samplePos, object.GetPos()) <= distThreashold * distThreashold)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	float Terrain::CalcSectionStartPosition(int key) const
+	{
+		return static_cast<float>(key) * SectionWidth;
+	}
+
+	int Terrain::CalcSectionKeyPosition(float xPos) const
+	{
+		int sectionKey = static_cast<int>(xPos / SectionWidth);
+		if (xPos < 0)
+			sectionKey -= 1;
+		return sectionKey;
+	}
+
+	sf::Vector2f Terrain::SampleToWorldPosition(const TerrainSection& section, size_t sampleIndex, float sectionStartPosition, float sampleWidth) const
+	{
+		sf::Vector2f pos{ sectionStartPosition + sampleIndex * sampleWidth, section.Samples.at(sampleIndex) - YOffset };
+		return pos;
+	}
+
+	float Terrain::CalcSampleWidth() const
+	{
+		return SectionWidth / static_cast<float>(SamplesPerSection);
+
+	}
+
+	int Terrain::CalcSignedSampleIndex(float xPos, int sectionKeyPosition, float sampleWidth) const
+	{
+		return static_cast<int>((xPos - sectionKeyPosition * SectionWidth) / sampleWidth);
+	}
+
+	//==================================[TerrainGenerator]===================================//
+
+	TerrainGenerator::TerrainGenerator(const TerrainGenerationSettings& settings)
 	{
 		SetSettings(settings);
 	}
 
-	void Terrain::SetSettings(const TerrainGenerationSettings& settings)
+	void TerrainGenerator::SetSettings(const TerrainGenerationSettings& settings)
 	{
 		m_MaxHeight = settings.MaxHeight;
 		m_BellHeigth = settings.BellHeigth;
 		m_BellWidth = settings.BellWidth;
 		m_MapedNoiseDistance = settings.MappedNoiseDistance;
-		m_SamplesPerSection = settings.SamplesPerSection;
-		m_SectionWidth = settings.SectionWidth;
-		m_YOffset = settings.YOffset;
+		m_Terrain.SamplesPerSection = settings.SamplesPerSection;
+		m_Terrain.SectionWidth = settings.SectionWidth;
+		m_Terrain.YOffset = settings.YOffset;
 
 		m_NoiseGenerator.SetBaseFrequensy(settings.BaseFrequensy);
 		m_NoiseGenerator.SetDetailedFrequensy(settings.DetailedFrequensy);
@@ -71,29 +186,21 @@ namespace CW {
 		m_NoiseGenerator.SetLacunarity(settings.Lacunarity);
 	}
 
-	bool CW::Terrain::Generate(int keyPosition)
+	bool TerrainGenerator::Generate(int keyPosition)
 	{
-		if (GetSection(keyPosition) != m_TerrainSections.end())
-		{
-			CW_WARN("Trying to generate existing terrain section on position: {}", keyPosition);
-			return false;
-		}
-
-		m_TerrainSections.emplace_back(keyPosition, m_SamplesPerSection + 1);
-		m_TerrainSections.back().Generate(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance, m_SectionWidth, m_BellWidth, m_BellHeigth);
-		return true;
+		return m_Terrain.Generate(keyPosition, m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance, m_BellWidth, m_BellHeigth);
 	}
 
-	void Terrain::DebugDraw()
+	void TerrainGenerator::DebugDraw()
 	{
-		float sampleWidth = calcSampleWidth();
-		for (const auto& section : m_TerrainSections)
+		float sampleWidth = CalcSampleWidth();
+		for (const auto& section : m_Terrain.TerrainSections)
 		{
 			float sectionStartPosition = CalcSectionStartPosition(section.Key);
-			for (size_t i = 0; i < m_SamplesPerSection - 1; ++i)
+			for (size_t i = 0; i < m_Terrain.SamplesPerSection - 1; ++i)
 			{
-				sf::Vector2f p1{ sampleToWorldPosition(section, i, sectionStartPosition, sampleWidth) };
-				sf::Vector2f p2{ sampleToWorldPosition(section, i + 1, sectionStartPosition, sampleWidth) };
+				sf::Vector2f p1{ SampleToWorldPosition(section, i, sectionStartPosition, sampleWidth) };
+				sf::Vector2f p2{ SampleToWorldPosition(section, i + 1, sectionStartPosition, sampleWidth) };
 
 				Renderer::Get().BeginDotShape()
 					.Position(p1)
@@ -105,141 +212,54 @@ namespace CW {
 		}
 	}
 
-	std::vector<TerrainSection>::iterator Terrain::GetSection(int keyPosition)
+	std::vector<TerrainSection>::iterator TerrainGenerator::GetSection(int keyPosition)
 	{
-		return std::ranges::find_if(m_TerrainSections.begin(), m_TerrainSections.end(),
-			[keyPosition](const TerrainSection& section) { return section.Key == keyPosition; });
+		return m_Terrain.GetSection(keyPosition);
 	}
 
-	std::vector<TerrainSection>::const_iterator Terrain::GetSection(int keyPosition) const
+	std::vector<TerrainSection>::const_iterator TerrainGenerator::GetSection(int keyPosition) const
 	{
-		return std::ranges::find_if(m_TerrainSections.begin(), m_TerrainSections.end(),
-			[keyPosition](const TerrainSection& section) { return section.Key == keyPosition; });
+		return m_Terrain.GetSection(keyPosition);
 	}
 
-	float Terrain::GetHeight(float x) const
+	float TerrainGenerator::GetHeight(float x) const
 	{
-		int key = CalcSectionKeyPosition(x);
-		auto section = GetSection(key);
-		size_t sample = static_cast<size_t>(calcSignedSampleIndex(x, key, calcSampleWidth()));
-		if (section == m_TerrainSections.end())
-		{
-			CW_ERROR("Terrain section on position x: {}, not exist!", x);
-			return 0.0f;
-		}
-		return sampleToWorldPosition(*section, sample, CalcSectionStartPosition(key), calcSampleWidth()).y;
+		return m_Terrain.GetHeight(x);
 	}
 
-	void Terrain::GenerateMesh(sf::ConvexShape& mesh, int keyPosition) const
+	void TerrainGenerator::RegenerateExisting()
 	{
-		auto section = GetSection(keyPosition);
-		if (section == m_TerrainSections.end())
-		{
-			CW_ERROR("Section with key position {} don\'t exist!", keyPosition);
-			return;
-		}
-		//
-		mesh.setPointCount(m_SamplesPerSection + 3);
-
-		float sectionPosition = CalcSectionStartPosition(section->Key);
-		float sampleWidth = calcSampleWidth();
-
-		size_t pointIndex = 0;
-		while (pointIndex < section->Samples.size())
-		{
-			mesh.setPoint(pointIndex, sampleToWorldPosition(*section, pointIndex, sectionPosition, sampleWidth));
-			pointIndex++;
-		}
-
-		sf::Vector2f bottomPoint = sampleToWorldPosition(*section, section->Samples.size() - 1, sectionPosition, sampleWidth);
-
-		float bottomPointHeight = 100000.0f;
-
-		bottomPoint.y = bottomPointHeight;
-		mesh.setPoint(pointIndex, bottomPoint);
-		pointIndex++;
-
-		bottomPoint = sampleToWorldPosition(*section, 0, sectionPosition, sampleWidth);
-		bottomPoint.y = bottomPointHeight;
-		mesh.setPoint(pointIndex, bottomPoint);
+		m_Terrain.RegenerateExisting(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance, m_BellWidth, m_BellHeigth);
 	}
 
-	void Terrain::GenerateAllMeshes(std::vector<sf::ConvexShape>& meshes) const
+	bool TerrainGenerator::IsNear(const Object& object, float distThreashold, int range) const
 	{
-		meshes.resize(m_TerrainSections.size());
-		for (size_t i = 0; i < m_TerrainSections.size(); i++)
-		{
-			GenerateMesh(meshes[i], m_TerrainSections[i].Key);
-		}
+		return m_Terrain.IsNear(object, distThreashold, range);
 	}
 
-	void Terrain::RegenerateExisting()
+	sf::Vector2f TerrainGenerator::SampleToWorldPosition(const TerrainSection& section, size_t sampleIndex, float sectionStartPosition, float sampleWidth) const
 	{
-		for (auto& section : m_TerrainSections)
-		{
-			section.Samples.resize(m_SamplesPerSection + 1);
-			section.Generate(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance, m_SectionWidth, m_BellWidth, m_BellHeigth);
-		}
+		return m_Terrain.SampleToWorldPosition(section, sampleIndex, sectionStartPosition, sampleWidth);
 	}
 
-	bool Terrain::IsNear(const Object& object, float distThreashold, int range) const
+	float TerrainGenerator::CalcSectionStartPosition(int key) const
 	{
-		int sectionKey = CalcSectionKeyPosition(object.GetPos().x);
-		float sampleWidth = calcSampleWidth();
-		int sampleIndex = calcSignedSampleIndex(object.GetPos().x, sectionKey, sampleWidth);
-
-		auto section = GetSection(sectionKey);
-		if (section == m_TerrainSections.end())
-		{
-			return false;
-		}
-
-		// TODO: определение коллизии на границах секций
-
-		float sectionStartPosition = CalcSectionStartPosition(section->Key);
-
-		for (int i = -range; i <= range; ++i)
-		{
-			if (sampleIndex + i < 0 || sampleIndex + i >= m_SamplesPerSection)
-				continue;
-
-			sf::Vector2f samplePos = sampleToWorldPosition(*section, sampleIndex + i, sectionStartPosition, sampleWidth);
-			if (distance_squared(samplePos, object.GetPos()) <= distThreashold * distThreashold)
-			{
-				return true;
-			}
-		}
-
-		return false;
+		return m_Terrain.CalcSectionStartPosition(key);
 	}
 
-	sf::Vector2f Terrain::sampleToWorldPosition(const TerrainSection& section, size_t sampleIndex, float sectionStartPosition, float sampleWidth) const
+	float TerrainGenerator::CalcSampleWidth() const
 	{
-		sf::Vector2f pos{ sectionStartPosition + sampleIndex * sampleWidth, section.Samples.at(sampleIndex) - m_YOffset };
-		return pos;
+		return m_Terrain.CalcSampleWidth();
 	}
 
-	float Terrain::CalcSectionStartPosition(int key) const
+	int TerrainGenerator::CalcSectionKeyPosition(float xPos) const
 	{
-		return static_cast<float>(key) * m_SectionWidth;
+		return m_Terrain.CalcSectionKeyPosition(xPos);
 	}
 
-	float Terrain::calcSampleWidth() const
+	int TerrainGenerator::CalcSignedSampleIndex(float xPos, int sectionKeyPosition, float sampleWidth) const
 	{
-		return m_SectionWidth / static_cast<float>(m_SamplesPerSection);
-	}
-
-	int Terrain::CalcSectionKeyPosition(float xPos) const
-	{
-		int sectionKey = static_cast<int>(xPos / m_SectionWidth);
-		if (xPos < 0)
-			sectionKey -= 1;
-		return sectionKey;
-	}
-
-	int Terrain::calcSignedSampleIndex(float xPos, int sectionKeyPosition, float sampleWidth) const
-	{
-		return static_cast<int>((xPos - sectionKeyPosition * m_SectionWidth) / sampleWidth);
+		return m_Terrain.CalcSignedSampleIndex(xPos, sectionKeyPosition, sampleWidth);
 	}
 
 
@@ -251,5 +271,46 @@ namespace CW {
 		m_NoiseTreeBase->SetSource(FastNoise::New<FastNoise::Perlin>());
 	}
 
+	void generate_mesh(const Terrain& terrain, sf::ConvexShape& mesh, int keyPosition)
+	{
+		auto section = terrain.GetSection(keyPosition);
+		if (section == terrain.TerrainSections.end())
+		{
+			CW_ERROR("Section with key position {} don\'t exist!", keyPosition);
+			return;
+		}
+		mesh.setPointCount(terrain.SamplesPerSection + 3);
+
+		float sectionPosition = terrain.CalcSectionStartPosition(section->Key);
+		float sampleWidth = terrain.CalcSampleWidth();
+
+		size_t pointIndex = 0;
+		while (pointIndex < section->Samples.size())
+		{
+			mesh.setPoint(pointIndex, terrain.SampleToWorldPosition(*section, pointIndex, sectionPosition, sampleWidth));
+			pointIndex++;
+		}
+
+		sf::Vector2f bottomPoint = terrain.SampleToWorldPosition(*section, section->Samples.size() - 1, sectionPosition, sampleWidth);
+
+		float bottomPointHeight = 100000.0f;
+
+		bottomPoint.y = bottomPointHeight;
+		mesh.setPoint(pointIndex, bottomPoint);
+		pointIndex++;
+
+		bottomPoint = terrain.SampleToWorldPosition(*section, 0, sectionPosition, sampleWidth);
+		bottomPoint.y = bottomPointHeight;
+		mesh.setPoint(pointIndex, bottomPoint);
+	}
+
+	void generate_all_meshes(const Terrain& terrain, std::vector<sf::ConvexShape>& meshes)
+	{
+		meshes.resize(terrain.TerrainSections.size());
+		for (size_t i = 0; i < terrain.TerrainSections.size(); i++)
+		{
+			generate_mesh(terrain, meshes[i], terrain.TerrainSections[i].Key);
+		}
+	}
 
 } // CW
