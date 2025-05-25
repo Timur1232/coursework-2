@@ -34,21 +34,21 @@ namespace CW {
         : public Layer
     {
     public:
-        SimulationLayer(sf::Vector2f windowSize, const SimulationSettings& settings, FullSimulationState* state = nullptr)
+        SimulationLayer(sf::Vector2f windowSize, Shared<SimulationSettings> settings, FullSimulationState* state = nullptr)
             : m_Camera(0, 0, windowSize.x, windowSize.y),
               m_Settings(settings),
-              m_Drones(settings.Drones),
-              m_Beacons(settings.Beacons),
-              m_Resources(settings.Resources),
-              m_Terrain(settings.TerrainGenerator),
-              m_ResourceReciever(settings.Drones)
+              m_Drones(settings->Drones),
+              m_Beacons(settings->Beacons),
+              m_Resources(settings->Resources),
+              m_Terrain(settings->TerrainGenerator),
+              m_ResourceReciever(settings->Drones)
         {
             m_DroneTexture = CreateUnique<sf::Texture>("res/sprites/drone_sprite.png");
             m_DroneSprite = CreateUnique<sf::Sprite>(*m_DroneTexture);
             m_DroneSprite->setOrigin(static_cast<sf::Vector2f>(m_DroneTexture->getSize()) / 2.0f);
             if (state)
             {
-                m_Settings = state->Settings;
+                *m_Settings = state->Settings;
                 m_Drones.SetState(*state);
                 m_Beacons.SetState(*state);
                 m_Resources.SetState(*state);
@@ -58,7 +58,7 @@ namespace CW {
             }
             Init(windowSize);
             if (!state)
-                InitNewSim(settings.DronesCount, { settings.StartingHorizontalPosition, 0.0f });
+                InitNewSim(settings->DronesCount, { settings->StartingHorizontalPosition, 0.0f });
         }
 
         ~SimulationLayer()
@@ -128,10 +128,6 @@ namespace CW {
         void OnEvent(Event& event) override
         {
             EventDispatcher dispatcher(event);
-            /*if (dispatcher.Dispach<CreateBeacon>(CW_BUILD_EVENT_FUNC(OnCreateBeacon)))
-                return;*/
-            if (dispatcher.Dispach<SetSimulationSettings>(CW_BUILD_EVENT_FUNC(OnSimSettings)))
-                return;
             if (dispatcher.Dispach<SaveSimulation>(CW_BUILD_EVENT_FUNC(OnSaveSimulation)))
                 return;
             if (dispatcher.Dispach<SwitchThread>(CW_BUILD_EVENT_FUNC(OnSwitchThread)))
@@ -139,22 +135,22 @@ namespace CW {
             dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed));
             dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
+            dispatcher.Dispach<KeyPressed>(CW_BUILD_EVENT_FUNC(OnKeyPressed));
 
             m_Camera.OnEvent(event);
-            //m_Drones.OnEvent(event);
         }
 
         void Draw() override
         {
-            m_RenderState.Clear();
+            m_CopyState.Clear();
 
             // синхронизация для копирования состояния
-            if (!m_RunSingleThread)
+            if (!m_Paused && !m_RunSingleThread)
                 SyncStopSimulationThread();
 
             GenerateChunksInCameraView();
 
-            CollectState(m_RenderState);
+            CollectState(m_CopyState);
             sf::Vector2i leftGen = m_LeftGeneratedSections;
             sf::Vector2i rightGen = m_RightGeneratedSections;
             m_LeftGeneratedSections.y = m_LeftGeneratedSections.x;
@@ -162,7 +158,7 @@ namespace CW {
 
             float elapsedTime = m_ElapsedTime;
 
-            if (!m_RunSingleThread)
+            if (!m_Paused && !m_RunSingleThread)
                 SpawnSimulationThread();
 
 
@@ -206,13 +202,13 @@ namespace CW {
             // body
             circleBuilder.DefaultAfterDraw()
                 .Radius(100.0f)
-                .Position(m_RenderState.ResieverPosition)
+                .Position(m_CopyState.ResieverPosition)
                 .Color(sf::Color::Magenta)
                 .Draw();
             // recieve radius
             //circleBuilder.DefaultAfterDraw()
-            //    .Radius(m_RenderState.Re)
-            //    .Position(m_RenderState.ResieverPosition)
+            //    .Radius(m_CopyState.Re)
+            //    .Position(m_CopyState.ResieverPosition)
             //    .Color(sf::Color::Transparent)
             //    .OutlineThickness(1.0f)
             //    .OutlineColor(sf::Color::Green)
@@ -226,28 +222,26 @@ namespace CW {
             //    .OutlineColor(sf::Color::Red)
             //    .Draw();
 
-            //m_Resources.DrawAllRecources();
-            for (size_t i = 0; i < m_RenderState.ResourcesPositions.size(); ++i)
+            for (size_t i = 0; i < m_CopyState.ResourcesPositions.size(); ++i)
             {
                 Renderer::Get().BeginCircleShape()
                     .DefaultAfterDraw()
                     .Radius(20.0f)
                     .Color(sf::Color::Cyan)
-                    .Position(m_RenderState.ResourcesPositions[i])
+                    .Position(m_CopyState.ResourcesPositions[i])
                     .Draw();
             }
 
             if (m_DrawBeacons)
             {
                 CW_PROFILE_SCOPE("beacons draw");
-                //m_Beacons.DrawAllBeacons();
                 auto& circleBuilder = Renderer::Get().BeginCircleShape();
                 circleBuilder.PointCount(4)
                     .Radius(10.0f);
-                for (size_t i = 0; i < m_RenderState.BeaconsPositions.size(); ++i)
+                for (size_t i = 0; i < m_CopyState.BeaconsPositions.size(); ++i)
                 {
-                    circleBuilder.Position(m_RenderState.BeaconsPositions[i])
-                        .Color(beacon_color(m_RenderState.BeaconsTypes[i], m_RenderState.BeaconsCharges[i]))
+                    circleBuilder.Position(m_CopyState.BeaconsPositions[i])
+                        .Color(beacon_color(m_CopyState.BeaconsTypes[i], m_CopyState.BeaconsCharges[i]))
                         .Draw();
                 }
                 circleBuilder.SetDefault();
@@ -255,14 +249,13 @@ namespace CW {
 
             {
                 CW_PROFILE_SCOPE("drones draw");
-                //m_Drones.DrawAllDrones();
-                for (size_t i = 0; i < m_RenderState.DronesDirections.size(); ++i)
+                for (size_t i = 0; i < m_CopyState.DronesDirections.size(); ++i)
                 {
                     /*debugDrawDirectionVisuals(drone.GetPos(), drone.GetDirection(), drone.GetAttraction());
                     debugDrawViewDistance(drone.GetPos(), drone.GetDirection());*/
 
-                    m_DroneSprite->setPosition(m_RenderState.DronesPositions[i]);
-                    if (abs(m_RenderState.DronesDirections[i].asRadians()) > angle::PI_2)
+                    m_DroneSprite->setPosition(m_CopyState.DronesPositions[i]);
+                    if (abs(m_CopyState.DronesDirections[i].asRadians()) > angle::PI_2)
                     {
                         m_DroneSprite->setScale({ 1.0f, -1.0f });
                     }
@@ -270,7 +263,7 @@ namespace CW {
                     {
                         m_DroneSprite->setScale({ 1.0f, 1.0f });
                     }
-                    m_DroneSprite->setRotation(m_RenderState.DronesDirections[i]);
+                    m_DroneSprite->setRotation(m_CopyState.DronesDirections[i]);
                     Renderer::Get().Draw(*m_DroneSprite);
                 }
             }
@@ -278,9 +271,8 @@ namespace CW {
             {
                 CW_PROFILE_SCOPE("terrain draw");
                 // генерация нового меша
-                GenerateMeshes(m_RenderState.Terrain, leftGen);
-                GenerateMeshes(m_RenderState.Terrain, rightGen);
-                
+                GenerateMeshes(m_CopyState.Terrain, leftGen);
+                GenerateMeshes(m_CopyState.Terrain, rightGen);
                 for (const auto& mesh : m_TerrainSectionMeshes)
                 {
                     renderer.Draw(mesh);
@@ -306,7 +298,7 @@ namespace CW {
             m_Resources.CollectState(state);
             state.GeneratedRange = m_GeneratedRange;
             state.RecieverData = m_ResourceReciever.GetData();
-            state.Settings = m_Settings;
+            state.Settings = *m_Settings;
         }
 
     private:
@@ -389,22 +381,6 @@ namespace CW {
             return false;
         }
 
-        /*bool OnCreateBeacon(CreateBeacon& e)
-        {
-            m_Beacons.CreateBeacon(e.Position, e.Type, e.BitDirection);
-            return false;
-        }*/
-
-        bool OnSimSettings(SetSimulationSettings& e)
-        {
-            m_Settings = *e.Settings;
-            m_Beacons.SetSettings(e.Settings->Beacons);
-            m_Drones.SetSettings(e.Settings->Drones);
-            m_Resources.SetSettings(e.Settings->Resources);
-            m_Terrain.SetSettings(e.Settings->TerrainGenerator);
-            return true;
-        }
-
         void InitNewSim(size_t droneCount, sf::Vector2f startPosition)
         {
             m_Beacons.Clear();
@@ -430,9 +406,11 @@ namespace CW {
             }
 
             FullSimulationState state;
-            SyncStopSimulationThread();
+            if (!m_Paused)
+                SyncStopSimulationThread();
             CollectState(state);
-            SpawnSimulationThread();
+            if (!m_Paused)
+                SpawnSimulationThread();
 
             // reciever
             file.write(reinterpret_cast<const char*>(&state.RecieverData), sizeof(state.RecieverData));
@@ -472,19 +450,38 @@ namespace CW {
 
         bool OnSwitchThread(SwitchThread& e)
         {
-            if (m_RunSingleThread)
+            m_Limiter.SetUPS(e.TargetUps);
+            m_RunSingleThread = !m_RunSingleThread;
+            if (m_Paused)
+                return true;
+            if (!m_RunSingleThread)
             {
-                m_RunSingleThread = false;
-                m_Limiter.SetUPS(e.TargetUps);
                 m_Limiter.Reset();
                 SpawnSimulationThread();
             }
             else
             {
-                m_RunSingleThread = true;
                 SyncStopSimulationThread();
             }
             return true;
+        }
+
+        bool OnKeyPressed(KeyPressed& event)
+        {
+            if (event.Data.code == sf::Keyboard::Key::Space)
+            {
+                if (!m_RunSingleThread && !m_Paused)
+                {
+                    SyncStopSimulationThread();
+                }
+                else if (!m_RunSingleThread && m_Paused)
+                {
+                    m_Limiter.Reset();
+                    SpawnSimulationThread();
+                }
+                m_Paused = !m_Paused;
+            }
+            return false;
         }
 
         /*void UpdateInterface() 
@@ -721,12 +718,12 @@ namespace CW {
         UPSLimiter m_Limiter{ 120 };
         bool m_RunSingleThread = true;
 
-        SimulationState m_RenderState;
+        SimulationState m_CopyState;
 
         Camera2D m_Camera;
         bool m_Hold = false;
 
-        SimulationSettings m_Settings;
+        Shared<SimulationSettings> m_Settings;
 
         BeaconManager m_Beacons;
         DroneManager m_Drones;
@@ -748,6 +745,8 @@ namespace CW {
 
         Unique<sf::Sprite> m_DroneSprite;
         Unique<sf::Texture> m_DroneTexture;
+
+        bool m_Paused = false;
 
         // Debug
         bool m_BeaconsInfo = false;
@@ -772,10 +771,11 @@ namespace CW {
         };
 
     public:
-        MainMenuLayer(sf::Vector2f windowSize)
+        MainMenuLayer(sf::Vector2f windowSize, Shared<SimulationSettings> simSettings)
             : m_StartButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f - 100.0f }, sf::Vector2f{ 100.0f, 50.0f })),
               m_LoadButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f }, sf::Vector2f{ 100.0f, 50.0f })),
-              m_ExitButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f + 100.0f }, sf::Vector2f{ 100.0f, 50.0f }))
+              m_ExitButtonCollision(CreateShared<RectCollision>(sf::Vector2f{ windowSize.x / 2.0f - 50.0f, windowSize.y / 2.0f + 100.0f }, sf::Vector2f{ 100.0f, 50.0f })),
+              m_SimSettings(simSettings)
         {
             m_StartSimButton.SetCollisionChecker(m_StartButtonCollision);
             m_LoadButton.SetCollisionChecker(m_LoadButtonCollision);
@@ -888,8 +888,6 @@ namespace CW {
             bool simSetWind = (m_MenuStatus == MenuStatus::SimSetting) ? true : false;
             if (ImGui::Begin("Simulation settings", &simSetWind, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse))
             {
-                /*auto size = ImGui::GetWindowSize();
-                ImGui::Text("window size: (%.2f, %.2f)", size.x, size.y);*/
                 float height = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
                 ImGui::BeginChild("SturtupSettings", ImVec2(ImGui::GetContentRegionAvail().x, -height));
                 
@@ -902,7 +900,7 @@ namespace CW {
                 ImGui::Separator();
                 if (ImGui::Button("Start simulation"))
                 {
-                    UserEventHandler::Get().SendEvent(StartSimulation{&m_SimSettings});
+                    UserEventHandler::Get().SendEvent(StartSimulation{});
                 }
                 ImGui::End();
             }
@@ -910,12 +908,12 @@ namespace CW {
                 m_MenuStatus = MenuStatus::None;
         }
 
-        void TerrainSetupInterface()
+        void TerrainSetupInterface() const
         {
             if (ImGui::CollapsingHeader("Terrain"))
             {
                 ImGui::Separator();
-                auto& terrain = m_SimSettings.TerrainGenerator;
+                auto& terrain = m_SimSettings->TerrainGenerator;
                 ImGui::InputFloat("Y offset (deepness)", &terrain.YOffset);
                 ImGui::InputInt("Samples per section", &terrain.SamplesPerSection);
                 ImGui::InputFloat("Section width", &terrain.SectionWidth);
@@ -950,12 +948,12 @@ namespace CW {
             }
         }
 
-        void BeaconSetupInterface()
+        void BeaconSetupInterface() const
         {
             if (ImGui::CollapsingHeader("Beacons"))
             {
                 ImGui::Separator();
-                auto& beacons = m_SimSettings.Beacons;
+                auto& beacons = m_SimSettings->Beacons;
                 ImGui::InputFloat("Discharge rate", &beacons.DischargeRate, 0.1f, 0.2f);
                 ImGui::InputFloat("Charge threshold", &beacons.ChargeThreshold, 0.01f, 0.1f);
 
@@ -969,10 +967,10 @@ namespace CW {
         {
             if (ImGui::CollapsingHeader("Drones"))
             {
-                auto& drones = m_SimSettings.Drones;
+                auto& drones = m_SimSettings->Drones;
                 ImGui::Separator();
-                ImGui::InputInt("Drones count", &m_SimSettings.DronesCount);
-                ImGui::InputFloat("Starting position", &m_SimSettings.StartingHorizontalPosition);
+                ImGui::InputInt("Drones count", &m_SimSettings->DronesCount);
+                ImGui::InputFloat("Starting position", &m_SimSettings->StartingHorizontalPosition);
                 ImGui::Spacing();
 
                 ImGui::InputFloat("Drone spawn cooldown", &drones.BeaconCooldownSec, 1.0f, 10.0f);
@@ -1001,12 +999,17 @@ namespace CW {
         void LoadSimulationInterface()
         {
             bool simLoadWind = (m_MenuStatus == MenuStatus::LoadSim) ? true : false;
-            if (ImGui::Begin("Load save", &simLoadWind))
+            ImGui::SetNextWindowPos({ 250.0f, 150.0f }, ImGuiCond_Appearing);
+            if (ImGui::Begin("Load save", &simLoadWind, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
             {
                 ImGui::InputText("Path", g_FilePathBuff, sizeof(g_FilePathBuff) / sizeof(*g_FilePathBuff));
-                if (ImGui::Button("Load"))
+                if (g_FilePathBuff[0])
                 {
-                    UserEventHandler::Get().SendEvent(LoadSimulation{ g_FilePathBuff });
+                    if (ImGui::Button("Load"))
+                    {
+                        UserEventHandler::Get().SendEvent(LoadSimulation{ g_FilePathBuff });
+                        g_FilePathBuff[0] = '\0';
+                    }
                 }
                 ImGui::End();
             }
@@ -1030,7 +1033,7 @@ namespace CW {
 
         MenuStatus m_MenuStatus = MenuStatus::None;
 
-        SimulationSettings m_SimSettings;
+        Shared<SimulationSettings> m_SimSettings;
     };
 
 
@@ -1058,8 +1061,6 @@ namespace CW {
 
             m_UpdateActive = false;
         }
-
-        void Update(float) override {}
 
         void Draw() override
         {
@@ -1110,44 +1111,30 @@ namespace CW {
     {
     public:
         MyApp()
-            : Application(800, 600, "test")
+            : Application(800, 600, "test"),
+              m_SimSettings(CreateShared<SimulationSettings>())
         {
             m_ClearColor = sf::Color(0, 0, 0, 255);
         }
 
         void Init() override
         {
-            PushLayer<MainMenuLayer>((sf::Vector2f) GetWindowSize());
+            PushLayer<MainMenuLayer>((sf::Vector2f) GetWindowSize(), m_SimSettings);
         }
 
         void Update(float deltaTime) override
         {
-            CW_PROFILE_FUNCTION();
-            if (m_ExitFlag)
-            {
-                PopLayer();
-                PopLayer();
-                m_ExitFlag = false;
-                PushLayer<MainMenuLayer>((sf::Vector2f)GetWindowSize());
-                m_ClearColor = sf::Color(0, 0, 0, 255);
-                return;
-            }
-
-            if (m_DebugIsOpen)
-                UpdateDebugInterface();
-            if (m_MenuIsOpen)
-                UpdateMenuInterface();
-            UpdateLayers(deltaTime);
+            AppIteration();
         }
 
-        void PauseUpdate(float deltaTime) override
+        void PausedUpdate(float) override
         {
+            AppIteration();
         }
 
         void Draw() override
         {
             CW_PROFILE_FUNCTION();
-            DrawLayers();
         }
 
         void OnEvent(Event& event) override
@@ -1164,13 +1151,34 @@ namespace CW {
             if (dispatcher.Dispach<LoadSimulation>(CW_BUILD_EVENT_FUNC(OnLoadSimulation)))
                 return;
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
+            dispatcher.Dispach<KeyPressed>(CW_BUILD_EVENT_FUNC(OnKeyPressed));
             OnEventLayers(event);
         }
 
     private:
+        void AppIteration()
+        {
+            CW_PROFILE_FUNCTION();
+            if (m_ExitFlag)
+            {
+                PopLayer();
+                PopLayer();
+                m_ExitFlag = false;
+                PushLayer<MainMenuLayer>((sf::Vector2f)GetWindowSize(), m_SimSettings);
+                m_ClearColor = sf::Color(0, 0, 0, 255);
+                m_SimIsRunning = false;
+                return;
+            }
+
+            if (m_DebugIsOpen)
+                UpdateDebugInterface();
+            if (m_MenuIsOpen)
+                UpdateMenuInterface();
+        }
+
         bool OnKeyPressed(KeyPressed& event)
         {
-            if (event.Data.code == sf::Keyboard::Key::Space)
+            if (m_SimIsRunning && event.Data.code == sf::Keyboard::Key::Space)
             {
                 SwitchPause();
             }
@@ -1191,12 +1199,12 @@ namespace CW {
 
         bool OnStartSimulation(StartSimulation& e)
         {
-            auto settings = *e.Settings;
             PopLayer();
-            PushLayer<SimulationLayer>((sf::Vector2f) GetWindowSize(), settings);
+            PushLayer<SimulationLayer>((sf::Vector2f) GetWindowSize(), m_SimSettings);
             PushLayer<InterfaceLayer>((sf::Vector2f) GetWindowSize());
             m_ClearColor = sf::Color(135, 206, 235, 255);
             m_DebugIsOpen = false;
+            m_SimIsRunning = true;
             return true;
         }
 
@@ -1262,7 +1270,8 @@ namespace CW {
             }
 
             EraseLayer(0);
-            PushLayer<SimulationLayer>((sf::Vector2f) GetWindowSize(), state.Settings, &state);
+            *m_SimSettings = state.Settings;
+            PushLayer<SimulationLayer>((sf::Vector2f) GetWindowSize(), m_SimSettings, &state);
             PushLayer<InterfaceLayer>((sf::Vector2f) GetWindowSize());
             m_ClearColor = sf::Color(135, 206, 235, 255);
             m_DebugIsOpen = false;
@@ -1290,6 +1299,11 @@ namespace CW {
                 ImGui::Text("render target view center: (%.2f, %.2f)", render.getView().getCenter().x, render.getView().getCenter().y);
                 ImGui::Spacing();
             }
+            ImGui::Separator();
+
+            ImGui::Text("Paused: %d", m_Pause);
+            ImGui::Text("Simulation running: %d", m_SimIsRunning);
+
             if (!m_VirtualTime)
             {
                 ImGui::SliderInt("Traget UPS", &m_TargetUPS, 60, 1024);
@@ -1306,14 +1320,25 @@ namespace CW {
         {
             ImGui::Begin("Menu");
             ImGui::InputText("Path", g_FilePathBuff, sizeof(g_FilePathBuff) / sizeof(*g_FilePathBuff));
-            if (ImGui::Button("Save"))
+            if (g_FilePathBuff[0])
             {
-                m_CurrentFilePath = g_FilePathBuff;
-                UserEventHandler::Get().SendEvent(SaveSimulation{ g_FilePathBuff });
+                if (ImGui::Button("Save"))
+                {
+                    m_CurrentFilePath = g_FilePathBuff;
+                    UserEventHandler::Get().SendEvent(SaveSimulation{ g_FilePathBuff });
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Save and Exit"))
+                {
+                    UserEventHandler::Get().SendEvent(SaveSimulation{ m_CurrentFilePath.c_str() });
+                    g_FilePathBuff[0] = '\0';
+                    m_ExitFlag = true;
+                    m_MenuIsOpen = false;
+                    m_DebugIsOpen = false;
+                }
             }
-            if (ImGui::Button("Save and Exit"))
+            if (ImGui::Button("Exit"))
             {
-                UserEventHandler::Get().SendEvent(SaveSimulation{ m_CurrentFilePath.c_str()});
                 m_ExitFlag = true;
                 m_MenuIsOpen = false;
                 m_DebugIsOpen = false;
@@ -1322,12 +1347,14 @@ namespace CW {
         }
 
     private:
+        bool m_SimIsRunning = false;
         bool m_MenuIsOpen = false;
         bool m_DebugIsOpen = false;
         bool m_ExitFlag = false;
         bool m_VirtualTime = false;
         int m_TargetUPS = 60;
         std::string m_CurrentFilePath = "";
+        Shared<SimulationSettings> m_SimSettings;
     };
 
 } // CW

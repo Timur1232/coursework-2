@@ -39,7 +39,7 @@ namespace CW {
         {
             return;
         }
-        if (dispatcher.Dispach<MouseMoved>(
+        dispatcher.Dispach<MouseMoved>(
             [this](MouseMoved& e) {
                 sf::Vector2f mousePos = static_cast<sf::Vector2f>(e.Data.position);
                 if (!m_Entered && m_CollisionChecker->CheckCollision(mousePos))
@@ -53,10 +53,7 @@ namespace CW {
                     return m_OnExitCallback(e);
                 }
                 return false;
-            }))
-        {
-            return;
-        }
+            });
     }
 
 } // CW

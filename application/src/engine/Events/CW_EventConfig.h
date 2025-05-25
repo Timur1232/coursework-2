@@ -5,4 +5,4 @@
 // 
 // ѕользовательские ивенты об€заны наследоватьс€ от CW::Event
 //
-#define CW_USER_EVENTS_LIST CreateBeacon, CloseApp, StartSimulation, SetSimulationSettings, SpawnDrone, SwitchMenu, SwitchDebugMenu, SaveSimulation, LoadSimulation, SwitchThread
+#define CW_USER_EVENTS_LIST CloseApp, StartSimulation, SwitchMenu, SwitchDebugMenu, SaveSimulation, LoadSimulation, SwitchThread

@@ -10,11 +10,15 @@ namespace CW {
     class Layer
         : public IDrawable,
           public IUpdate,
+          public IPausedUpdate,
           public IOnEvent
     {
     public:
         Layer() = default;
         virtual ~Layer() = default;
+
+        virtual void Update(float) override {}
+        virtual void PausedUpdate(float) override {}
 
         bool IsUpdateActive() const { return m_UpdateActive; }
         bool IsDrawActive() const { return m_DrawActive; }

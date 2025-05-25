@@ -113,9 +113,6 @@ namespace CW {
             beaconSpawn = true;
             components = { m_Position, opposite_target_type(m_TargetType),
                     angle_to_bit_direction((m_DirectionAngle + sf::degrees(180.0f)).wrapSigned()) };
-            /*UserEventHandler::Get()
-                .SendEvent(CreateBeacon{ m_Position, opposite_target_type(m_TargetType),
-                    angle_to_bit_direction((m_DirectionAngle + sf::degrees(180.0f)).wrapSigned()) });*/
             m_BeaconTimerSec = settings.BeaconCooldownSec;
         }
 
@@ -306,13 +303,13 @@ namespace CW {
         for (const auto& ibeacon : filteredBeacons)
         {
             const auto& beacon = ibeacon->Object;
-            if (auto positionDelta = beacon.GetPos() - m_Position;
-                (positionDelta.x != 0.0f || positionDelta.y != 0.0f)
-                && ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle).dot(positionDelta.normalized()) >= FOV)
+            if (float distSq = distance_squared(beacon.GetPos(), m_Position);
+                distSq <= viewDistance.y * viewDistance.y
+                && distSq >= viewDistance.x * viewDistance.x && distSq > furthestDistSq)
             {
-                if (float distSq = distance_squared(beacon.GetPos(), m_Position);
-                    distSq <= viewDistance.y * viewDistance.y
-                    && distSq >= viewDistance.x * viewDistance.x && distSq > furthestDistSq)
+                if (auto positionDelta = beacon.GetPos() - m_Position;
+                    (positionDelta.x != 0.0f || positionDelta.y != 0.0f)
+                    && ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle).dot(positionDelta.normalized()) >= FOV)
                 {
                     furthestDistSq = distSq;
                     furthestBeacon = &beacon;
@@ -326,14 +323,10 @@ namespace CW {
 
     DroneManager::DroneManager()
     {
-        /*m_Texture = CreateUnique<sf::Texture>("res/sprites/drone_sprite.png");
-        m_Sprite = CreateUnique<sf::Sprite>(*m_Texture);
-        m_Sprite->setOrigin(static_cast<sf::Vector2f>(m_Texture->getSize()) / 2.0f);*/
         SetSettings(m_DroneSettings);
     }
 
     DroneManager::DroneManager(const DroneSettings& settings)
-        : DroneManager()
     {
         SetSettings(settings);
     }
@@ -390,10 +383,12 @@ namespace CW {
             if (drone.GetPos().x > m_FurthestHorizontalReach.y)
                 m_FurthestHorizontalReach.y = drone.GetPos().x;
 
-            if (terrain.IsNear(drone, 50.0f))
+            if (terrain.IsNear(drone, 60.0f))
             {
                 drone.SetDirection((drone.GetDirection() + sf::degrees(180.0f)).wrapSigned());
                 drone.SetAttraction(drone.GetDirection());
+                sf::Vector2f pos = drone.GetPos();
+                drone.SetPos({pos.x, pos.y - 5.0f});
             }
 
             drone.ReactToResources(resources, m_DroneSettings.ViewDistance, m_DroneSettings.FOV);
@@ -403,33 +398,6 @@ namespace CW {
         }
         return componentsVec;
     }
-
-    /*void DroneManager::DrawAllDrones()
-    {
-        for (auto& drone : m_Drones)
-        {
-            debugDrawDirectionVisuals(drone.GetPos(), drone.GetDirection(), drone.GetAttraction());
-            debugDrawViewDistance(drone.GetPos(), drone.GetDirection());
-
-            m_Sprite->setPosition(drone.GetPos());
-            if (abs(drone.GetDirection().asRadians()) > angle::PI_2)
-            {
-                m_Sprite->setScale({1.0f, -1.0f});
-            }
-            else
-            {
-                m_Sprite->setScale({ 1.0f, 1.0f });
-            }
-            m_Sprite->setRotation(drone.GetDirection());
-            Renderer::Get().Draw(*m_Sprite);
-        }
-    }*/
-
-    /*void DroneManager::OnEvent(Event& event)
-    {
-        EventDispatcher dispatcher(event);
-        dispatcher.Dispach<SpawnDrone>(CW_BUILD_EVENT_FUNC(OnSpawnDrone));
-    }*/
 
     void DroneManager::Clear()
     {
@@ -519,13 +487,6 @@ namespace CW {
         m_DrawViewDistance = false;
         m_DrawDirection = false;
     }
-
-    /*bool DroneManager::OnSpawnDrone(SpawnDrone& e)
-    {
-        sf::Angle randAngle = sf::degrees(lerp(0.0f, 180.0f, rand_float()));
-        CreateDrone(e.Position, randAngle);
-        return true;
-    }*/
 
     inline void DroneManager::debugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const
     {

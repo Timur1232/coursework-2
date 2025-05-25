@@ -12,6 +12,14 @@ namespace CW {
 	};
 
 
+	class IPausedUpdate
+	{
+	public:
+		virtual ~IPausedUpdate() = default;
+		virtual void PausedUpdate(float deltaTime) = 0;
+	};
+
+
 	template <class T>
 	concept has_update = requires(T u, float deltaTime)
 	{

@@ -139,31 +139,13 @@ namespace CW {
 
 			if (!beacon->IsAlive())
 			{
-				m_Chunks.ForgetObject(beacon);
 				++m_DeadBeacons;
 				auto& last = m_Beacons[m_Beacons.size() - m_DeadBeacons];
 				m_Chunks.ForgetObject(last);
 				std::swap(beacon, last);
-				m_Chunks.AddObject(beacon);
+				--i;
 			}
 		}
-	}
-
-	void BeaconManager::DrawAllBeacons()
-	{
-		auto& circleBuilder = Renderer::Get().BeginCircleShape();
-		circleBuilder.PointCount(4)
-			.Radius(10.0f);
-		for (auto& beacon : m_Beacons)
-		{
-			if (beacon->IsAlive())
-			{
-				circleBuilder.Position(beacon->GetPos())
-					.Color(beacon_color(beacon->GetType(), beacon->GetCharge()))
-					.Draw();
-			}
-		}
-		circleBuilder.SetDefault();
 	}
 
 	void BeaconManager::CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection, float charge)

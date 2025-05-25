@@ -10,13 +10,13 @@ namespace CW {
         UPSLimiter();
         UPSLimiter(size_t ups);
 
-        void Wait() const;
+        void Wait();
         void SetUPS(size_t ups);
         void Reset();
 
     private:
         std::chrono::microseconds m_LimitTime;
-        mutable std::chrono::steady_clock::time_point m_NextPoint;
+        std::chrono::steady_clock::time_point m_NextPoint;
     };
 
 } // CW

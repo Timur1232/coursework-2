@@ -46,33 +46,6 @@ namespace CW {
 		m_DroneSpawnCooldown = data.DroneSpawnCooldown;
 	}
 
-	void ResourceReciever::Draw()
-	{
-		auto& circleBuilder = Renderer::Get().BeginCircleShape();
-		// body
-		circleBuilder.DefaultAfterDraw()
-			.Radius(100.0f)
-			.Position(m_Position)
-			.Color(sf::Color::Magenta)
-			.Draw();
-		// recieve radius
-		circleBuilder.DefaultAfterDraw()
-			.Radius(m_RecieveRadius)
-			.Position(m_Position)
-			.Color(sf::Color::Transparent)
-			.OutlineThickness(1.0f)
-			.OutlineColor(sf::Color::Green)
-			.Draw();
-		// broadcast radius
-		circleBuilder.DefaultAfterDraw()
-			.Radius(m_BroadcastRadius)
-			.Position(m_Position)
-			.Color(sf::Color::Transparent)
-			.OutlineThickness(1.0f)
-			.OutlineColor(sf::Color::Red)
-			.Draw();
-	}
-
 	bool ResourceReciever::Update(float deltaTime)
 	{
 		m_DroneSpawnTimer -= deltaTime;

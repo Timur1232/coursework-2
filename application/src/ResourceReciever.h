@@ -20,8 +20,7 @@ namespace CW {
 	};
 
 	class ResourceReciever
-		: public Object,
-		  public IDrawable
+		: public Object
 	{
 	public:
 		ResourceReciever() = default;
@@ -33,7 +32,6 @@ namespace CW {
 		RecieverData GetData() const;
 		void SetData(const RecieverData& data);
 
-		void Draw() override;
 		bool Update(float deltaTime);
 
 		[[nodiscard]] int GetResources() const;

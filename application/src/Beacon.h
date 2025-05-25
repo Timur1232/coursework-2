@@ -70,7 +70,6 @@ namespace CW {
 		void SetSettings(const BeaconSettings& settings);
 
 		void Update(float deltaTime) override;
-		void DrawAllBeacons();
 		void CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection, float charge = 1.0f);
 		void Clear();
 

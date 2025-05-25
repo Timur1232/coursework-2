@@ -73,7 +73,6 @@ namespace CW {
 	struct FullSimulationState;
 
 	class DroneManager
-		//: public IOnEvent
 	{
 	public:
 		DroneManager();
@@ -95,10 +94,6 @@ namespace CW {
 			ResourceReciever& reciever,
 			const TerrainGenerator& terrain);
 
-		//void DrawAllDrones();
-
-		//void OnEvent(Event& event) override;
-
 		void Clear();
 		void Reset(size_t droneCount, sf::Vector2f startPosition = { 0.0f, 0.0f }, TargetType target = TargetType::Recource);
 
@@ -115,7 +110,6 @@ namespace CW {
 		sf::Vector2f GetFurthestHorizontalReach() const { return m_FurthestHorizontalReach; }
 
 	private:
-		//bool OnSpawnDrone(SpawnDrone& e);
 		// Debug
 		inline void debugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const;
 		inline void debugDrawViewDistance(sf::Vector2f position, sf::Angle directionAngle) const;

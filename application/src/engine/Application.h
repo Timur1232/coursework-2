@@ -16,6 +16,7 @@ namespace CW {
 	class Application
 		: public IDrawable,
 		  public IUpdate,
+		  public IPausedUpdate,
 		  public IOnEvent
 	{
 	public:
@@ -25,9 +26,11 @@ namespace CW {
 
 		virtual void Init() = 0;
 
-		virtual void PauseUpdate(float deltaTime) = 0;
+		virtual void Update(float) override {}
+		virtual void PausedUpdate(float) override {}
 
 		void UpdateLayers(float deltaTime);
+		void PausedUpdateLayers(float deltaTime);
 		bool OnEventLayers(Event& event);
 		void DrawLayers();
 

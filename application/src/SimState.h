@@ -29,7 +29,12 @@ namespace CW {
 
         // ResourceReciever
         sf::Vector2f ResieverPosition;
-        int ResourceCount;
+
+        // info
+        int ResourceCount = 0;
+        size_t DronesCount = 0;
+        size_t BeconsCount = 0;
+
 
         void Clear()
         {

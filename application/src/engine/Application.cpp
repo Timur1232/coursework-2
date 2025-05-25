@@ -19,6 +19,15 @@ namespace CW {
 		}
 	}
 
+	void Application::PausedUpdateLayers(float deltaTime)
+	{
+		for (auto& layer : m_Layers)
+		{
+			if (layer->IsUpdateActive())
+				layer->PausedUpdate(deltaTime);
+		}
+	}
+
 	bool Application::OnEventLayers(Event& event)
 	{
 		auto layerIter = m_Layers.rbegin();

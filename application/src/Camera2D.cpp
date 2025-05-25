@@ -22,11 +22,16 @@ namespace CW {
 	void CW::Camera2D::OnEvent(Event& event)
 	{
 		EventDispatcher dispatcher(event);
-		dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(onMouseButtonPressed));
-		dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(onMouseButtonReleased));
-		dispatcher.Dispach<MouseMoved>(CW_BUILD_EVENT_FUNC(onMouseMoved));
-		dispatcher.Dispach<MouseWheelScrolled>(CW_BUILD_EVENT_FUNC(onMouseWheelScrolled));
-		dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(onResized));
+		if (dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(onMouseButtonPressed)))
+			return;
+		if (dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(onMouseButtonReleased)))
+			return;
+		if (dispatcher.Dispach<MouseMoved>(CW_BUILD_EVENT_FUNC(onMouseMoved)))
+			return;
+		if (dispatcher.Dispach<MouseWheelScrolled>(CW_BUILD_EVENT_FUNC(onMouseWheelScrolled)))
+			return;
+		if (dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(onResized)))
+			return;
 	}
 
 	bool Camera2D::onMouseButtonPressed(MouseButtonPressed& e)

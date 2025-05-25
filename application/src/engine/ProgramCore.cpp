@@ -43,13 +43,21 @@ namespace CW {
 
 			ImGui::SFML::Update(*m_Window, deltaTime);
 
-			if (m_App->IsPaused())
-				m_App->PauseUpdate(deltaTime.asSeconds());
-			else
+			if (!m_App->IsPaused())
+			{
 				m_App->Update(deltaTime.asSeconds());
+				m_App->UpdateLayers(deltaTime.asSeconds());
+			}
+			else
+			{
+				m_App->PausedUpdate(deltaTime.asSeconds());
+				m_App->PausedUpdateLayers(deltaTime.asSeconds());
+			}
+
 
 			m_Window->clear(m_App->GetClearColor());
 			m_App->Draw();
+			m_App->DrawLayers();
 			ImGui::SFML::Render(*m_Window);
 			m_Window->display();
 		}
@@ -76,7 +84,6 @@ namespace CW {
 	void ProgramCore::pollEvents()
 	{
 		CW_PROFILE_FUNCTION();
-		int eventsCount = 0;
 		while (std::optional event = m_Window->pollEvent())
 		{
 			{
@@ -84,6 +91,7 @@ namespace CW {
 				ImGui::SFML::ProcessEvent(*m_Window, *event);
 			}
 
+			// особые случаи ивентов
 			if (event->is<sf::Event::Closed>())
 			{
 				WindowClosed closed;
@@ -96,19 +104,31 @@ namespace CW {
 				onWindowResized(resized);
 				m_App->OnEvent(resized);
 			}
+			// ивенты MouseButtonPressed, MouseButtonReleased и MouseMoved отправляются, только если не были обработаны ImGui
+			else if (auto e = event->getIf<sf::Event::MouseButtonPressed>(); e && !ImGui::GetIO().WantCaptureMouse)
+			{
+				MouseButtonPressed pressed(*e);
+				m_App->OnEvent(pressed);
+			}
+			else if (auto e = event->getIf<sf::Event::MouseButtonReleased>(); e && !ImGui::GetIO().WantCaptureMouse)
+			{
+				MouseButtonReleased released(*e);
+				m_App->OnEvent(released);
+			}
+			else if (auto e = event->getIf<sf::Event::MouseMoved>(); e && !ImGui::GetIO().WantCaptureMouse)
+			{
+				MouseMoved moved(*e);
+				m_App->OnEvent(moved);
+			}
 			else
 			{
 				CW_PROFILE_SCOPE("Dispacher function");
 				dispatch_core_event<
 					KeyPressed, sf::Event::KeyPressed,
 					KeyReleased, sf::Event::KeyReleased,
-					MouseWheelScrolled, sf::Event::MouseWheelScrolled,
-					MouseButtonPressed, sf::Event::MouseButtonPressed,
-					MouseButtonReleased, sf::Event::MouseButtonReleased,
-					MouseMoved, sf::Event::MouseMoved
+					MouseWheelScrolled, sf::Event::MouseWheelScrolled
 				>(*event, *m_App);
 			}
-			eventsCount++;
 		}
 	}
 

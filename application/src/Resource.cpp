@@ -77,22 +77,6 @@ namespace CW {
 		m_Settings = settings;
 	}
 
-	void ResourceManager::DrawAllRecources()
-	{
-		auto validResources = m_Resources
-			| std::ranges::views::filter([](const Resource& r) { return !r.IsCarried(); });
-		
-		for (const auto& resource : validResources)
-		{
-			Renderer::Get().BeginCircleShape()
-				.DefaultAfterDraw()
-				.Radius(20.0f)
-				.Color(sf::Color::Cyan)
-				.Position(resource.GetPos())
-				.Draw();
-		}
-	}
-
 	void ResourceManager::CreateResource(sf::Vector2f position, int amount)
 	{
 		auto carriedResource = std::ranges::find_if(m_Resources.begin(), m_Resources.end(), [](const Resource& r) { return r.IsCarried(); });

@@ -14,7 +14,7 @@ namespace CW {
         Reset();
     }
 
-    void UPSLimiter::Wait() const
+    void UPSLimiter::Wait()
     {
         auto now = std::chrono::high_resolution_clock::now();
         if (now < m_NextPoint)

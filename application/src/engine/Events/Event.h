@@ -38,11 +38,11 @@ namespace CW {
 		}
 
 		template <std::derived_from<Event> T, class F>
-		bool Dispach(const F& func)
+		bool Dispach(const F& callback)
 		{
 			if (m_Event.GetEventType() == T::GetStaticEventType())
 			{
-				m_Event.Handled |= func(static_cast<T&>(m_Event));
+				m_Event.Handled |= callback(static_cast<T&>(m_Event));
 				return true;
 			}
 			return false;
@@ -54,4 +54,4 @@ namespace CW {
 
 } // CW
 
-#define CW_BUILD_EVENT_FUNC(func) [this](auto&&... args) -> decltype(auto) { return this->func(std::forward<decltype(args)>(args)...); }
+#define CW_BUILD_EVENT_FUNC(callback) [this](auto&&... args) -> decltype(auto) { return this->callback(std::forward<decltype(args)>(args)...); }

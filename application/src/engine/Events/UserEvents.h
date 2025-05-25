@@ -11,21 +11,6 @@ static EventType GetStaticEventType() { return EventType::type; }
 
 namespace CW {
 
-	class CreateBeacon
-		: public Event
-	{
-	public:
-		sf::Vector2f Position;
-		CW::TargetType Type;
-		uint8_t BitDirection;
-
-		CreateBeacon(sf::Vector2f position, CW::TargetType type, uint8_t bitDirection)
-			: Position(position), Type(type), BitDirection(bitDirection)
-		{
-		}
-		CW_BULD_EVENT_TYPE(CreateBeacon)
-	};
-
 	class CloseApp
 		: public Event
 	{
@@ -38,39 +23,8 @@ namespace CW {
 		: public Event
 	{
 	public:
-		const SimulationSettings* Settings;
-
-		StartSimulation(const SimulationSettings* settings)
-			: Settings(settings)
-		{
-		}
+		StartSimulation() = default;
 		CW_BULD_EVENT_TYPE(StartSimulation)
-	};
-
-	class SetSimulationSettings
-		: public Event
-	{
-	public:
-		const SimulationSettings* Settings;
-
-		SetSimulationSettings(const SimulationSettings* settings)
-			: Settings(settings)
-		{
-		}
-		CW_BULD_EVENT_TYPE(SetSimulationSettings)
-	};
-
-	class SpawnDrone
-		: public Event
-	{
-	public:
-		sf::Vector2f Position;
-
-		SpawnDrone(sf::Vector2f position)
-			: Position(position)
-		{
-		}
-		CW_BULD_EVENT_TYPE(SpawnDrone)
 	};
 
 	class SwitchMenu
@@ -103,9 +57,9 @@ namespace CW {
 		: public Event
 	{
 	public:
-		const char* FilePath;
+		std::string FilePath;
 
-		LoadSimulation(const char* path) : FilePath(path) {}
+		LoadSimulation(std::string_view path) : FilePath(path) {}
 		CW_BULD_EVENT_TYPE(LoadSimulation)
 	};
 
