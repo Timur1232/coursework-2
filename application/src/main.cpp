@@ -38,7 +38,7 @@ namespace CW {
             : m_Camera(0, 0, windowSize.x, windowSize.y),
               m_Settings(settings),
               m_Drones(settings->Drones),
-              m_Beacons(settings->Beacons),
+              m_Beacons(settings->Beacons, settings->Drones.ViewDistance.y * 2.0f),
               m_Resources(settings->Resources),
               m_Terrain(settings->TerrainGenerator),
               m_ResourceReciever(settings->Drones)
@@ -161,7 +161,6 @@ namespace CW {
             if (!m_Paused && !m_RunSingleThread)
                 SpawnSimulationThread();
 
-
             m_WaterShader.setUniform("uCameraPosition", m_Camera.GetView().getCenter());
             m_WaterShader.setUniform("uZoomFactor", m_Camera.GetZoomFactor());
             m_WaterShader.setUniform("uTime", elapsedTime);
@@ -195,9 +194,6 @@ namespace CW {
                 chunkMeshBuilder.SetDefault();
             }*/
 
-            
-
-            //m_ResourceReciever.Draw();
             auto& circleBuilder = Renderer::Get().BeginCircleShape();
             // body
             circleBuilder.DefaultAfterDraw()
@@ -401,15 +397,18 @@ namespace CW {
             std::ofstream file(e.FilePath, std::ios::binary);
             if (!file)
             {
-                CW_ERROR("Unable to open file for saving!");
+                const char* messege = "Unable to open file for saving!";
+                UserEventHandler::Get().SendEvent(MessegeToUser{ messege });
+                CW_ERROR("{}", messege);
+                UserEventHandler::Get().SendEvent(SaveResults{ true });
                 return true;
             }
 
             FullSimulationState state;
-            if (!m_Paused)
+            if (!m_Paused && !m_RunSingleThread)
                 SyncStopSimulationThread();
             CollectState(state);
-            if (!m_Paused)
+            if (!m_Paused && !m_RunSingleThread)
                 SpawnSimulationThread();
 
             // reciever
@@ -444,6 +443,8 @@ namespace CW {
             {
                 resource.WriteToFile(file);
             }
+
+            UserEventHandler::Get().SendEvent(SaveResults{ false });
 
             return true;
         }
@@ -752,10 +753,9 @@ namespace CW {
         bool m_BeaconsInfo = false;
         bool m_DronesInfo = false;
         bool m_DrawBeacons = true;
+        bool m_DrawChunks = false;
 
         ObjectPalleteBuilder m_ObjPallete;
-
-        bool m_DrawChunks = false;
     };
 
 
@@ -1110,6 +1110,15 @@ namespace CW {
         : public Application
     {
     public:
+        enum class ExitStatus
+        {
+            None = 0,
+            JustSaving,
+            SaveAndExit,
+            Error,
+            Exit
+        };
+    public:
         MyApp()
             : Application(800, 600, "test"),
               m_SimSettings(CreateShared<SimulationSettings>())
@@ -1150,6 +1159,10 @@ namespace CW {
                 return;
             if (dispatcher.Dispach<LoadSimulation>(CW_BUILD_EVENT_FUNC(OnLoadSimulation)))
                 return;
+            if (dispatcher.Dispach<MessegeToUser>(CW_BUILD_EVENT_FUNC(OnMessegeToUser)))
+                return;
+            if (dispatcher.Dispach<SaveResults>(CW_BUILD_EVENT_FUNC(OnSaveResults)))
+                return;
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
             dispatcher.Dispach<KeyPressed>(CW_BUILD_EVENT_FUNC(OnKeyPressed));
             OnEventLayers(event);
@@ -1159,21 +1172,29 @@ namespace CW {
         void AppIteration()
         {
             CW_PROFILE_FUNCTION();
-            if (m_ExitFlag)
+            switch (m_ExitFlag)
             {
+            case ExitStatus::Exit:
                 PopLayer();
                 PopLayer();
-                m_ExitFlag = false;
+                m_ExitFlag = ExitStatus::None;
                 PushLayer<MainMenuLayer>((sf::Vector2f)GetWindowSize(), m_SimSettings);
                 m_ClearColor = sf::Color(0, 0, 0, 255);
                 m_SimIsRunning = false;
                 return;
+            case ExitStatus::Error:
+                CW_ERROR("Saving error");
+                m_ExitFlag = ExitStatus::None;
+                break;
+            default: break;
             }
 
             if (m_DebugIsOpen)
                 UpdateDebugInterface();
             if (m_MenuIsOpen)
                 UpdateMenuInterface();
+            if (m_PopupIsOpen)
+                UpdatePopup();
         }
 
         bool OnKeyPressed(KeyPressed& event)
@@ -1225,7 +1246,9 @@ namespace CW {
             std::ifstream file(e.FilePath, std::ios::binary);
             if (!file)
             {
-                CW_ERROR("Unable to open file for loading: {}", e.FilePath);
+                m_PopupMessege = std::format("Unable to open file for loading: {}", e.FilePath);
+                m_PopupIsOpen = true;
+                CW_ERROR("{}", m_PopupMessege);
                 return true;
             }
 
@@ -1282,6 +1305,44 @@ namespace CW {
             return true;
         }
 
+        bool OnMessegeToUser(MessegeToUser& e)
+        {
+            m_PopupIsOpen = true;
+            m_PopupMessege = std::move(e.Messege);
+            return true;
+        }
+
+        bool OnSaveResults(SaveResults& e)
+        {
+            if (e.Error)
+            {
+                m_ExitFlag = ExitStatus::Error;
+            }
+            else
+            {
+                switch (m_ExitFlag)
+                {
+                case ExitStatus::SaveAndExit:
+                    m_ExitFlag = ExitStatus::Exit;
+                    m_MenuIsOpen = false;
+                    m_DebugIsOpen = false;
+                    break;
+                case ExitStatus::JustSaving:  m_ExitFlag = ExitStatus::None; break;
+                default: break;
+                }
+            }
+            return true;
+        }
+
+        void UpdatePopup()
+        {
+            ImGui::Begin("Messege", &m_PopupIsOpen, m_WindowFlags);
+            ImGui::Text(m_PopupMessege.c_str());
+            if (ImGui::Button("Ok"))
+                m_PopupIsOpen = false;
+            ImGui::End();
+        }
+
         void UpdateDebugInterface()
         {
             ImGui::Begin("Debug");
@@ -1318,30 +1379,43 @@ namespace CW {
 
         void UpdateMenuInterface()
         {
-            ImGui::Begin("Menu");
+            ImGui::Begin("Menu", nullptr, m_WindowFlags);
             ImGui::InputText("Path", g_FilePathBuff, sizeof(g_FilePathBuff) / sizeof(*g_FilePathBuff));
-            if (g_FilePathBuff[0])
+
+            ImGui::SameLine();
+            if (ImGui::SmallButton("clear"))
             {
+                g_FilePathBuff[0] = '\0';
+            }
+
+            const char* savePath = (g_FilePathBuff[0]) ? g_FilePathBuff : m_CurrentFilePath.c_str();
+            ImGui::Text("Current path: %s", m_CurrentFilePath.c_str());
+            if (savePath[0])
+            {
+                ImGui::Text("Will be saved in: %s", savePath);
                 if (ImGui::Button("Save"))
                 {
                     m_CurrentFilePath = g_FilePathBuff;
-                    UserEventHandler::Get().SendEvent(SaveSimulation{ g_FilePathBuff });
+                    UserEventHandler::Get().SendEvent(SaveSimulation{ savePath });
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Save and Exit"))
                 {
-                    UserEventHandler::Get().SendEvent(SaveSimulation{ m_CurrentFilePath.c_str() });
+                    UserEventHandler::Get().SendEvent(SaveSimulation{ savePath });
                     g_FilePathBuff[0] = '\0';
-                    m_ExitFlag = true;
-                    m_MenuIsOpen = false;
-                    m_DebugIsOpen = false;
+                    m_ExitFlag = ExitStatus::SaveAndExit;
                 }
+            }
+            else
+            {
+                ImGui::Text("Please enter save path");
             }
             if (ImGui::Button("Exit"))
             {
-                m_ExitFlag = true;
+                m_ExitFlag = ExitStatus::Exit;
                 m_MenuIsOpen = false;
                 m_DebugIsOpen = false;
+                g_FilePathBuff[0] = '\0';
             }
             ImGui::End();
         }
@@ -1350,11 +1424,17 @@ namespace CW {
         bool m_SimIsRunning = false;
         bool m_MenuIsOpen = false;
         bool m_DebugIsOpen = false;
-        bool m_ExitFlag = false;
         bool m_VirtualTime = false;
+
+        ExitStatus m_ExitFlag = ExitStatus::None;
+
+        bool m_PopupIsOpen = false;
+        std::string m_PopupMessege = "";
+
         int m_TargetUPS = 60;
         std::string m_CurrentFilePath = "";
         Shared<SimulationSettings> m_SimSettings;
+        ImGuiWindowFlags m_WindowFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
     };
 
 } // CW

@@ -80,15 +80,11 @@ namespace CW {
 	}
 
 
-	BeaconManager::BeaconManager()
-	{
-		m_Beacons.reserve(1024 * 1024);
-	}
-
-	BeaconManager::BeaconManager(const BeaconSettings& settings)
-		: BeaconManager()
+	BeaconManager::BeaconManager(const BeaconSettings& settings, float chunckSize)
+		: m_Chunks(chunckSize)
 	{
 		m_BeaconSettings = settings;
+		m_Beacons.reserve(1024 * 1024);
 	}
 
 	void BeaconManager::SetState(FullSimulationState& state)

@@ -57,8 +57,7 @@ namespace CW {
 		using IndexedBeacon = Indexed<Beacon>;
 
 	public:
-		BeaconManager();
-		BeaconManager(const BeaconSettings& settings);
+		BeaconManager(const BeaconSettings& settings, float chunckSize);
 
 		void SetState(FullSimulationState& state);
 
@@ -82,7 +81,7 @@ namespace CW {
 
 	private:
 		std::vector<IndexedBeacon> m_Beacons;
-		ChunkHandler<Beacon> m_Chunks{ 500.0f };
+		ChunkHandler<Beacon> m_Chunks;
 		size_t m_DeadBeacons = 0;
 
 		BeaconSettings m_BeaconSettings;

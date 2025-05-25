@@ -96,6 +96,7 @@
     <ClCompile Include="src\BitDirection.cpp" />
     <ClCompile Include="src\Camera2D.cpp" />
     <ClCompile Include="src\debug_utils\LineShape.cpp" />
+    <ClCompile Include="src\debug_utils\Log.cpp" />
     <ClCompile Include="src\Drone.cpp" />
     <ClCompile Include="src\engine\Application.cpp" />
     <ClCompile Include="src\engine\Button.cpp" />

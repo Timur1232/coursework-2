@@ -152,8 +152,10 @@ namespace CW {
 	void ProgramCore::pollUserEvents()
 	{
 		CW_PROFILE_FUNCTION();
-		for (auto& event : UserEventHandler::Get().GetEvents())
+		auto& events = UserEventHandler::Get().GetEvents();
+		for (size_t i = 0; i < events.size(); ++i)
 		{
+			auto& event = events[i];
 			dispatch_user_event<CW_USER_EVENTS_LIST>(event, *m_App);
 		}
 		UserEventHandler::Get().ClearEvents();

@@ -47,10 +47,20 @@ namespace CW {
 		: public Event
 	{
 	public:
-		const char* FilePath;
+		std::string FilePath;
 
-		SaveSimulation(const char* path) : FilePath(path) {}
+		SaveSimulation(std::string_view path) : FilePath(path) {}
 		CW_BULD_EVENT_TYPE(SaveSimulation)
+	};
+
+	class SaveResults
+		: public Event
+	{
+	public:
+		bool Error;
+
+		SaveResults(bool error) : Error(error) {}
+		CW_BULD_EVENT_TYPE(SaveResults)
 	};
 
 	class LoadSimulation
@@ -71,6 +81,16 @@ namespace CW {
 
 		SwitchThread(int targetUPS) : TargetUps(targetUPS) {}
 		CW_BULD_EVENT_TYPE(SwitchThread)
+	};
+
+	class MessegeToUser
+		: public Event
+	{
+	public:
+		std::string Messege;
+
+		MessegeToUser(const char* messege) : Messege(messege) {}
+		CW_BULD_EVENT_TYPE(MessegeToUser)
 	};
 
 } // CW

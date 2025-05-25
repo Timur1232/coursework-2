@@ -18,6 +18,7 @@
 #include <cmath>
 #include <concepts>
 #include <thread>
+#include <mutex>
 
 #include <fstream>
 #include <sstream>
