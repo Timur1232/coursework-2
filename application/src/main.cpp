@@ -146,7 +146,6 @@ namespace CW {
 
         void Draw() override
         {
-            return;
             m_RenderState.Clear();
 
             // синхронизация для копирования состояния

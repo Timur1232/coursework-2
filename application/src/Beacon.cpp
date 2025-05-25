@@ -141,7 +141,10 @@ namespace CW {
 			{
 				m_Chunks.ForgetObject(beacon);
 				++m_DeadBeacons;
-				std::swap(m_Beacons[i], m_Beacons[m_Beacons.size() - m_DeadBeacons]);
+				auto& last = m_Beacons[m_Beacons.size() - m_DeadBeacons];
+				m_Chunks.ForgetObject(last);
+				std::swap(beacon, last);
+				m_Chunks.AddObject(beacon);
 			}
 		}
 	}

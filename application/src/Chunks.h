@@ -122,7 +122,7 @@ namespace CW {
 				return;
 			}
 			m_Objects[index] = nullptr;
-			if (((m_Objects.size() - m_DeadPtrs) > 2) && (index != (m_Objects.size() - m_DeadPtrs - 1)))
+			if ((((i64) m_Objects.size() - (i64) m_DeadPtrs) > 2) && (index != (m_Objects.size() - m_DeadPtrs - 1)))
 			{
 				std::swap(m_Objects[index], m_Objects[m_Objects.size() - m_DeadPtrs - 1]);
 				m_Objects[index]->Index = index;
