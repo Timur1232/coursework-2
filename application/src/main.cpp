@@ -24,6 +24,8 @@
 
 #define SHADERS_FOLDER "res/shaders/"
 #define SPRITES_FOLDER "res/sprites/"
+#define SAVES_FOLDER   "saves/"
+#define SAVE_EXTENSION ".s"
 
 namespace CW {
 
@@ -43,7 +45,7 @@ namespace CW {
               m_Terrain(settings->TerrainGenerator),
               m_ResourceReciever(settings->Drones)
         {
-            m_DroneTexture = CreateUnique<sf::Texture>("res/sprites/drone_sprite.png");
+            m_DroneTexture = CreateUnique<sf::Texture>(SPRITES_FOLDER "drone_sprite.png");
             m_DroneSprite = CreateUnique<sf::Sprite>(*m_DroneTexture);
             m_DroneSprite->setOrigin(static_cast<sf::Vector2f>(m_DroneTexture->getSize()) / 2.0f);
             if (state)
@@ -59,6 +61,7 @@ namespace CW {
             Init(windowSize);
             if (!state)
                 InitNewSim(settings->DronesCount, { settings->StartingHorizontalPosition, 0.0f });
+            m_SimulationRunning = true;
         }
 
         ~SimulationLayer()
@@ -84,8 +87,7 @@ namespace CW {
 
         void Init(const sf::Vector2f& windowSize)
         {
-            m_Resources.Reserve(128);
-            m_Drones.SetDefaultSettings();
+            m_Resources.Reserve(1024);
 
             if (!m_WaterShader.loadFromFile(SHADERS_FOLDER "water_fragment.glsl", sf::Shader::Type::Fragment))
             {
@@ -121,8 +123,19 @@ namespace CW {
 
         void Update(float deltaTime) override
         {
-            if (m_RunSingleThread)
+            if (!m_SimulationRunning)
+                return;
+            if (m_RunSingleThread && m_SimulationRunning)
                 OneIteration(deltaTime);
+            if (m_CopyState.ResourceCount < m_Settings->Drones.DroneCost && 
+                (!m_RunSingleThread && m_CopyState.DronesDirections.size() == 0
+                || m_RunSingleThread && m_Drones.AliveCount() == 0))
+            {
+                UserEventHandler::Get().SendEvent(MessegeToUser{ "All drones are dead and cannot be created! Simulation is over." });
+                m_SimulationRunning = false;
+                if (!m_RunSingleThread)
+                    SyncStopSimulationThread();
+            }
         }
 
         void OnEvent(Event& event) override
@@ -394,11 +407,11 @@ namespace CW {
         
         bool OnSaveSimulation(SaveSimulation& e)
         {
-            std::ofstream file(e.FilePath, std::ios::binary);
+            std::ofstream file(SAVES_FOLDER + e.FilePath + SAVE_EXTENSION, std::ios::binary);
             if (!file)
             {
-                const char* messege = "Unable to open file for saving!";
-                UserEventHandler::Get().SendEvent(MessegeToUser{ messege });
+                std::string messege = std::format("Unable to open file for saving! path: {}", e.FilePath);
+                UserEventHandler::Get().SendEvent(MessegeToUser{ messege.c_str()});
                 CW_ERROR("{}", messege);
                 UserEventHandler::Get().SendEvent(SaveResults{ true });
                 return true;
@@ -718,6 +731,7 @@ namespace CW {
 
         UPSLimiter m_Limiter{ 120 };
         bool m_RunSingleThread = true;
+        bool m_SimulationRunning = false;
 
         SimulationState m_CopyState;
 
@@ -973,6 +987,7 @@ namespace CW {
                 ImGui::InputFloat("Starting position", &m_SimSettings->StartingHorizontalPosition);
                 ImGui::Spacing();
 
+                ImGui::InputFloat("Drone discharge rate (% / sec)", &drones.DischargeRate, 1.0f, 10.0f);
                 ImGui::InputFloat("Drone spawn cooldown", &drones.BeaconCooldownSec, 1.0f, 10.0f);
                 ImGui::Spacing();
                 ImGui::InputFloat("Speed", &drones.Speed, 10.0f, 100.0f);
@@ -987,6 +1002,8 @@ namespace CW {
                 ImGui::SliderAngle("Random wander angle", &drones.RandomWanderAngleRad, 1.0f, 180.0f);
                 ImGui::SliderFloat("Wander angle threashold", &drones.WanderAngleThresholdDeg, 0.0f, 15.0f);
                 ImGui::SliderAngle("Max turning delta", &drones.MaxTurningDeltaRad, 1.0f, 180.0f);
+                ImGui::Spacing();
+                ImGui::Checkbox("Bit directions", &drones.BitDirections);
 
                 if (ImGui::Button("set default##drone"))
                 {
@@ -1175,6 +1192,7 @@ namespace CW {
             switch (m_ExitFlag)
             {
             case ExitStatus::Exit:
+            case ExitStatus::SaveAndExit:
                 PopLayer();
                 PopLayer();
                 m_ExitFlag = ExitStatus::None;
@@ -1186,7 +1204,7 @@ namespace CW {
                 CW_ERROR("Saving error");
                 m_ExitFlag = ExitStatus::None;
                 break;
-            default: break;
+            default: m_ExitFlag = ExitStatus::None; break;
             }
 
             if (m_DebugIsOpen)
@@ -1218,7 +1236,7 @@ namespace CW {
             return true;
         }
 
-        bool OnStartSimulation(StartSimulation& e)
+        bool OnStartSimulation(StartSimulation&)
         {
             PopLayer();
             PushLayer<SimulationLayer>((sf::Vector2f) GetWindowSize(), m_SimSettings);
@@ -1243,7 +1261,7 @@ namespace CW {
 
         bool OnLoadSimulation(LoadSimulation& e)
         {
-            std::ifstream file(e.FilePath, std::ios::binary);
+            std::ifstream file(SAVES_FOLDER + e.FilePath + SAVE_EXTENSION, std::ios::binary);
             if (!file)
             {
                 m_PopupMessege = std::format("Unable to open file for loading: {}", e.FilePath);

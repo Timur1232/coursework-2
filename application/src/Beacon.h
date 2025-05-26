@@ -16,12 +16,14 @@ namespace CW {
 
 	[[nodiscard]] sf::Color beacon_color(TargetType type, float charge);
 
+	// TODO: выдача битового направления или обычного в зависимости от настройки
+
 	class Beacon
 		: public Object
 	{
 	public:
 		Beacon() = default;
-		Beacon(sf::Vector2f position, TargetType type, uint8_t bitDirection, float charge = 1.0f);
+		Beacon(sf::Vector2f position, TargetType type, sf::Angle angle, float charge = 1.0f);
 
 		void WriteToFile(std::ofstream& file) const;
 		void ReadFromFile(std::ifstream& file);
@@ -32,17 +34,18 @@ namespace CW {
 
 		[[nodiscard]] bool IsAlive() const { return m_Alive; }
 
-		void Revive(sf::Vector2f newPosition, TargetType newType, uint8_t bitDirection, float charge = 1.0f);
+		void Revive(sf::Vector2f newPosition, TargetType newType, float charge = 1.0f);
 
 		float GetCharge() const { return m_Charge; }
 		[[nodiscard]] TargetType GetType() const { return m_Type; }
-		[[nodiscard]] uint8_t GetBitDirection() const { return m_BitDirection; }
 		[[nodiscard]] sf::Angle GetDirectionAngle() const;
+		[[nodiscard]] sf::Angle GetBitDirectionAngle() const { return m_Direction; }
+		void SetDirection(sf::Angle angle) { m_Direction = angle; }
 
 	private:
 		TargetType m_Type = TargetType::None;
 		float m_Charge = 1.0f;
-		byte m_BitDirection = DirectionBit::None;
+		sf::Angle m_Direction;
 		bool m_Alive = true;
 	};
 
@@ -69,7 +72,7 @@ namespace CW {
 		void SetSettings(const BeaconSettings& settings);
 
 		void Update(float deltaTime) override;
-		void CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection, float charge = 1.0f);
+		void CreateBeacon(sf::Vector2f position, TargetType type, sf::Angle angle, float charge = 1.0f);
 		void Clear();
 
 		[[nodiscard]] const ChunkHandler<Beacon>& GetChuncks() const { return m_Chunks; }

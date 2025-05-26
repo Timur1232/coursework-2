@@ -19,7 +19,7 @@
 
 namespace CW {
 
-	using BeaconComponents = std::tuple<sf::Vector2f, TargetType, u8>;
+	using BeaconComponents = std::tuple<sf::Vector2f, TargetType, sf::Angle>;
 
 	class Drone
 		: public Object
@@ -40,12 +40,20 @@ namespace CW {
 		[[nodiscard]] std::optional<size_t> GetTargetResourceIndex() const { return m_TargetResourceIndex; }
 		TargetType GetTarget() const { return m_TargetType; }
 
+		float GetCharge() const { return m_Charge; }
+		void SetCharge(float charge) { m_Charge = charge; }
+		void ChargeCharge(float delta) { m_Charge += delta; }
+
+		bool IsAlive() const { return m_IsAlive; }
+		void Revive(sf::Vector2f position, sf::Angle direction, TargetType targetType);
+
 		void SetDirection(sf::Angle angle) { m_DirectionAngle = angle; }
 		void SetAttraction(sf::Angle angle) { m_AttractionAngle = angle; }
 
 		bool Update(float deltaTime, const DroneSettings& settings, std::vector<Resource>& resources, BeaconComponents& components);
 
-		void ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec, float FOV, sf::Vector2f viewDistance);
+		void ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec,
+			float FOV, sf::Vector2f viewDistance, bool bitDir);
 		[[nodiscard]] bool ReactToResourceReciver(ResourceReciever& reciever, float wanderCooldownSec);
 
 		void ReactToResources(std::vector<Resource>& resources, sf::Vector2f viewDistance, float FOV);
@@ -63,6 +71,9 @@ namespace CW {
 		int m_CarriedResources = 0;
 		float m_BeaconTimerSec = 0.0f;
 		float m_WanderTimer = 0.0f;
+
+		float m_Charge = 1.0f;
+		bool m_IsAlive = true;
 
 		TargetType m_TargetType = TargetType::Recource;
 		std::optional<size_t> m_TargetResourceIndex{};
@@ -101,6 +112,7 @@ namespace CW {
 
 		[[nodiscard]] size_t Size() const { return m_Drones.size(); }
 		[[nodiscard]] size_t Capacity() const { return m_Drones.capacity(); }
+		size_t AliveCount() const { return m_Drones.size() - m_DeadDrones; }
 
 		void InfoInterface(bool* open);
 		void DebugInterface();
@@ -116,6 +128,7 @@ namespace CW {
 
 	private:
 		std::vector<Drone> m_Drones;
+		size_t m_DeadDrones = 0;
 		DroneSettings m_DroneSettings;
 		sf::Vector2f m_FurthestHorizontalReach;
 

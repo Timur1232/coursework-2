@@ -21,7 +21,11 @@ namespace CW {
 
     void DroneSettings::SetDefault()
     {
+        BitDirections = true;
+
         ViewDistance = { 70.0f, 250.0f };
+
+        DischargeRate = 0.05f;
 
         Speed = 100.0f;
         TurningSpeed = angle::to_radians(15.0f);
@@ -54,6 +58,7 @@ namespace CW {
     void Drone::WriteToFile(std::ofstream& file) const
     {
         file.write(reinterpret_cast<const char*>(&m_Position), sizeof(m_Position));
+        file.write(reinterpret_cast<const char*>(&m_Charge), sizeof(m_Charge));
 
         float directionRad = m_DirectionAngle.asRadians();
         float attractionRad = m_AttractionAngle.asRadians();
@@ -71,6 +76,7 @@ namespace CW {
     void Drone::ReadFromFile(std::ifstream& file)
     {
         file.read(reinterpret_cast<char*>(&m_Position), sizeof(sf::Vector2f));
+        file.read(reinterpret_cast<char*>(&m_Charge), sizeof(m_Charge));
 
         float directionRad, attractionRad;
         file.read(reinterpret_cast<char*>(&directionRad), sizeof(directionRad));
@@ -87,9 +93,32 @@ namespace CW {
         m_TargetType = static_cast<TargetType>(typeInt);
     }
 
+    void Drone::Revive(sf::Vector2f position, sf::Angle direction, TargetType targetType)
+    {
+        m_Position = position;
+        m_DirectionAngle = m_AttractionAngle = direction;
+        m_Charge = 1.0f;
+        m_TargetType = targetType;
+        m_TargetResourceIndex = {};
+        m_CarriedResources = 0;
+        m_BeaconTimerSec = 0.0f;
+        m_WanderTimer = 0.0f;
+        m_IsAlive = true;
+    }
+
     bool Drone::Update(float deltaTime, const DroneSettings& settings, std::vector<Resource>& resources, BeaconComponents& components)
     {
         CW_PROFILE_FUNCTION();
+        if (!IsAlive())
+            return false;
+        m_Charge -= settings.DischargeRate / 100.0f * deltaTime;
+        if (m_Charge <= 0.0f)
+        {
+            m_IsAlive = false;
+            m_Charge = 0.0f;
+            return false;
+        }
+        
         bool beaconSpawn = false;
 
         turn(deltaTime, sf::radians(settings.TurningSpeed), sf::radians(settings.MaxTurningDeltaRad));
@@ -112,7 +141,7 @@ namespace CW {
         {
             beaconSpawn = true;
             components = { m_Position, opposite_target_type(m_TargetType),
-                    angle_to_bit_direction((m_DirectionAngle + sf::degrees(180.0f)).wrapSigned()) };
+                    (m_DirectionAngle + sf::degrees(180.0f)).wrapSigned() };
             m_BeaconTimerSec = settings.BeaconCooldownSec;
         }
 
@@ -136,7 +165,7 @@ namespace CW {
         return beaconSpawn;
     }
 
-    void Drone::ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec, float FOV, sf::Vector2f viewDistance)
+    void Drone::ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec, float FOV, sf::Vector2f viewDistance, bool bitDir)
     {
         CW_PROFILE_FUNCTION();
         if (m_TargetResourceIndex)
@@ -157,7 +186,10 @@ namespace CW {
 
         if (furthestBeacon)
         {
-            m_AttractionAngle = furthestBeacon->GetDirectionAngle();
+            if (bitDir)
+                m_AttractionAngle = furthestBeacon->GetBitDirectionAngle();
+            else
+                m_AttractionAngle = furthestBeacon->GetDirectionAngle();
             m_WanderTimer = wanderCooldownSec;
         }
     }
@@ -174,6 +206,7 @@ namespace CW {
                 m_TargetType = TargetType::Recource;
                 m_AttractionAngle = (m_AttractionAngle - sf::degrees(180.0f)).wrapSigned();
                 m_DirectionAngle = m_AttractionAngle;
+                m_Charge = 1.0f;
                 return true;
             }
             else if (distSq <= reciever.GetBroadcastRadius() * reciever.GetBroadcastRadius())
@@ -345,14 +378,23 @@ namespace CW {
     {
         for (const auto& drone : m_Drones)
         {
-            state.DronesPositions.push_back(drone.GetPos());
-            state.DronesDirections.push_back(drone.GetDirection());
+            if (drone.IsAlive())
+            {
+                state.DronesPositions.push_back(drone.GetPos());
+                state.DronesDirections.push_back(drone.GetDirection());
+            }
         }
     }
 
     void DroneManager::CollectState(FullSimulationState& state) const
     {
-        state.Drones = m_Drones;
+        for (const auto& drone : m_Drones)
+        {
+            if (drone.IsAlive())
+            {
+                state.Drones.push_back(drone);
+            }
+        }
     }
 
     void DroneManager::SetSettings(const DroneSettings& settings)
@@ -370,11 +412,20 @@ namespace CW {
     {
         BeaconComponents components;
         std::vector<BeaconComponents> componentsVec;
-        for (auto& drone : m_Drones)
+        for (size_t i = 0; i < m_Drones.size() - m_DeadDrones; ++i)
         {
+            auto& drone = m_Drones[i];
             if (drone.Update(deltaTime, m_DroneSettings, resources, components))
             {
                 componentsVec.emplace_back(components);
+            }
+            if (!drone.IsAlive())
+            {
+                ++m_DeadDrones;
+                auto& last = m_Drones[m_Drones.size() - m_DeadDrones];
+                std::swap(drone, last);
+                --i;
+                continue;
             }
 
             // Подсчет максимальной достигнутой горизонтальной позиции
@@ -383,18 +434,18 @@ namespace CW {
             if (drone.GetPos().x > m_FurthestHorizontalReach.y)
                 m_FurthestHorizontalReach.y = drone.GetPos().x;
 
-            if (terrain.IsNear(drone, 60.0f))
+            if (terrain.IsNear(drone, 80.0f))
             {
                 drone.SetDirection((drone.GetDirection() + sf::degrees(180.0f)).wrapSigned());
                 drone.SetAttraction(drone.GetDirection());
                 sf::Vector2f pos = drone.GetPos();
-                drone.SetPos({pos.x, pos.y - 5.0f});
+                drone.SetPos({pos.x, pos.y - 15.0f});
             }
 
             drone.ReactToResources(resources, m_DroneSettings.ViewDistance, m_DroneSettings.FOV);
 
             if (!drone.ReactToResourceReciver(reciever, m_DroneSettings.WanderCooldownSec))
-                drone.ReactToBeacons(beacons, m_DroneSettings.WanderCooldownSec, m_DroneSettings.FOV, m_DroneSettings.ViewDistance);
+                drone.ReactToBeacons(beacons, m_DroneSettings.WanderCooldownSec, m_DroneSettings.FOV, m_DroneSettings.ViewDistance, m_DroneSettings.BitDirections);
         }
         return componentsVec;
     }
@@ -418,11 +469,20 @@ namespace CW {
 
     void DroneManager::CreateDrone(sf::Vector2f position, sf::Angle directionAngle, TargetType target)
     {
-        if (m_Drones.size() == m_Drones.capacity())
+        if (m_DeadDrones)
         {
-            CW_INFO("Drones realloc");
+            auto& drone= m_Drones[m_Drones.size() - m_DeadDrones];
+            drone.Revive(position, directionAngle, target);
+            --m_DeadDrones;
         }
-        m_Drones.emplace_back(position, directionAngle, target);
+        else
+        {
+            if (m_Drones.size() == m_Drones.capacity())
+            {
+                CW_INFO("Drones realloc");
+            }
+            m_Drones.emplace_back(position, directionAngle, target);
+        }
     }
 
     void DroneManager::InfoInterface(bool* open)

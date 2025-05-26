@@ -9,7 +9,7 @@
 
 namespace CW {
 
-    // для рендера
+    // для синхронизации потоков
     struct SimulationState
     {
         // Drone
@@ -32,9 +32,6 @@ namespace CW {
 
         // info
         int ResourceCount = 0;
-        size_t DronesCount = 0;
-        size_t BeconsCount = 0;
-
 
         void Clear()
         {

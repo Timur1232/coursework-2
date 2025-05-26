@@ -5,6 +5,7 @@ namespace CW {
 
 	struct DroneSettings
 	{
+		float DischargeRate;
 		float Speed;
 		float TurningSpeed;
 
@@ -24,6 +25,7 @@ namespace CW {
 		int DroneCost;
 		float DroneSpawnCooldown;
 		sf::Vector2f BasePosition;
+		bool BitDirections;
 
 		DroneSettings();
 		void SetDefault();

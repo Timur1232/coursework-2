@@ -27,11 +27,11 @@ namespace CW {
 	RecieverData ResourceReciever::GetData() const
 	{
 		return RecieverData{
-			.ResourceCount = m_ResourceCount,
-			.RecieveRadius = m_RecieveRadius,
-			.BroadcastRadius = m_BroadcastRadius,
-			.DroneCost = m_DroneCost,
-			.DroneSpawnTimer = m_DroneSpawnTimer,
+			.ResourceCount		= m_ResourceCount,
+			.RecieveRadius		= m_RecieveRadius,
+			.BroadcastRadius	= m_BroadcastRadius,
+			.DroneCost			= m_DroneCost,
+			.DroneSpawnTimer    = m_DroneSpawnTimer,
 			.DroneSpawnCooldown = m_DroneSpawnCooldown,
 		};
 	}
@@ -52,7 +52,6 @@ namespace CW {
 		if (m_DroneSpawnTimer <= 0.0f && m_ResourceCount >= m_DroneCost)
 		{
 			m_ResourceCount -= m_DroneCost;
-			//UserEventHandler::Get().SendEvent(SpawnDrone{ m_Position });
 			m_DroneSpawnTimer = m_DroneSpawnCooldown;
 			return true;
 		}

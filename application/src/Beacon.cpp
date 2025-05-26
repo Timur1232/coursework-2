@@ -10,8 +10,8 @@
 
 namespace CW {
 
-	Beacon::Beacon(sf::Vector2f position, TargetType type, uint8_t bitDirection, float charge)
-		: Object(position), m_Type(type), m_BitDirection(bitDirection), m_Charge(charge)
+	Beacon::Beacon(sf::Vector2f position, TargetType type, sf::Angle angle, float charge)
+		: Object(position), m_Type(type), m_Direction(angle), m_Charge(charge)
 	{
 	}
 
@@ -21,7 +21,8 @@ namespace CW {
 		int typeInt = static_cast<int>(m_Type);
 		file.write(reinterpret_cast<const char*>(&typeInt), sizeof(typeInt));
 		file.write(reinterpret_cast<const char*>(&m_Charge), sizeof(m_Charge));
-		file.write(reinterpret_cast<const char*>(&m_BitDirection), sizeof(m_BitDirection));
+		float directionRad = m_Direction.asRadians();
+		file.write(reinterpret_cast<const char*>(&directionRad), sizeof(directionRad));
 	}
 
 	void Beacon::ReadFromFile(std::ifstream& file)
@@ -31,7 +32,9 @@ namespace CW {
 		file.read(reinterpret_cast<char*>(&typeInt), sizeof(typeInt));
 		m_Type = static_cast<TargetType>(typeInt);
 		file.read(reinterpret_cast<char*>(&m_Charge), sizeof(m_Charge));
-		file.read(reinterpret_cast<char*>(&m_BitDirection), sizeof(m_BitDirection));
+		float directionRad;
+		file.read(reinterpret_cast<char*>(&directionRad), sizeof(directionRad));
+		m_Direction = sf::radians(directionRad);
 	}
 
 	void Beacon::InfoInterface(size_t index) const
@@ -41,7 +44,7 @@ namespace CW {
 		ImGui::Text("alive: %d", m_Alive);
 		ImGui::Text("beacon position: (%.2f, %.2f)", m_Position.x, m_Position.y);
 		ImGui::Text("beacon charge: %.3f", m_Charge);
-		ImGui::Text("beacon direction: %d", m_BitDirection);
+		ImGui::Text("beacon direction: %.2f", m_Direction.asDegrees());
 	}
 
 	void Beacon::Update(float deltaTime, const BeaconSettings& bs)
@@ -60,23 +63,18 @@ namespace CW {
 		}
 	}
 
-	void Beacon::Revive(sf::Vector2f newPosition, TargetType newType, uint8_t bitDirection, float charge)
+	void CW::Beacon::Revive(sf::Vector2f newPosition, TargetType newType, float charge)
 	{
 		m_Charge = 1.0f;
 		m_Position = newPosition;
 		m_Type = newType;
 		m_Alive = true;
 		m_Charge = charge;
-		m_BitDirection = bitDirection;
 	}
 
 	sf::Angle Beacon::GetDirectionAngle() const
 	{
-		if (m_BitDirection == DirectionBit::None)
-		{
-			return sf::Angle::Zero;
-		}
-		return DIRECTION_ANGLE_TABLE.at(m_BitDirection);
+		return DIRECTION_ANGLE_TABLE.at(angle_to_bit_direction(m_Direction));
 	}
 
 
@@ -93,7 +91,7 @@ namespace CW {
 		m_BeaconSettings = state.Settings.Beacons;
 		for (const auto& beacon : state.Beacons)
 		{
-			CreateBeacon(beacon.GetPos(), beacon.GetType(), beacon.GetBitDirection(), beacon.GetCharge());
+			CreateBeacon(beacon.GetPos(), beacon.GetType(), beacon.GetDirectionAngle(), beacon.GetCharge());
 		}
 	}
 
@@ -144,13 +142,13 @@ namespace CW {
 		}
 	}
 
-	void BeaconManager::CreateBeacon(sf::Vector2f position, TargetType type, uint8_t bitDirection, float charge)
+	void BeaconManager::CreateBeacon(sf::Vector2f position, TargetType type, sf::Angle angle, float charge)
 	{
 		CW_PROFILE_FUNCTION();
 		if (m_DeadBeacons)
 		{
 			IndexedBeacon& beacon = m_Beacons[m_Beacons.size() - m_DeadBeacons];
-			beacon->Revive(position, type, bitDirection, charge);
+			beacon->Revive(position, type, charge);
 			m_Chunks.AddObject(beacon);
 			--m_DeadBeacons;
 		}
@@ -165,7 +163,7 @@ namespace CW {
 				}
 				CW_INFO("Beacon buffer realloc");
 			}
-			m_Beacons.emplace_back(position, type, bitDirection, charge);
+			m_Beacons.emplace_back(position, type, angle, charge);
 			if (realloc)
 			{
 				for (size_t i = 0; i < m_Beacons.size() - 1; ++i)
