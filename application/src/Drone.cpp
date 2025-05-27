@@ -438,7 +438,8 @@ namespace CW {
 
             if (terrain.IsNear(drone, 80.0f))
             {
-                drone.SetDirection((drone.GetDirection() + sf::degrees(180.0f)).wrapSigned());
+                sf::Vector2f normal = terrain.GetNormal(drone.GetPos().x + (ONE_LENGTH_VEC.rotatedBy(drone.GetDirection()) * 80.0f).x);
+                drone.SetDirection(normal.angle().wrapSigned());
                 drone.SetAttraction(drone.GetDirection());
                 sf::Vector2f pos = drone.GetPos();
                 drone.SetPos({pos.x, pos.y - 15.0f});
