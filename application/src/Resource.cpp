@@ -8,20 +8,25 @@
 
 namespace CW {
 
-	Resource::Resource(sf::Vector2f position, int amount)
-		: Object(position), m_Amount(amount)
+	Resource::Resource(sf::Vector2f position, sf::Angle rotation, int amount)
+		: Object(position), m_Rotation(rotation), m_Amount(amount)
 	{
 	}
 
 	void Resource::WriteToFile(std::ofstream& file) const
 	{
 		file.write(reinterpret_cast<const char*>(&m_Position), sizeof(m_Position));
+		float rotationRad = m_Rotation.asRadians();
+		file.write(reinterpret_cast<const char*>(&rotationRad), sizeof(rotationRad));
 		file.write(reinterpret_cast<const char*>(&m_Amount), sizeof(m_Amount));
 	}
 
 	void Resource::ReadFromFile(std::ifstream& file)
 	{
 		file.read(reinterpret_cast<char*>(&m_Position), sizeof(m_Position));
+		float rotationRad;
+		file.read(reinterpret_cast<char*>(&rotationRad), sizeof(rotationRad));
+		m_Rotation = sf::radians(rotationRad);
 		file.read(reinterpret_cast<char*>(&m_Amount), sizeof(m_Amount));
 	}
 
@@ -34,10 +39,11 @@ namespace CW {
 		m_IsCarried = true;
 	}
 
-	void Resource::Revive(sf::Vector2f position, int amount)
+	void Resource::Revive(sf::Vector2f position, sf::Angle rotation, int amount)
 	{
 		m_Position = position;
 		m_Amount = amount;
+		m_Rotation = rotation;
 		m_IsCarried = false;
 	}
 
@@ -60,6 +66,7 @@ namespace CW {
 			if (!resource.IsCarried())
 			{
 				state.ResourcesPositions.push_back(resource.GetPos());
+				state.ResourcesRotations.push_back(resource.GetRotation());
 				state.ResourcesAmounts.push_back(resource.GetResources());
 			}
 		}
@@ -77,17 +84,17 @@ namespace CW {
 		m_Settings = settings;
 	}
 
-	void ResourceManager::CreateResource(sf::Vector2f position, int amount)
+	void ResourceManager::CreateResource(sf::Vector2f position, sf::Angle rotation, int amount)
 	{
 		auto carriedResource = std::ranges::find_if(m_Resources.begin(), m_Resources.end(), [](const Resource& r) { return r.IsCarried(); });
 
 		if (carriedResource != m_Resources.end())
 		{
-			carriedResource->Revive(position, amount);
+			carriedResource->Revive(position, rotation, amount);
 		}
 		else
 		{
-			m_Resources.emplace_back(position, amount);
+			m_Resources.emplace_back(position, rotation, amount);
 		}
 	}
 
@@ -96,24 +103,22 @@ namespace CW {
 		if (rand_float() > m_Settings.GenerateChance)
 			return;
 
-		const auto& generator = terrain.GetNoiseGenerator();
-
-		float leftX = terrain.CalcSectionStartPosition(sectionKey);
-		float rightX = leftX + terrain.GetSectionWidth();
+		float leftX = terrain.CalcSectionStartPosition(sectionKey) + m_Settings.ClusterSize;
+		float rightX = leftX + terrain.GetSectionWidth() - m_Settings.ClusterSize;
 
 		float spawnPosX = lerp(leftX, rightX, rand_float());
-		float spawnPosY = terrain.GetHeight(spawnPosX) - m_Settings.ClusterSize - 100.0f;
-		sf::Vector2f spawnPos(spawnPosX, spawnPosY);
-
-		int resourceCount = (int) (m_Settings.MaxResourcesInCluster * rand_float());
+		int resourceCount = (int)((m_Settings.MaxResourcesInCluster - 5) * rand_float()) + 5;
 		for (int i = 0; i < resourceCount; ++i)
 		{
-			sf::Angle angle = lerp(sf::degrees(-180.0f), sf::degrees(180.0f), rand_float());
-			float dist = m_Settings.ClusterSize * rand_float();
+			float xOffset = lerp(-m_Settings.ClusterSize, m_Settings.ClusterSize, rand_float());
+			float posX = spawnPosX + xOffset;
+			sf::Vector2f normal = terrain.GetNormal(posX);
+			sf::Angle angle = normal.perpendicular().angle();
 
-			sf::Vector2f position = spawnPos + ONE_LENGTH_VEC.rotatedBy(angle) * dist;
-			int amount = (int) (m_Settings.MaxResourceAmount * rand_float());
-			m_Resources.emplace_back(position, amount);
+			sf::Vector2f position(posX, terrain.GetHeight(posX));
+			position += normal * 50.0f;
+			int amount = (int)((m_Settings.MaxResourceAmount - 5) * rand_float()) + 5;
+			CreateResource(position, angle, amount);
 		}
 	}
 

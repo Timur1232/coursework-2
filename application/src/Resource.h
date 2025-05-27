@@ -16,7 +16,7 @@ namespace CW {
 	{
 	public:
 		Resource() = default;
-		Resource(sf::Vector2f position, int amount = 10);
+		Resource(sf::Vector2f position, sf::Angle rotation, int amount = 10);
 
 		void WriteToFile(std::ofstream& file) const;
 		void ReadFromFile(std::ifstream& file);
@@ -24,10 +24,13 @@ namespace CW {
 		inline int GetResources() const { return m_Amount; }
 		inline bool IsCarried() const { return m_IsCarried; }
 
+		sf::Angle GetRotation() const { return m_Rotation; }
+
 		void Pickup();
-		void Revive(sf::Vector2f position, int amount = 10);
+		void Revive(sf::Vector2f position, sf::Angle rotation, int amount = 10);
 
 	private:
+		sf::Angle m_Rotation = sf::Angle::Zero;
 		int m_Amount = 10;
 		bool m_IsCarried = false;
 	};
@@ -52,7 +55,7 @@ namespace CW {
 		void Clear() { m_Resources.clear(); }
 		void Reserve(size_t reserve) { m_Resources.reserve(reserve); }
 
-		void CreateResource(sf::Vector2f position, int amount = 10);
+		void CreateResource(sf::Vector2f position, sf::Angle rotation, int amount = 10);
 
 		std::vector<Resource>& GetResources() { return m_Resources; }
 

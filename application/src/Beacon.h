@@ -57,7 +57,7 @@ namespace CW {
 		: public IUpdate
 	{
 	public:
-		using IndexedBeacon = Indexed<Beacon>;
+		using IndexedBeacon = Indexed<Beacon, 2>;
 
 	public:
 		BeaconManager(const BeaconSettings& settings, float chunckSize);

@@ -15,6 +15,7 @@ namespace CW {
         // Drone
         std::vector<sf::Vector2f> DronesPositions;
         std::vector<sf::Angle> DronesDirections;
+        std::vector<sf::Angle> DronesAttractions;
 
         // Beacon
         std::vector<sf::Vector2f> BeaconsPositions;
@@ -23,6 +24,7 @@ namespace CW {
 
         // Resource
         std::vector<sf::Vector2f> ResourcesPositions;
+        std::vector<sf::Angle> ResourcesRotations;
         std::vector<int> ResourcesAmounts;
 
         Terrain Terrain;
@@ -37,10 +39,12 @@ namespace CW {
         {
             DronesPositions.clear();
             DronesDirections.clear();
+            DronesAttractions.clear();
             BeaconsPositions.clear();
             BeaconsTypes.clear();
             BeaconsCharges.clear();
             ResourcesPositions.clear();
+            ResourcesRotations.clear();
             ResourcesAmounts.clear();
             Terrain.TerrainSections.clear();
         }

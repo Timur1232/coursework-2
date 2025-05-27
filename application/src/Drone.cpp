@@ -32,7 +32,7 @@ namespace CW {
 
         FOV = 0.5f;
 
-        PickupDist = 70.0f;
+        //PickupDist = 70.0f;
 
         BeaconCooldownSec = 5.0f;
         WanderCooldownSec = 5.0f;
@@ -151,7 +151,7 @@ namespace CW {
         {
             m_TargetResourceIndex = {};
         }
-        else if (CheckResourceColission(settings.PickupDist, resources))
+        else if (CheckResourceColission(170.0f, resources))
         {
             CW_TRACE("Drone picked {} resources on ({}, {})", resources.at(*m_TargetResourceIndex).GetResources(), resources.at(*m_TargetResourceIndex).GetPos().x, resources.at(*m_TargetResourceIndex).GetPos().y);
             m_TargetType = TargetType::Navigation;
@@ -331,7 +331,7 @@ namespace CW {
         float furthestDistSq = -1.0f;
 
         auto filteredBeacons = *chunk
-            | std::views::filter([&](const Indexed<Beacon>* b) { return b && (*b)->IsAlive() && (*b)->GetType() == m_TargetType; });
+            | std::views::filter([&](const Indexed<Beacon, 2>* b) { return b && (*b)->IsAlive() && (*b)->GetType() == m_TargetType; });
 
         for (const auto& ibeacon : filteredBeacons)
         {
@@ -374,7 +374,7 @@ namespace CW {
         }
     }
 
-    void DroneManager::CollectState(SimulationState& state) const
+    void DroneManager::CollectState(SimulationState& state, bool debug) const
     {
         for (const auto& drone : m_Drones)
         {
@@ -382,6 +382,8 @@ namespace CW {
             {
                 state.DronesPositions.push_back(drone.GetPos());
                 state.DronesDirections.push_back(drone.GetDirection());
+                if (debug)
+                    state.DronesAttractions.push_back(drone.GetAttraction());
             }
         }
     }
@@ -546,58 +548,6 @@ namespace CW {
         m_DroneSettings.SetDefault();
         m_DrawViewDistance = false;
         m_DrawDirection = false;
-    }
-
-    inline void DroneManager::debugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const
-    {
-        if (m_DrawDirection)
-        {
-            auto& directionArrowBuilder = Renderer::Get().BeginCircleShape()
-                .PointCount(3)
-                .Radius(4.0f);
-            directionArrowBuilder.Position(position + ONE_LENGTH_VEC.rotatedBy(directionAngle) * 100.0f)
-                .Rotation(directionAngle + sf::degrees(90.0f))
-                .Draw();
-            directionArrowBuilder.Position(position + ONE_LENGTH_VEC.rotatedBy(attractionAngle) * 100.0f)
-                .Rotation(attractionAngle + sf::degrees(90.0f))
-                .Color(sf::Color::Blue)
-                .Draw();
-            directionArrowBuilder.SetDefault();
-        }
-    }
-
-    inline void DroneManager::debugDrawViewDistance(sf::Vector2f position, sf::Angle directionAngle) const
-    {
-        if (m_DrawViewDistance)
-        {
-            auto& FOVVisualBuilder = Renderer::Get().BeginLineShape()
-                .Length(m_DroneSettings.ViewDistance.y)
-                .Position(position);
-            FOVVisualBuilder
-                .SetRotationByP1(sf::radians(m_FOVRadPrecalc))
-                .RotateByP1(directionAngle)
-                .Draw();
-            FOVVisualBuilder.Position(position)
-                .SetRotationByP1(sf::radians(-m_FOVRadPrecalc))
-                .RotateByP1(directionAngle)
-                .Draw();
-            FOVVisualBuilder.SetDefault();
-            
-            auto& viewDistMeshBuilder = Renderer::Get().BeginCircleShape()
-                .PointCount(16)
-                .Color(sf::Color::Transparent)
-                .OutlineColor(sf::Color::White)
-                .OutlineThickness(1.0f);
-            viewDistMeshBuilder
-                .Radius(m_DroneSettings.ViewDistance.x)
-                .Position(position)
-                .Draw();
-            viewDistMeshBuilder
-                .Radius(m_DroneSettings.ViewDistance.y)
-                .Position(position)
-                .Draw();
-            viewDistMeshBuilder.SetDefault();
-        }
     }
 
 } // CW

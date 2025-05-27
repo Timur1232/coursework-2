@@ -93,4 +93,12 @@ namespace CW {
 		CW_BULD_EVENT_TYPE(MessegeToUser)
 	};
 
+	class SwitchDroneDebug
+		: public Event
+	{
+	public:
+		SwitchDroneDebug() = default;
+		CW_BULD_EVENT_TYPE(SwitchDroneDebug)
+	};
+
 } // CW

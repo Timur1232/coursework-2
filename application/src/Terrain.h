@@ -86,6 +86,7 @@ namespace CW {
 		std::vector<TerrainSection>::const_iterator GetSection(int keyPosition) const;
 
 		float GetHeight(float x) const;
+		sf::Vector2f GetNormal(float x) const;
 
 		[[nodiscard]] bool IsNear(const Object& object, float distThreashold, int range = 3) const;
 
@@ -117,6 +118,7 @@ namespace CW {
 		std::vector<TerrainSection>::const_iterator GetSection(int keyPosition) const;
 
 		float GetHeight(float x) const;
+		sf::Vector2f GetNormal(float x) const;
 
 		void SetYOffset(float offset) { m_Terrain.YOffset = offset; }
 		float GetYOffset() const { return m_Terrain.YOffset; }
@@ -145,6 +147,9 @@ namespace CW {
 		int GetOctaves() const { return m_NoiseGenerator.GetOctaves(); }
 		float GetLacunarity() const { return m_NoiseGenerator.GetLacunarity(); }
 
+		float GetBellWidth() const { return m_BellWidth; }
+		float GetBellHeight() const { return m_BellHeight; }
+
 		void RegenerateExisting();
 
 		[[nodiscard]] bool IsNear(const Object& object, float distThreashold, int range = 3) const;
@@ -166,7 +171,7 @@ namespace CW {
 		NoiseGenerator m_NoiseGenerator;
 
 		float m_MaxHeight = 1000.0f;
-		float m_BellHeigth = 8000.0f;
+		float m_BellHeight = 8000.0f;
 		float m_BellWidth = 15000.0f;
 		float m_MapedNoiseDistance = 0.5f;
 	};

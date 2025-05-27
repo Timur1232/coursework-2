@@ -104,11 +104,11 @@ namespace CW {
 	}
 
 
-	template <class T>
+	template <class T, size_t size = 1>
 	struct Indexed
 	{
 		T Object;
-		size_t Index = 0;
+		std::array<size_t, size> Indecies = 0;
 
 		Indexed() = default;
 
@@ -119,7 +119,7 @@ namespace CW {
 		}
 
 		Indexed(T&& other)
-			: Object(std::forward<T>(other.Object)), Index(other.Index)
+			: Object(std::forward<T>(other.Object)), Indecies(other.Indecies)
 		{
 		}
 

@@ -30,6 +30,10 @@
 namespace CW {
 
     char g_FilePathBuff[512] = "";
+    constexpr float DRONE_SCALE_FACTOR = 300.0f / 1024.0f;
+    constexpr float RESOURCE_SCALE_FACTOR = 150.0f / 1024.0f;
+    constexpr float BEACON_SCALE_FACTOR = 80.0f / 1024.0f;
+    constexpr float RECIEVER_SCALE_FACTOR = 600.0f / 1024.0f;
 
 
     class SimulationLayer
@@ -48,6 +52,26 @@ namespace CW {
             m_DroneTexture = CreateUnique<sf::Texture>(SPRITES_FOLDER "drone_sprite.png");
             m_DroneSprite = CreateUnique<sf::Sprite>(*m_DroneTexture);
             m_DroneSprite->setOrigin(static_cast<sf::Vector2f>(m_DroneTexture->getSize()) / 2.0f);
+            m_DroneSprite->setScale({ DRONE_SCALE_FACTOR, DRONE_SCALE_FACTOR });
+
+            m_ResourceTextures[0] = CreateUnique<sf::Texture>(SPRITES_FOLDER "scrap_sprite.png");
+            m_ResourceTextures[1] = CreateUnique<sf::Texture>(SPRITES_FOLDER "statue_sprite.png");
+            m_ResourceTextures[2] = CreateUnique<sf::Texture>(SPRITES_FOLDER "treasure_sprite.png");
+            for (size_t i = 0; i < m_ResourceSprites.size(); ++i)
+            {
+                m_ResourceSprites[i] = CreateUnique<sf::Sprite>(*m_ResourceTextures[i]);
+                m_ResourceSprites[i]->setOrigin(static_cast<sf::Vector2f>(m_ResourceTextures[i]->getSize()) / 2.0f);
+                m_ResourceSprites[i]->setScale({ RESOURCE_SCALE_FACTOR, RESOURCE_SCALE_FACTOR });
+            }
+
+            m_RecieverTexture = CreateUnique<sf::Texture>(SPRITES_FOLDER "base_sprite.png");
+            m_RecieverSprite = CreateUnique<sf::Sprite>(*m_RecieverTexture);
+            m_RecieverSprite->setOrigin(static_cast<sf::Vector2f>(m_RecieverTexture->getSize()) / 2.0f);
+            m_RecieverSprite->setScale({ RECIEVER_SCALE_FACTOR, RECIEVER_SCALE_FACTOR });
+            sf::Vector2f recieverSpritePos = m_ResourceReciever.GetPos();
+            recieverSpritePos.y = -450.0f;
+            m_RecieverSprite->setPosition(recieverSpritePos);
+
             if (state)
             {
                 *m_Settings = state->Settings;
@@ -145,6 +169,8 @@ namespace CW {
                 return;
             if (dispatcher.Dispach<SwitchThread>(CW_BUILD_EVENT_FUNC(OnSwitchThread)))
                 return;
+            if (dispatcher.Dispach<SwitchDroneDebug>(CW_BUILD_EVENT_FUNC(OnSwitchDroneDebug)))
+                return;
             dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed));
             dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
@@ -207,41 +233,22 @@ namespace CW {
                 chunkMeshBuilder.SetDefault();
             }*/
 
-            auto& circleBuilder = Renderer::Get().BeginCircleShape();
-            // body
-            circleBuilder.DefaultAfterDraw()
-                .Radius(100.0f)
-                .Position(m_CopyState.ResieverPosition)
-                .Color(sf::Color::Magenta)
-                .Draw();
-            // recieve radius
-            //circleBuilder.DefaultAfterDraw()
-            //    .Radius(m_CopyState.Re)
-            //    .Position(m_CopyState.ResieverPosition)
-            //    .Color(sf::Color::Transparent)
-            //    .OutlineThickness(1.0f)
-            //    .OutlineColor(sf::Color::Green)
-            //    .Draw();
-            //// broadcast radius
-            //circleBuilder.DefaultAfterDraw()
-            //    .Radius(m_BroadcastRadius)
-            //    .Position(m_Position)
-            //    .Color(sf::Color::Transparent)
-            //    .OutlineThickness(1.0f)
-            //    .OutlineColor(sf::Color::Red)
-            //    .Draw();
+            Renderer::Get().Draw(*m_RecieverSprite);
 
             for (size_t i = 0; i < m_CopyState.ResourcesPositions.size(); ++i)
             {
-                Renderer::Get().BeginCircleShape()
-                    .DefaultAfterDraw()
-                    .Radius(20.0f)
-                    .Color(sf::Color::Cyan)
-                    .Position(m_CopyState.ResourcesPositions[i])
-                    .Draw();
+                sf::Vector2f resourcePos = m_CopyState.ResourcesPositions[i];
+                sf::Angle resourceRot = m_CopyState.ResourcesRotations[i];
+                int resourceAmount = m_CopyState.ResourcesAmounts[i];
+
+                size_t spriteIndex = (size_t) (((float) resourceAmount - 5.0f) / (float) m_Settings->Resources.MaxResourceAmount * (float) 3);
+                auto& sprite = *m_ResourceSprites[spriteIndex];
+
+                sprite.setPosition(resourcePos);
+                sprite.setRotation(resourceRot);
+                Renderer::Get().Draw(sprite);
             }
 
-            if (m_DrawBeacons)
             {
                 CW_PROFILE_SCOPE("beacons draw");
                 auto& circleBuilder = Renderer::Get().BeginCircleShape();
@@ -249,6 +256,9 @@ namespace CW {
                     .Radius(10.0f);
                 for (size_t i = 0; i < m_CopyState.BeaconsPositions.size(); ++i)
                 {
+                    /*auto& beaconPos = m_CopyState.BeaconsPositions[i];
+                    m_BeaconSprite->setPosition(beaconPos);
+                    Renderer::Get().Draw(*m_BeaconSprite);*/
                     circleBuilder.Position(m_CopyState.BeaconsPositions[i])
                         .Color(beacon_color(m_CopyState.BeaconsTypes[i], m_CopyState.BeaconsCharges[i]))
                         .Draw();
@@ -260,17 +270,20 @@ namespace CW {
                 CW_PROFILE_SCOPE("drones draw");
                 for (size_t i = 0; i < m_CopyState.DronesDirections.size(); ++i)
                 {
-                    /*debugDrawDirectionVisuals(drone.GetPos(), drone.GetDirection(), drone.GetAttraction());
-                    debugDrawViewDistance(drone.GetPos(), drone.GetDirection());*/
+                    if (m_DebugDroneVisuals)
+                    {
+                        debugDrawDirectionVisuals(m_CopyState.DronesPositions[i], m_CopyState.DronesDirections[i], m_CopyState.DronesAttractions[i]);
+                        debugDrawViewDistance(m_CopyState.DronesPositions[i], m_CopyState.DronesDirections[i], m_Settings->Drones.ViewDistance, std::acos(m_Settings->Drones.FOV));
+                    }
 
                     m_DroneSprite->setPosition(m_CopyState.DronesPositions[i]);
                     if (abs(m_CopyState.DronesDirections[i].asRadians()) > angle::PI_2)
                     {
-                        m_DroneSprite->setScale({ 1.0f, -1.0f });
+                        m_DroneSprite->setScale({ RESOURCE_SCALE_FACTOR, -RESOURCE_SCALE_FACTOR });
                     }
                     else
                     {
-                        m_DroneSprite->setScale({ 1.0f, 1.0f });
+                        m_DroneSprite->setScale({ RESOURCE_SCALE_FACTOR, RESOURCE_SCALE_FACTOR });
                     }
                     m_DroneSprite->setRotation(m_CopyState.DronesDirections[i]);
                     Renderer::Get().Draw(*m_DroneSprite);
@@ -279,9 +292,10 @@ namespace CW {
           
             {
                 CW_PROFILE_SCOPE("terrain draw");
+                const auto& terrain = m_CopyState.Terrain;
                 // генерация нового меша
-                GenerateMeshes(m_CopyState.Terrain, leftGen);
-                GenerateMeshes(m_CopyState.Terrain, rightGen);
+                GenerateMeshes(terrain, leftGen);
+                GenerateMeshes(terrain, rightGen);
                 for (const auto& mesh : m_TerrainSectionMeshes)
                 {
                     renderer.Draw(mesh);
@@ -292,7 +306,7 @@ namespace CW {
 
         void CollectState(SimulationState& state)
         {
-            m_Drones.CollectState(state);
+            m_Drones.CollectState(state, m_DebugDroneVisuals);
             m_Beacons.CollectState(state);
             m_Resources.CollectState(state);
             state.ResieverPosition = m_ResourceReciever.GetPos();
@@ -498,6 +512,12 @@ namespace CW {
             return false;
         }
 
+        bool OnSwitchDroneDebug(SwitchDroneDebug&)
+        {
+            m_DebugDroneVisuals = !m_DebugDroneVisuals;
+            return true;
+        }
+
         /*void UpdateInterface() 
         {
             ImGui::Begin("Debug");
@@ -659,16 +679,18 @@ namespace CW {
 
             if (leftBorderKey < m_GeneratedRange.x && cameraViewRect.contains({ leftBorderX, cameraViewRect.getCenter().y }))
             {
-                GenerateChunkRange(leftBorderKey, m_GeneratedRange.x);
-                m_LeftGeneratedSections.x = leftBorderKey;
-                m_GeneratedRange.x = leftBorderKey;
+                GenerateChunkRange(leftBorderKey - 1, m_GeneratedRange.x);
+                GenerateResourcesInChunck(leftBorderKey, m_GeneratedRange.x);
+                m_LeftGeneratedSections.x = leftBorderKey - 1;
+                m_GeneratedRange.x = leftBorderKey - 1;
             }
             if (rightBorderKey >= m_GeneratedRange.y && cameraViewRect.contains({ rightBorderX, cameraViewRect.getCenter().y }))
             {
                 rightBorderKey += 1;
-                GenerateChunkRange(m_GeneratedRange.y, rightBorderKey);
-                m_RightGeneratedSections.y = rightBorderKey;
-                m_GeneratedRange.y = rightBorderKey;
+                GenerateChunkRange(m_GeneratedRange.y, rightBorderKey + 1);
+                GenerateResourcesInChunck(m_GeneratedRange.y, rightBorderKey);
+                m_RightGeneratedSections.y = rightBorderKey + 1;
+                m_GeneratedRange.y = rightBorderKey + 1;
             }
         }
 
@@ -678,7 +700,13 @@ namespace CW {
             {
                 if (!m_Terrain.Generate(key))
                     continue;
-                //GenerateMesh(key);
+            }
+        }
+
+        void GenerateResourcesInChunck(int left, int right)
+        {
+            for (int key = left; key < right; ++key)
+            {
                 m_Resources.GenerateResourceOnSection(m_Terrain, key);
             }
         }
@@ -703,25 +731,65 @@ namespace CW {
 
             if (leftBorderKey < m_GeneratedRange.x)
             {
-                GenerateChunkRange(leftBorderKey, m_GeneratedRange.x);
-                m_LeftGeneratedSections.x = leftBorderKey;
-                m_GeneratedRange.x = leftBorderKey;
+                GenerateChunkRange(leftBorderKey - 1, m_GeneratedRange.x);
+                GenerateResourcesInChunck(leftBorderKey, m_GeneratedRange.x);
+                m_LeftGeneratedSections.x = leftBorderKey - 1;
+                m_GeneratedRange.x = leftBorderKey - 1;
             }
             if (rightBorderKey >= m_GeneratedRange.y)
             {
                 rightBorderKey += 1;
-                GenerateChunkRange(m_GeneratedRange.y, rightBorderKey);
-                m_RightGeneratedSections.y = rightBorderKey;
-                m_GeneratedRange.y = rightBorderKey;
+                GenerateChunkRange(m_GeneratedRange.y, rightBorderKey + 1);
+                GenerateResourcesInChunck(m_GeneratedRange.y, rightBorderKey);
+                m_RightGeneratedSections.y = rightBorderKey + 1;
+                m_GeneratedRange.y = rightBorderKey + 1;
             }
+        }
 
-            //for (int key = genRangeLeft; key < genRangeRight; ++key)
-            //{
-            //    if (!m_Terrain.Generate(key))
-            //        continue;
-            //    //GenerateMesh(key);
-            //    m_Resources.GenerateResourceOnSection(m_Terrain, key);
-            //}
+        void debugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const
+        {
+            auto& directionArrowBuilder = Renderer::Get().BeginCircleShape()
+                .PointCount(3)
+                .Radius(4.0f);
+            directionArrowBuilder.Position(position + ONE_LENGTH_VEC.rotatedBy(directionAngle) * 100.0f)
+                .Rotation(directionAngle + sf::degrees(90.0f))
+                .Draw();
+            directionArrowBuilder.Position(position + ONE_LENGTH_VEC.rotatedBy(attractionAngle) * 100.0f)
+                .Rotation(attractionAngle + sf::degrees(90.0f))
+                .Color(sf::Color::Blue)
+                .Draw();
+            directionArrowBuilder.SetDefault();
+        }
+
+        void debugDrawViewDistance(sf::Vector2f position, sf::Angle directionAngle, sf::Vector2f viewDistance, float FOVRad) const
+        {
+            auto& FOVVisualBuilder = Renderer::Get().BeginLineShape()
+                .Length(viewDistance.y)
+                .Position(position);
+            FOVVisualBuilder
+                .SetRotationByP1(sf::radians(FOVRad))
+                .RotateByP1(directionAngle)
+                .Draw();
+            FOVVisualBuilder.Position(position)
+                .SetRotationByP1(sf::radians(-FOVRad))
+                .RotateByP1(directionAngle)
+                .Draw();
+            FOVVisualBuilder.SetDefault();
+
+            auto& viewDistMeshBuilder = Renderer::Get().BeginCircleShape()
+                .PointCount(16)
+                .Color(sf::Color::Transparent)
+                .OutlineColor(sf::Color::White)
+                .OutlineThickness(1.0f);
+            viewDistMeshBuilder
+                .Radius(viewDistance.x)
+                .Position(position)
+                .Draw();
+            viewDistMeshBuilder
+                .Radius(viewDistance.y)
+                .Position(position)
+                .Draw();
+            viewDistMeshBuilder.SetDefault();
         }
 
     private:
@@ -732,6 +800,7 @@ namespace CW {
         UPSLimiter m_Limiter{ 120 };
         bool m_RunSingleThread = true;
         bool m_SimulationRunning = false;
+        bool m_Paused = false;
 
         SimulationState m_CopyState;
 
@@ -755,19 +824,24 @@ namespace CW {
 
         float m_ElapsedTime = 0.0f;
 
+        // Visuals
         sf::Shader m_WaterShader;
         sf::Shader m_DarkeningShader;
 
         Unique<sf::Sprite> m_DroneSprite;
         Unique<sf::Texture> m_DroneTexture;
 
-        bool m_Paused = false;
+        std::array<Unique<sf::Sprite>, 3> m_ResourceSprites;
+        std::array<Unique<sf::Texture>, 3> m_ResourceTextures;
+
+        /*Unique<sf::Sprite> m_BeaconSprite;
+        Unique<sf::Texture> m_BeaconTexture;*/
+
+        Unique<sf::Sprite> m_RecieverSprite;
+        Unique<sf::Texture> m_RecieverTexture;
 
         // Debug
-        bool m_BeaconsInfo = false;
-        bool m_DronesInfo = false;
-        bool m_DrawBeacons = true;
-        bool m_DrawChunks = false;
+        bool m_DebugDroneVisuals = false;
 
         ObjectPalleteBuilder m_ObjPallete;
     };
@@ -994,7 +1068,7 @@ namespace CW {
                 ImGui::SliderAngle("Turning speed", &drones.TurningSpeed, 1.0f, 180.0f);
                 ImGui::InputFloat("FOV", &drones.FOV, 0.01f, 0.1f);
                 ImGui::InputFloat2("View distance", &drones.ViewDistance.x);
-                ImGui::InputFloat("Pickup distance", &drones.PickupDist, 1.0f, 10.0f);
+                //ImGui::InputFloat("Pickup distance", &drones.PickupDist, 1.0f, 10.0f);
                 ImGui::Spacing();
                 ImGui::InputFloat("Beacon spawn cooldown", &drones.BeaconCooldownSec, 0.5f, 1.0f);
                 ImGui::InputFloat("Wander cooldown", &drones.BeaconCooldownSec, 0.5f, 1.0f);
@@ -1382,6 +1456,8 @@ namespace CW {
 
             ImGui::Text("Paused: %d", m_Pause);
             ImGui::Text("Simulation running: %d", m_SimIsRunning);
+            if (ImGui::Button("Switch drone debug visuals"))
+                UserEventHandler::Get().SendEvent(SwitchDroneDebug{});
 
             if (!m_VirtualTime)
             {

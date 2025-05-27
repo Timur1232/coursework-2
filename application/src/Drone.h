@@ -93,7 +93,7 @@ namespace CW {
 
 		const std::vector<Drone>& GetDrones() const { return m_Drones; }
 
-		void CollectState(SimulationState& state) const;
+		void CollectState(SimulationState& state, bool debug) const;
 		void CollectState(FullSimulationState& state) const;
 
 		void SetSettings(const DroneSettings& settings);
@@ -120,11 +120,6 @@ namespace CW {
 		void SetDefaultSettings();
 
 		sf::Vector2f GetFurthestHorizontalReach() const { return m_FurthestHorizontalReach; }
-
-	private:
-		// Debug
-		inline void debugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const;
-		inline void debugDrawViewDistance(sf::Vector2f position, sf::Angle directionAngle) const;
 
 	private:
 		std::vector<Drone> m_Drones;

@@ -94,6 +94,28 @@ namespace CW {
 		return SampleToWorldPosition(*section, sample, CalcSectionStartPosition(key), CalcSampleWidth()).y;
 	}
 
+	sf::Vector2f Terrain::GetNormal(float x) const
+	{
+		float sampleWidth = CalcSampleWidth();
+
+		int key = CalcSectionKeyPosition(x);
+		auto section = GetSection(key);
+		if (section == TerrainSections.end())
+		{
+			CW_ERROR("Terrain section1 on position x: {}, not exist!", x);
+			return {1.0f, 0.0f};
+		}
+
+		size_t sample1 = static_cast<size_t>(CalcSignedSampleIndex(x, key, sampleWidth));
+		size_t sample2 = static_cast<size_t>(CalcSignedSampleIndex(x + sampleWidth, key, sampleWidth));
+
+		sf::Vector2f p1 = SampleToWorldPosition(*section, sample1, CalcSectionStartPosition(key), sampleWidth);
+		sf::Vector2f p2 = SampleToWorldPosition(*section, sample2, CalcSectionStartPosition(key), sampleWidth);
+
+		sf::Vector2f normal = (p1 - p2).perpendicular().normalized();
+		return normal;
+	}
+
 	bool Terrain::IsNear(const Object& object, float distThreashold, int range) const
 	{
 		int sectionKey = CalcSectionKeyPosition(object.GetPos().x);
@@ -165,7 +187,7 @@ namespace CW {
 	void TerrainGenerator::SetSettings(const TerrainGenerationSettings& settings)
 	{
 		m_MaxHeight = settings.MaxHeight;
-		m_BellHeigth = settings.BellHeigth;
+		m_BellHeight = settings.BellHeigth;
 		m_BellWidth = settings.BellWidth;
 		m_MapedNoiseDistance = settings.MappedNoiseDistance;
 		m_Terrain.SamplesPerSection = settings.SamplesPerSection;
@@ -188,7 +210,7 @@ namespace CW {
 
 	bool TerrainGenerator::Generate(int keyPosition)
 	{
-		return m_Terrain.Generate(keyPosition, m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance, m_BellWidth, m_BellHeigth);
+		return m_Terrain.Generate(keyPosition, m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance, m_BellWidth, m_BellHeight);
 	}
 
 	void TerrainGenerator::DebugDraw()
@@ -227,9 +249,14 @@ namespace CW {
 		return m_Terrain.GetHeight(x);
 	}
 
+	sf::Vector2f TerrainGenerator::GetNormal(float x) const
+	{
+		return m_Terrain.GetNormal(x);
+	}
+
 	void TerrainGenerator::RegenerateExisting()
 	{
-		m_Terrain.RegenerateExisting(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance, m_BellWidth, m_BellHeigth);
+		m_Terrain.RegenerateExisting(m_NoiseGenerator, m_MaxHeight, m_MapedNoiseDistance, m_BellWidth, m_BellHeight);
 	}
 
 	bool TerrainGenerator::IsNear(const Object& object, float distThreashold, int range) const

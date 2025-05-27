@@ -22,8 +22,8 @@ namespace CW {
 	class Chunk
 	{
 	public:
-		using ObjectIterator = std::vector<Indexed<T>*>::iterator;
-		using const_ObjectIterator = std::vector<Indexed<T>*>::const_iterator;
+		using ObjectIterator = std::vector<Indexed<T, 2>*>::iterator;
+		using const_ObjectIterator = std::vector<Indexed<T, 2>*>::const_iterator;
 
 	public:
 		Chunk(sf::Vector2i key)
@@ -56,7 +56,7 @@ namespace CW {
 		[[nodiscard]] bool Capacity() const { return m_Objects.capacity(); }
 		void Clear() { m_Objects.clear(); }
 
-		[[nodiscard]] const std::vector<Indexed<T>*>& GetObjects() const { return m_Objects; }
+		[[nodiscard]] const std::vector<Indexed<T, 2>*>& GetObjects() const { return m_Objects; }
 
 		[[nodiscard]]  sf::Vector2i GetKey() const { return m_Key; }
 		//void SetKey(sf::Vector2i key) { m_Key = key; }
@@ -81,15 +81,15 @@ namespace CW {
 			return m_Objects.end();
 		}
 
-		[[nodiscard]] T& operator[](size_t index) { return *m_Objects[index]; }
-		[[nodiscard]] const T& At(size_t index) const { return *m_Objects.at(index); }
+		/*[[nodiscard]] T& operator[](size_t index) { return *m_Objects[index]; }
+		[[nodiscard]] const T& At(size_t index) const { return *m_Objects.at(index); }*/
 
-		void PushBack(Indexed<T>& object)
+		void PushBack(Indexed<T, 2>& object)
 		{
 			if (m_DeadPtrs)
 			{
 				m_Objects[m_Objects.size() - m_DeadPtrs] = &object;
-				object.Index = m_Objects.size() - m_DeadPtrs;
+				object.Indecies[1] = m_Objects.size() - m_DeadPtrs;
 				--m_DeadPtrs;
 				/*for (size_t i = 0; i < m_Objects.size(); ++i)
 				{
@@ -104,7 +104,7 @@ namespace CW {
 			else
 			{
 				m_Objects.push_back(&object);
-				m_Objects.back()->Index = m_Objects.size() - 1;
+				m_Objects.back()->Indecies[1] = m_Objects.size() - 1;
 			}
 		}
 
@@ -113,25 +113,25 @@ namespace CW {
 			m_Objects.pop_back();
 		}
 
-		void ForgetObject(Indexed<T>& object)
+		void ForgetObject(Indexed<T, 2>& object)
 		{
-			size_t index = object.Index;
+			size_t index = object.Indecies[1];
 			if (index >= m_Objects.size())
 			{
-				CW_ERROR("Non-valid object index in chunk! index: {}, size: {}", index, m_Objects.size());
+				//CW_ERROR("Non-valid object index in chunk! index: {}, size: {}", index, m_Objects.size());
 				return;
 			}
 			m_Objects[index] = nullptr;
 			if ((((i64) m_Objects.size() - (i64) m_DeadPtrs) > 2) && (index != (m_Objects.size() - m_DeadPtrs - 1)))
 			{
 				std::swap(m_Objects[index], m_Objects[m_Objects.size() - m_DeadPtrs - 1]);
-				m_Objects[index]->Index = index;
+				m_Objects[index]->Indecies[1] = index;
 			}
 			++m_DeadPtrs;
 		}
 
 	private:
-		std::vector<Indexed<T>*> m_Objects;
+		std::vector<Indexed<T, 2>*> m_Objects;
 		size_t m_DeadPtrs = 0;
 		sf::Vector2i m_Key;
 	};
@@ -183,7 +183,7 @@ namespace CW {
 			return chunk;
 		}
 
-		void AddObject(Indexed<T>& object)
+		void AddObject(Indexed<T, 2>& object)
 		{
 			sf::Vector2i chunkKey = positionToChunkKey(object->GetPos());
 			size_t chunkIndex = 0;
@@ -198,17 +198,19 @@ namespace CW {
 				m_Chunks.emplace_back(chunkKey);
 			}
 			m_Chunks[chunkIndex].PushBack(object);
+			object.Indecies[0] = chunkIndex;
 		}
 
-		void ForgetObject(Indexed<T>& object)
+		void ForgetObject(Indexed<T, 2>& object)
 		{
-			sf::Vector2i chunkKey = positionToChunkKey(object->GetPos());
+			/*sf::Vector2i chunkKey = positionToChunkKey(object->GetPos());
 			if (!m_ChunkIndecies.contains(chunkKey))
 			{
 				CW_ERROR("Unable to find chunk with object on ({:.2f}, {:.2f})!", object->GetPos().x, object->GetPos().y);
 				return;
 			}
-			size_t chunkIndex = m_ChunkIndecies.at(chunkKey);
+			size_t chunkIndex = m_ChunkIndecies.at(chunkKey);*/
+			size_t chunkIndex = object.Indecies[0];
 			m_Chunks[chunkIndex].ForgetObject(object);
 		}
 
