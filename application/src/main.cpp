@@ -1312,7 +1312,7 @@ namespace CW {
     {
     public:
         MyApp()
-            : Application(800, 600, "test"),
+            : Application(800, 600, "simulation"),
               m_SimSettings(CreateShared<SimulationSettings>())
         {
             m_ClearColor = sf::Color(0, 0, 0, 255);
