@@ -19,6 +19,7 @@
 #include <concepts>
 #include <thread>
 #include <mutex>
+#include <syncstream>
 
 #include <fstream>
 #include <sstream>

@@ -59,7 +59,6 @@ namespace CW {
 		[[nodiscard]] const std::vector<Indexed<T, 2>*>& GetObjects() const { return m_Objects; }
 
 		[[nodiscard]]  sf::Vector2i GetKey() const { return m_Key; }
-		//void SetKey(sf::Vector2i key) { m_Key = key; }
 
 		[[nodiscard]] ObjectIterator begin()
 		{
@@ -81,9 +80,6 @@ namespace CW {
 			return m_Objects.end();
 		}
 
-		/*[[nodiscard]] T& operator[](size_t index) { return *m_Objects[index]; }
-		[[nodiscard]] const T& At(size_t index) const { return *m_Objects.at(index); }*/
-
 		void PushBack(Indexed<T, 2>& object)
 		{
 			if (m_DeadPtrs)
@@ -91,15 +87,6 @@ namespace CW {
 				m_Objects[m_Objects.size() - m_DeadPtrs] = &object;
 				object.Indecies[1] = m_Objects.size() - m_DeadPtrs;
 				--m_DeadPtrs;
-				/*for (size_t i = 0; i < m_Objects.size(); ++i)
-				{
-					if (!m_Objects[i])
-					{
-						m_Objects[i] = object;
-						--m_DeadPtrs;
-						return i;
-					}
-				}*/
 			}
 			else
 			{
@@ -118,7 +105,7 @@ namespace CW {
 			size_t index = object.Indecies[1];
 			if (index >= m_Objects.size())
 			{
-				//CW_ERROR("Non-valid object index in chunk! index: {}, size: {}", index, m_Objects.size());
+				CW_ERROR("Non-valid object index in chunk! index: {}, size: {}, position: ({:.2f}, {:.2f})", index, m_Objects.size(), object->GetPos().x, object->GetPos().y);
 				return;
 			}
 			m_Objects[index] = nullptr;
@@ -203,13 +190,6 @@ namespace CW {
 
 		void ForgetObject(Indexed<T, 2>& object)
 		{
-			/*sf::Vector2i chunkKey = positionToChunkKey(object->GetPos());
-			if (!m_ChunkIndecies.contains(chunkKey))
-			{
-				CW_ERROR("Unable to find chunk with object on ({:.2f}, {:.2f})!", object->GetPos().x, object->GetPos().y);
-				return;
-			}
-			size_t chunkIndex = m_ChunkIndecies.at(chunkKey);*/
 			size_t chunkIndex = object.Indecies[0];
 			m_Chunks[chunkIndex].ForgetObject(object);
 		}
@@ -224,6 +204,8 @@ namespace CW {
 				chunk.Clear();
 			}
 		}
+
+		float GetChunkSize() const { return m_ChunkSize; }
 
 	private:
 		sf::Vector2i positionToChunkKey(sf::Vector2f position) const

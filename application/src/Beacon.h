@@ -66,7 +66,7 @@ namespace CW {
 
 		const std::vector<IndexedBeacon>& GetIndexedBeacons() const { return m_Beacons; }
 
-		void CollectState(SimulationState& state) const;
+		void CollectState(SimulationState& state, bool debug) const;
 		void CollectState(FullSimulationState& state) const;
 
 		void SetSettings(const BeaconSettings& settings);

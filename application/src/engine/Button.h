@@ -28,7 +28,7 @@ namespace CW {
 
         void SetOnClickCallback(const std::function<bool(MouseButtonPressed&)>& callback) { m_OnClickCallback = callback; }
         void SetOnEnterCallback(const std::function<bool(MouseMoved&)>& callback) { m_OnEnterCallback = callback; }
-        void SetOnOnExitCallback(const std::function<bool(MouseMoved&)>& callback) { m_OnExitCallback = callback; }
+        void SetOnExitCallback(const std::function<bool(MouseMoved&)>& callback) { m_OnExitCallback = callback; }
 
     private:
         Shared<ICollisionStrategy> m_CollisionChecker;

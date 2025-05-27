@@ -34,20 +34,30 @@ namespace CW {
     constexpr float RESOURCE_SCALE_FACTOR = 150.0f / 1024.0f;
     constexpr float BEACON_SCALE_FACTOR = 80.0f / 1024.0f;
     constexpr float RECIEVER_SCALE_FACTOR = 600.0f / 1024.0f;
-
+    constexpr ImGuiWindowFlags WINDOW_FLAGS = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
     class SimulationLayer
         : public Layer
     {
     public:
-        SimulationLayer(sf::Vector2f windowSize, Shared<SimulationSettings> settings, FullSimulationState* state = nullptr)
+        enum class ExitStatus
+        {
+            None = 0,
+            JustSaving,
+            SaveAndExit,
+            Error,
+            Exit
+        };
+    public:
+        SimulationLayer(sf::Vector2f windowSize, Shared<SimulationSettings> settings, FullSimulationState* state = nullptr, const char* savePath = "")
             : m_Camera(0, 0, windowSize.x, windowSize.y),
               m_Settings(settings),
               m_Drones(settings->Drones),
               m_Beacons(settings->Beacons, settings->Drones.ViewDistance.y * 2.0f),
               m_Resources(settings->Resources),
               m_Terrain(settings->TerrainGenerator),
-              m_ResourceReciever(settings->Drones)
+              m_MotherBase(settings->Drones),
+              m_CurrentFilePath(savePath)
         {
             m_DroneTexture = CreateUnique<sf::Texture>(SPRITES_FOLDER "drone_sprite.png");
             m_DroneSprite = CreateUnique<sf::Sprite>(*m_DroneTexture);
@@ -68,7 +78,7 @@ namespace CW {
             m_RecieverSprite = CreateUnique<sf::Sprite>(*m_RecieverTexture);
             m_RecieverSprite->setOrigin(static_cast<sf::Vector2f>(m_RecieverTexture->getSize()) / 2.0f);
             m_RecieverSprite->setScale({ RECIEVER_SCALE_FACTOR, RECIEVER_SCALE_FACTOR });
-            sf::Vector2f recieverSpritePos = m_ResourceReciever.GetPos();
+            sf::Vector2f recieverSpritePos = m_MotherBase.GetPos();
             recieverSpritePos.y = -450.0f;
             m_RecieverSprite->setPosition(recieverSpritePos);
 
@@ -78,7 +88,7 @@ namespace CW {
                 m_Drones.SetState(*state);
                 m_Beacons.SetState(*state);
                 m_Resources.SetState(*state);
-                m_ResourceReciever.SetData(state->RecieverData);
+                m_MotherBase.SetData(state->RecieverData);
                 m_Terrain.SetSettings(state->Settings.TerrainGenerator);
                 m_GeneratedRange = state->GeneratedRange;
             }
@@ -147,29 +157,66 @@ namespace CW {
 
         void Update(float deltaTime) override
         {
-            if (!m_SimulationRunning)
-                return;
+            if (m_DebugIsOpen)
+                UpdateDebugInterface();
+            if (m_MenuIsOpen)
+                UpdateMenuInterface();
+
             if (m_RunSingleThread && m_SimulationRunning)
                 OneIteration(deltaTime);
-            if (m_CopyState.ResourceCount < m_Settings->Drones.DroneCost && 
+            if (m_SimulationRunning && m_CopyState.ResourceCount < m_Settings->Drones.DroneCost &&
                 (!m_RunSingleThread && m_CopyState.DronesDirections.size() == 0
                 || m_RunSingleThread && m_Drones.AliveCount() == 0))
             {
-                UserEventHandler::Get().SendEvent(MessegeToUser{ "All drones are dead and cannot be created! Simulation is over." });
+                EventHandler::Get().SendEvent(MessegeToUser{ "All drones are dead and cannot be created! Simulation is over." });
                 m_SimulationRunning = false;
                 if (!m_RunSingleThread)
                     SyncStopSimulationThread();
+                m_RunSingleThread = true;
             }
+
+            if (HandleExit())
+                return;
+        }
+
+        bool HandleExit()
+        {
+            switch (m_ExitFlag)
+            {
+            case ExitStatus::Exit:
+            case ExitStatus::SaveAndExit:
+                m_SimulationRunning = false;
+                if (!m_RunSingleThread)
+                    SyncStopSimulationThread();
+                m_RunSingleThread = true;
+                m_ExitFlag = ExitStatus::None;
+                EventHandler::Get().SendEvent(SimulationOver{});
+                return true;
+            case ExitStatus::Error:
+                CW_ERROR("Saving error");
+                m_ExitFlag = ExitStatus::None;
+                break;
+            default: m_ExitFlag = ExitStatus::None; break;
+            }
+            return false;
+        }
+
+        void PausedUpdate(float) override
+        {
+            if (HandleExit())
+                return;
+            if (m_DebugIsOpen)
+                UpdateDebugInterface();
+            if (m_MenuIsOpen)
+                UpdateMenuInterface();
         }
 
         void OnEvent(Event& event) override
         {
             EventDispatcher dispatcher(event);
-            if (dispatcher.Dispach<SaveSimulation>(CW_BUILD_EVENT_FUNC(OnSaveSimulation)))
+            if (dispatcher.Dispach<SwitchDebugMenu>(CW_BUILD_EVENT_FUNC(OnSwitchDebugMenu)))
                 return;
-            if (dispatcher.Dispach<SwitchThread>(CW_BUILD_EVENT_FUNC(OnSwitchThread)))
-                return;
-            if (dispatcher.Dispach<SwitchDroneDebug>(CW_BUILD_EVENT_FUNC(OnSwitchDroneDebug)))
+            if (dispatcher.Dispach<SwitchMenu>(CW_BUILD_EVENT_FUNC(OnSwitchMenu)))
                 return;
             dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed));
             dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
@@ -217,21 +264,20 @@ namespace CW {
                 .Draw();
             renderer.SetView(m_Camera.GetView());
 
-            /*if (m_DrawChunks)
+            if (m_DrawChunks)
             {
                 auto& chunkMeshBuilder = renderer.BeginRectangleShape();
                 chunkMeshBuilder.Size({ 500.0f, 500.0f })
                     .Color(sf::Color::Transparent)
                     .OutlineThickness(m_Camera.GetZoomFactor())
                     .OutlineColor({ 255, 255, 255, 180 });
-                for (const auto& chunk : m_Beacons.GetChuncks().GetAllChunks())
+                for (auto& chunkPos : m_CopyState.ChunksPositions)
                 {
-                    sf::Vector2f chunkPos = static_cast<sf::Vector2f>(chunk.GetKey()) * 500.0f;
                     chunkMeshBuilder.Position(chunkPos)
                         .Draw();
                 }
                 chunkMeshBuilder.SetDefault();
-            }*/
+            }
 
             Renderer::Get().Draw(*m_RecieverSprite);
 
@@ -256,9 +302,6 @@ namespace CW {
                     .Radius(10.0f);
                 for (size_t i = 0; i < m_CopyState.BeaconsPositions.size(); ++i)
                 {
-                    /*auto& beaconPos = m_CopyState.BeaconsPositions[i];
-                    m_BeaconSprite->setPosition(beaconPos);
-                    Renderer::Get().Draw(*m_BeaconSprite);*/
                     circleBuilder.Position(m_CopyState.BeaconsPositions[i])
                         .Color(beacon_color(m_CopyState.BeaconsTypes[i], m_CopyState.BeaconsCharges[i]))
                         .Draw();
@@ -272,8 +315,8 @@ namespace CW {
                 {
                     if (m_DebugDroneVisuals)
                     {
-                        debugDrawDirectionVisuals(m_CopyState.DronesPositions[i], m_CopyState.DronesDirections[i], m_CopyState.DronesAttractions[i]);
-                        debugDrawViewDistance(m_CopyState.DronesPositions[i], m_CopyState.DronesDirections[i], m_Settings->Drones.ViewDistance, std::acos(m_Settings->Drones.FOV));
+                        DebugDrawDirectionVisuals(m_CopyState.DronesPositions[i], m_CopyState.DronesDirections[i], m_CopyState.DronesAttractions[i]);
+                        DebugDrawViewDistance(m_CopyState.DronesPositions[i], m_CopyState.DronesDirections[i], m_Settings->Drones.ViewDistance, std::acos(m_Settings->Drones.FOV));
                     }
 
                     m_DroneSprite->setPosition(m_CopyState.DronesPositions[i]);
@@ -307,10 +350,11 @@ namespace CW {
         void CollectState(SimulationState& state)
         {
             m_Drones.CollectState(state, m_DebugDroneVisuals);
-            m_Beacons.CollectState(state);
+            m_Beacons.CollectState(state, m_DrawChunks);
             m_Resources.CollectState(state);
-            state.ResieverPosition = m_ResourceReciever.GetPos();
-            state.ResourceCount = m_ResourceReciever.GetResources();
+            state.ResieverPosition = m_MotherBase.GetPos();
+            state.ResourceCount = m_MotherBase.GetResources();
+            state.TotalResourceCount = m_MotherBase.GetTotalResources();
             state.Terrain = m_Terrain.GetTerrain();
         }
 
@@ -320,7 +364,7 @@ namespace CW {
             m_Beacons.CollectState(state);
             m_Resources.CollectState(state);
             state.GeneratedRange = m_GeneratedRange;
-            state.RecieverData = m_ResourceReciever.GetData();
+            state.RecieverData = m_MotherBase.GetData();
             state.Settings = *m_Settings;
         }
 
@@ -329,11 +373,11 @@ namespace CW {
         {
             GenerateChunksForDrones();
 
-            if (m_ResourceReciever.Update(deltaTime))
+            if (m_MotherBase.Update(deltaTime))
             {
                 // создание дрона
                 sf::Angle randAngle = sf::degrees(lerp(0.0f, 180.0f, rand_float()));
-                m_Drones.CreateDrone(m_ResourceReciever.GetPos(), randAngle);
+                m_Drones.CreateDrone(m_MotherBase.GetPos(), randAngle);
                 CW_TRACE("Drone spawned: count {}", m_Drones.Size());
             }
 
@@ -344,7 +388,7 @@ namespace CW {
             {
                 CW_PROFILE_SCOPE("drones update");
                 std::vector<BeaconComponents> componentsVec = m_Drones.UpdateAllDrones(deltaTime, m_Resources.GetResources(),
-                    m_Beacons.GetChuncks(), m_ResourceReciever, m_Terrain);
+                    m_Beacons.GetChuncks(), m_MotherBase, m_Terrain);
                 for (auto [pos, type, bitDir] : componentsVec)
                 {
                     // создание маяков
@@ -404,6 +448,18 @@ namespace CW {
             return false;
         }
 
+        bool OnSwitchDebugMenu(SwitchDebugMenu&)
+        {
+            m_DebugIsOpen = !m_DebugIsOpen;
+            return true;
+        }
+
+        bool OnSwitchMenu(SwitchMenu&)
+        {
+            m_MenuIsOpen = !m_MenuIsOpen;
+            return true;
+        }
+
         void InitNewSim(size_t droneCount, sf::Vector2f startPosition)
         {
             m_Beacons.Clear();
@@ -419,16 +475,16 @@ namespace CW {
             CW_TRACE("Restarting simulation with {} drones", droneCount);
         }
         
-        bool OnSaveSimulation(SaveSimulation& e)
+        void SaveSimulation()
         {
-            std::ofstream file(SAVES_FOLDER + e.FilePath + SAVE_EXTENSION, std::ios::binary);
+            std::ofstream file(SAVES_FOLDER + m_CurrentFilePath + SAVE_EXTENSION, std::ios::binary);
             if (!file)
             {
-                std::string messege = std::format("Unable to open file for saving! path: {}", e.FilePath);
-                UserEventHandler::Get().SendEvent(MessegeToUser{ messege.c_str()});
+                std::string messege = std::format("Unable to open file for saving! path: {}", m_CurrentFilePath);
+                EventHandler::Get().SendEvent(MessegeToUser{ messege.c_str()});
                 CW_ERROR("{}", messege);
-                UserEventHandler::Get().SendEvent(SaveResults{ true });
-                return true;
+                HandleSaveResults(true);
+                return;
             }
 
             FullSimulationState state;
@@ -471,17 +527,15 @@ namespace CW {
                 resource.WriteToFile(file);
             }
 
-            UserEventHandler::Get().SendEvent(SaveResults{ false });
-
-            return true;
+            HandleSaveResults(false);
         }
 
-        bool OnSwitchThread(SwitchThread& e)
+        void SwitchThread()
         {
-            m_Limiter.SetUPS(e.TargetUps);
+            m_Limiter.SetUPS(m_TargetUPS);
             m_RunSingleThread = !m_RunSingleThread;
             if (m_Paused)
-                return true;
+                return;
             if (!m_RunSingleThread)
             {
                 m_Limiter.Reset();
@@ -491,7 +545,6 @@ namespace CW {
             {
                 SyncStopSimulationThread();
             }
-            return true;
         }
 
         bool OnKeyPressed(KeyPressed& event)
@@ -511,159 +564,6 @@ namespace CW {
             }
             return false;
         }
-
-        bool OnSwitchDroneDebug(SwitchDroneDebug&)
-        {
-            m_DebugDroneVisuals = !m_DebugDroneVisuals;
-            return true;
-        }
-
-        /*void UpdateInterface() 
-        {
-            ImGui::Begin("Debug");
-            if (ImGui::CollapsingHeader("Simulation-info"))
-            {
-                ImGui::Text("m_Beacons size: %d", m_Beacons.Size());
-                ImGui::Text("m_Beacons capasity: %d", m_Beacons.Capacity());
-                ImGui::Spacing();
-                ImGui::Text("mouse hovering on any window: %d", ImGui::GetIO().WantCaptureMouse);
-                m_Camera.DebugInterface();
-
-                ImGui::Spacing();
-                ImGui::Text("chunks amount: %d", m_Beacons.GetChuncks().Size());
-                ImGui::Checkbox("draw chunks", &m_DrawChunks);
-
-                ImGui::Spacing();
-                ImGui::Text("terrain sections generated: %d (%d; %d)", m_Terrain.GetSectionsCount(), m_GeneratedRange.x, m_GeneratedRange.y);
-            }
-
-            if (ImGui::CollapsingHeader("Object-pallete"))
-            {
-                m_ObjPallete.UpdateInterface();
-            }
-
-            if (ImGui::CollapsingHeader("Resources"))
-            {
-                m_ResourceReciever.DebugInterface();
-            }
-
-            if (ImGui::CollapsingHeader("Drones"))
-            {
-                static int droneCount = 100;
-                static sf::Vector2f startPos = { 0.0f, 0.0f };
-                static TargetType target = TargetType::Recource;
-
-                ImGui::InputInt("drone count", &droneCount);
-                ImGui::InputFloat2("starting position", &startPos.x);
-                ImGui::Text("target on start");
-                if (ImGui::RadioButton("Recource##Drones", target == TargetType::Recource))
-                    target = TargetType::Recource;
-                ImGui::SameLine();
-                if (ImGui::RadioButton("Navigation##Drones", target == TargetType::Navigation))
-                    target = TargetType::Navigation;
-
-                if (ImGui::Button("restart simulation"))
-                {
-                    RestartSim(droneCount, startPos, target);
-                }
-
-                ImGui::Checkbox("show drones info", &m_DronesInfo);
-                m_Drones.DebugInterface();
-
-                ImGui::Text("default drones settings");
-                if (ImGui::Button("default drone"))
-                    m_Drones.SetDefaultSettings();
-            }
-
-            if (ImGui::CollapsingHeader("Beacons"))
-            {
-                ImGui::Text("default beacons settings");
-                if (ImGui::Button("default beacon"))
-                    CW_WARN("Not implemented");
-
-                ImGui::Checkbox("draw beacons", &m_DrawBeacons);
-                ImGui::Checkbox("show beacons info", &m_BeaconsInfo);
-                m_Beacons.DebugInterface();
-            }
-
-            if (ImGui::CollapsingHeader("Terrain"))
-            {
-                ImGui::Text("regenerate terrain");
-                if (ImGui::Button("regenerate"))
-                    m_Terrain.RegenerateExisting();
-
-                static float yOffset = m_Terrain.GetYOffset();
-                if (ImGui::InputFloat("y offset", &yOffset))
-                    m_Terrain.SetYOffset(yOffset);
-
-                static int samplesCount = (int)m_Terrain.GetSamplesPerSection();
-                static float sectionWidth = m_Terrain.GetSectionWidth();
-                if (ImGui::InputInt("samples per section", &samplesCount))
-                    m_Terrain.SetSamplesPerSection(samplesCount);
-                if (ImGui::InputFloat("section width", &sectionWidth))
-                    m_Terrain.SetSectionWidth(sectionWidth);
-
-                if (ImGui::TreeNode("noise settings"))
-                {
-                    static int seed = m_Terrain.GetDetailedSeed();
-                    static float maxHeight = m_Terrain.GetMaxHeight();
-                    static float mappedNoiseDistance = m_Terrain.GetMappedNoiseDistance();
-                    if (ImGui::InputInt("seed", &seed))
-                        m_Terrain.SetDetailedSeed(seed);
-                    if (ImGui::InputFloat("max height", &maxHeight))
-                        m_Terrain.SetMaxHeight(maxHeight);
-                    if (ImGui::InputFloat("mapped noise distance", &mappedNoiseDistance))
-                        m_Terrain.SetMapedNoiseDistance(mappedNoiseDistance);
-
-                    ImGui::Spacing();
-
-                    static float gain = m_Terrain.GetGain();
-                    static float weightedStrength = m_Terrain.GetWeightedStrength();
-                    static int octaves = m_Terrain.GetOctaves();
-                    static float lacunarity = m_Terrain.GetLacunarity();
-                    if (ImGui::InputFloat("gain", &gain))
-                        m_Terrain.SetGain(gain);
-                    if (ImGui::InputFloat("weighted strength", &weightedStrength))
-                        m_Terrain.SetWeightedStrength(weightedStrength);
-                    if (ImGui::InputInt("octaves", &octaves))
-                        m_Terrain.SetOctaves(octaves);
-                    if (ImGui::InputFloat("lacunarity", &lacunarity))
-                        m_Terrain.SetLacunarity(lacunarity);
-
-                    ImGui::TreePop();
-                }
-
-                if (ImGui::TreeNode("generating chunks"))
-                {
-                    static int startIndex = 0;
-                    static int endIndex = 0;
-                    ImGui::InputInt("start", &startIndex);
-                    ImGui::InputInt("end", &endIndex);
-                    if (ImGui::Button("generate"))
-                    {
-                        if (endIndex < startIndex)
-                        {
-                            CW_WARN("Need start <= end indecies");
-                        }
-                        else
-                        {
-                            for (int i = startIndex; i < endIndex; ++i)
-                            {
-                                m_Terrain.Generate(i);
-                            }
-                        }
-                    }
-                    ImGui::TreePop();
-                }
-            }
-            ImGui::End();
-
-            if (m_BeaconsInfo)
-                m_Beacons.InfoInterface(&m_BeaconsInfo);
-
-            if (m_DronesInfo)
-                m_Drones.InfoInterface(&m_DronesInfo);
-        }*/
 
         void GenerateChunksInCameraView()
         {
@@ -746,7 +646,7 @@ namespace CW {
             }
         }
 
-        void debugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const
+        void DebugDrawDirectionVisuals(sf::Vector2f position, sf::Angle directionAngle, sf::Angle attractionAngle) const
         {
             auto& directionArrowBuilder = Renderer::Get().BeginCircleShape()
                 .PointCount(3)
@@ -761,7 +661,7 @@ namespace CW {
             directionArrowBuilder.SetDefault();
         }
 
-        void debugDrawViewDistance(sf::Vector2f position, sf::Angle directionAngle, sf::Vector2f viewDistance, float FOVRad) const
+        void DebugDrawViewDistance(sf::Vector2f position, sf::Angle directionAngle, sf::Vector2f viewDistance, float FOVRad) const
         {
             auto& FOVVisualBuilder = Renderer::Get().BeginLineShape()
                 .Length(viewDistance.y)
@@ -792,12 +692,132 @@ namespace CW {
             viewDistMeshBuilder.SetDefault();
         }
 
+        void UpdateDebugInterface()
+        {
+            ImGui::Begin("Debug");
+            if (ImGui::CollapsingHeader("App-statistics"))
+            {
+                const auto& render = Renderer::Get().GetRenderTarget();
+                sf::Vector2i mousePos = sf::Mouse::getPosition();
+                ImGui::Text("fps: %.1f", ImGui::GetIO().Framerate);
+                ImGui::Text("mouse position: (%d, %d)", mousePos.x, mousePos.y);
+                ImGui::Text("world mouse position: (%.2f, %.2f)",
+                    render.mapPixelToCoords(mousePos).x,
+                    render.mapPixelToCoords(mousePos).y);
+                ImGui::Text("render target view size: (%.2f, %.2f)", render.getView().getSize().x, render.getView().getSize().y);
+                ImGui::Text("render target view center: (%.2f, %.2f)", render.getView().getCenter().x, render.getView().getCenter().y);
+                ImGui::Spacing();
+            }
+            ImGui::Separator();
+
+            if (ImGui::CollapsingHeader("Virtual-time"))
+            {
+                if (m_RunSingleThread)
+                {
+                    ImGui::SliderInt("Traget UPS", &m_TargetUPS, 60, 1024);
+                }
+                if (ImGui::Button("Switch virtual time"))
+                {
+                    SwitchThread();
+                }
+            }
+            ImGui::Separator();
+
+            if (ImGui::CollapsingHeader("Simulation-statistics"))
+            {
+                ImGui::Text("Paused: %d", m_Paused);
+                ImGui::Text("Simulation running: %d", m_SimulationRunning);
+                ImGui::Separator();
+                ImGui::Text("Alive drones:              %d", m_CopyState.DronesPositions.size());
+                ImGui::Text("Alive beacons:             %d", m_CopyState.BeaconsPositions.size());
+                ImGui::Text("Resources on base:         %d", m_CopyState.ResourceCount);
+                ImGui::Text("Total resources collected: %d", m_CopyState.TotalResourceCount);
+            }
+            ImGui::Separator();
+
+            if (ImGui::CollapsingHeader("Debug"))
+            {
+                ImGui::Checkbox("Drone debug visuals", &m_DebugDroneVisuals);
+                ImGui::Checkbox("Chuck debug visuals", &m_DrawChunks);
+            }
+            
+            ImGui::End();
+        }
+
+        void UpdateMenuInterface()
+        {
+            ImGui::Begin("Menu", nullptr, WINDOW_FLAGS);
+            ImGui::InputText("Path", g_FilePathBuff, sizeof(g_FilePathBuff) / sizeof(*g_FilePathBuff));
+
+            ImGui::SameLine();
+            if (ImGui::SmallButton("clear"))
+            {
+                g_FilePathBuff[0] = '\0';
+            }
+
+            std::string savePath = (g_FilePathBuff[0]) ? g_FilePathBuff : m_CurrentFilePath.c_str();
+            ImGui::Text("Current path: %s", m_CurrentFilePath.c_str());
+            if (savePath[0])
+            {
+                ImGui::Text("Will be saved in: %s", SAVES_FOLDER + savePath + SAVE_EXTENSION);
+                if (ImGui::Button("Save"))
+                {
+                    m_CurrentFilePath = savePath;
+                    SaveSimulation();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Save and Exit"))
+                {
+                    m_CurrentFilePath = savePath;
+                    SaveSimulation();
+                    g_FilePathBuff[0] = '\0';
+                    m_ExitFlag = ExitStatus::SaveAndExit;
+                }
+            }
+            else
+            {
+                ImGui::Text("Please enter save path");
+            }
+            if (ImGui::Button("Exit"))
+            {
+                m_ExitFlag = ExitStatus::Exit;
+                m_MenuIsOpen = false;
+                m_DebugIsOpen = false;
+                g_FilePathBuff[0] = '\0';
+            }
+            ImGui::End();
+        }
+
+        void HandleSaveResults(bool error)
+        {
+            if (error)
+            {
+                m_ExitFlag = ExitStatus::Error;
+            }
+            else
+            {
+                switch (m_ExitFlag)
+                {
+                case ExitStatus::SaveAndExit:
+                    m_ExitFlag = ExitStatus::Exit;
+                    m_MenuIsOpen = false;
+                    m_DebugIsOpen = false;
+                    m_Paused = false;
+                    break;
+                case ExitStatus::JustSaving:  m_ExitFlag = ExitStatus::None; break;
+                default: break;
+                }
+            }
+        }
+
     private:
         std::thread m_SimulationThread;
         const float c_FixedDeltaTime = 1.0f / 60.0f;
         std::atomic<bool> m_SimulationStopRequest = false;
 
-        UPSLimiter m_Limiter{ 120 };
+        UPSLimiter m_Limiter{ 60 };
+        std::string m_CurrentFilePath = "";
+        int m_TargetUPS = 60;
         bool m_RunSingleThread = true;
         bool m_SimulationRunning = false;
         bool m_Paused = false;
@@ -812,7 +832,7 @@ namespace CW {
         BeaconManager m_Beacons;
         DroneManager m_Drones;
         ResourceManager m_Resources;
-        ResourceReciever m_ResourceReciever;
+        MotherBase m_MotherBase;
 
         TerrainGenerator m_Terrain;
         sf::Vector2i m_GeneratedRange{-5, 5};
@@ -824,6 +844,12 @@ namespace CW {
 
         float m_ElapsedTime = 0.0f;
 
+        // Menu
+        bool m_MenuIsOpen = false;
+        bool m_DebugIsOpen = false;
+
+        ExitStatus m_ExitFlag = ExitStatus::None;
+
         // Visuals
         sf::Shader m_WaterShader;
         sf::Shader m_DarkeningShader;
@@ -834,15 +860,12 @@ namespace CW {
         std::array<Unique<sf::Sprite>, 3> m_ResourceSprites;
         std::array<Unique<sf::Texture>, 3> m_ResourceTextures;
 
-        /*Unique<sf::Sprite> m_BeaconSprite;
-        Unique<sf::Texture> m_BeaconTexture;*/
-
         Unique<sf::Sprite> m_RecieverSprite;
         Unique<sf::Texture> m_RecieverTexture;
 
         // Debug
         bool m_DebugDroneVisuals = false;
-
+        bool m_DrawChunks = false;
         ObjectPalleteBuilder m_ObjPallete;
     };
 
@@ -856,6 +879,13 @@ namespace CW {
             None = 0,
             SimSetting,
             LoadSim
+        };
+        enum class HoverStatus
+        {
+            None = 0,
+            Start,
+            Load,
+            Exit
         };
 
     public:
@@ -884,7 +914,39 @@ namespace CW {
             m_ExitButton.SetOnClickCallback(
                 [](MouseButtonPressed& e) {
                     if (e.Data.button == sf::Mouse::Button::Left)
-                        UserEventHandler::Get().SendEvent(CloseApp{});
+                        EventHandler::Get().SendEvent(CloseApp{});
+                    return true;
+                });
+
+            m_StartSimButton.SetOnEnterCallback(
+                [this](MouseMoved&) {
+                    m_HoverStatus = HoverStatus::Start;
+                    return true;
+                });
+            m_LoadButton.SetOnEnterCallback(
+                [this](MouseMoved&) {
+                    m_HoverStatus = HoverStatus::Load;
+                    return true;
+                });
+            m_ExitButton.SetOnEnterCallback(
+                [this](MouseMoved&) {
+                    m_HoverStatus = HoverStatus::Exit;
+                    return true;
+                });
+
+            m_StartSimButton.SetOnExitCallback(
+                [this](MouseMoved&) {
+                    m_HoverStatus = HoverStatus::None;
+                    return true;
+                });
+            m_LoadButton.SetOnExitCallback(
+                [this](MouseMoved&) {
+                    m_HoverStatus = HoverStatus::None;
+                    return true;
+                });
+            m_ExitButton.SetOnExitCallback(
+                [this](MouseMoved&) {
+                    m_HoverStatus = HoverStatus::None;
                     return true;
                 });
 
@@ -912,6 +974,16 @@ namespace CW {
 
         void Draw() override
         {
+            sf::Color startHighlight = sf::Color::White;
+            sf::Color loadHighlight  = sf::Color::White;
+            sf::Color exitHighlight  = sf::Color::White;
+            switch (m_HoverStatus)
+            {
+            case HoverStatus::Start: startHighlight = sf::Color{ 230, 230, 210, 255 }; break;
+            case HoverStatus::Load:  loadHighlight  = sf::Color{ 230, 230, 210, 255 }; break;
+            case HoverStatus::Exit:  exitHighlight  = sf::Color{ 230, 230, 210, 255 }; break;
+            case HoverStatus::None:  startHighlight = loadHighlight = exitHighlight = sf::Color::White; break;
+            }
             auto& renderer = Renderer::Get();
             // background
             m_BackgroundShader.setUniform("iTime", m_ElapsedTime);
@@ -928,6 +1000,7 @@ namespace CW {
                 .Texture(&m_StartTexture)
                 .OutlineThickness(2.0f)
                 .OutlineColor({ 25, 240, 25 })
+                .Color(startHighlight)
                 .Draw();
             // Load
             renderer.BeginRectangleShape()
@@ -936,6 +1009,7 @@ namespace CW {
                 .Texture(&m_LoadTexture)
                 .OutlineThickness(2.0f)
                 .OutlineColor({ 14, 77, 148 })
+                .Color(loadHighlight)
                 .Draw();
             // Exit
             renderer.BeginRectangleShape()
@@ -944,6 +1018,7 @@ namespace CW {
                 .Texture(&m_ExitTexture)
                 .OutlineThickness(2.0f)
                 .OutlineColor({ 240, 25, 25 })
+                .Color(exitHighlight)
                 .Draw()
                 .SetDefault();
         }
@@ -988,7 +1063,7 @@ namespace CW {
                 ImGui::Separator();
                 if (ImGui::Button("Start simulation"))
                 {
-                    UserEventHandler::Get().SendEvent(StartSimulation{});
+                    EventHandler::Get().SendEvent(StartSimulation{});
                 }
                 ImGui::End();
             }
@@ -1098,7 +1173,7 @@ namespace CW {
                 {
                     if (ImGui::Button("Load"))
                     {
-                        UserEventHandler::Get().SendEvent(LoadSimulation{ g_FilePathBuff });
+                        EventHandler::Get().SendEvent(LoadSimulation{ g_FilePathBuff });
                         g_FilePathBuff[0] = '\0';
                     }
                 }
@@ -1123,6 +1198,7 @@ namespace CW {
         Button m_ExitButton;
 
         MenuStatus m_MenuStatus = MenuStatus::None;
+        HoverStatus m_HoverStatus = HoverStatus::None;
 
         Shared<SimulationSettings> m_SimSettings;
     };
@@ -1131,6 +1207,13 @@ namespace CW {
     class InterfaceLayer
         : public Layer
     {
+    public:
+        enum class HoverStatus
+        {
+            None = 0,
+            Menu,
+            Debug,
+        };
     public:
         InterfaceLayer(sf::Vector2f windowSize)
             : m_MenuButtonCollision(CreateShared<CircleCollision>(sf::Vector2f{windowSize.x - 35.0f, 35.0f}, 25.0f)),
@@ -1141,33 +1224,71 @@ namespace CW {
 
             m_MenuButton.SetOnClickCallback(
                 [](MouseButtonPressed&) {
-                    UserEventHandler::Get().SendEvent(SwitchMenu{});
+                    EventHandler::Get().SendEvent(SwitchMenu{});
                     return true;
                 });
             m_DebugMenuButton.SetOnClickCallback(
                 [](MouseButtonPressed&) {
-                    UserEventHandler::Get().SendEvent(SwitchDebugMenu{});
+                    EventHandler::Get().SendEvent(SwitchDebugMenu{});
+                    return true;
+                });
+
+            m_MenuButton.SetOnEnterCallback(
+                [this](MouseMoved&) {
+                    m_HoverStatus = HoverStatus::Menu;
+                    return true;
+                });
+            m_DebugMenuButton.SetOnEnterCallback(
+                [this](MouseMoved&) {
+                    m_HoverStatus = HoverStatus::Debug;
+                    return true;
+                });
+
+            m_MenuButton.SetOnExitCallback(
+                [this](MouseMoved&) {
+                    m_HoverStatus = HoverStatus::None;
+                    return true;
+                });
+            m_DebugMenuButton.SetOnExitCallback(
+                [this](MouseMoved&) {
+                    m_HoverStatus = HoverStatus::None;
                     return true;
                 });
 
             m_UpdateActive = false;
+
+            if (!m_MenuTexture.loadFromFile(SPRITES_FOLDER "menu_button.png"))
+                CW_ERROR("Unable to load menu button texture!");
+            if (!m_DebugTexture.loadFromFile(SPRITES_FOLDER "debug_button.png"))
+                CW_ERROR("Unable to load debug button texture!");
         }
 
         void Draw() override
         {
+            sf::Color menuHighlight = sf::Color::White;
+            sf::Color debugHighlight = sf::Color::White;
+            switch (m_HoverStatus)
+            {
+            case HoverStatus::Menu:  menuHighlight  = sf::Color{ 230, 230, 210, 255 }; break;
+            case HoverStatus::Debug: debugHighlight = sf::Color{ 230, 230, 210, 255 }; break;
+            case HoverStatus::None:  menuHighlight = debugHighlight = sf::Color::White; break;
+            }
+
             auto& renderer = Renderer::Get();
             renderer.ApplyDefaultView();
             // menu button
             renderer.BeginCircleShape()
                 .Radius(m_MenuButtonCollision->GetRadius())
                 .Position(m_MenuButtonCollision->GetPos())
-                .Color({ 220, 220, 220 })
+                .Texture(&m_MenuTexture)
+                .Color(menuHighlight)
                 .Draw();
             // debug menu button
             renderer.BeginCircleShape()
                 .Radius(m_DebugMenuButtonCollision->GetRadius())
                 .Position(m_DebugMenuButtonCollision->GetPos())
-                .Color({ 150, 150, 150 })
+                .Texture(&m_DebugTexture)
+                .Color(debugHighlight)
                 .Draw()
                 .SetDefault();
         }
@@ -1194,21 +1315,16 @@ namespace CW {
         Button m_DebugMenuButton;
         Shared<CircleCollision> m_MenuButtonCollision;
         Shared<CircleCollision> m_DebugMenuButtonCollision;
+        HoverStatus m_HoverStatus = HoverStatus::None;
+
+        sf::Texture m_MenuTexture;
+        sf::Texture m_DebugTexture;
     };
 
 
     class MyApp
         : public Application
     {
-    public:
-        enum class ExitStatus
-        {
-            None = 0,
-            JustSaving,
-            SaveAndExit,
-            Error,
-            Exit
-        };
     public:
         MyApp()
             : Application(800, 600, "test"),
@@ -1244,16 +1360,13 @@ namespace CW {
                 return;
             if (dispatcher.Dispach<StartSimulation>(CW_BUILD_EVENT_FUNC(OnStartSimulation)))
                 return;
-            if (dispatcher.Dispach<SwitchDebugMenu>(CW_BUILD_EVENT_FUNC(OnSwitchDebugMenu)))
-                return;
-            if (dispatcher.Dispach<SwitchMenu>(CW_BUILD_EVENT_FUNC(OnSwitchMenu)))
+            if (dispatcher.Dispach<SimulationOver>(CW_BUILD_EVENT_FUNC(OnSimulationOver)))
                 return;
             if (dispatcher.Dispach<LoadSimulation>(CW_BUILD_EVENT_FUNC(OnLoadSimulation)))
                 return;
             if (dispatcher.Dispach<MessegeToUser>(CW_BUILD_EVENT_FUNC(OnMessegeToUser)))
                 return;
-            if (dispatcher.Dispach<SaveResults>(CW_BUILD_EVENT_FUNC(OnSaveResults)))
-                return;
+            
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
             dispatcher.Dispach<KeyPressed>(CW_BUILD_EVENT_FUNC(OnKeyPressed));
             OnEventLayers(event);
@@ -1263,28 +1376,7 @@ namespace CW {
         void AppIteration()
         {
             CW_PROFILE_FUNCTION();
-            switch (m_ExitFlag)
-            {
-            case ExitStatus::Exit:
-            case ExitStatus::SaveAndExit:
-                PopLayer();
-                PopLayer();
-                m_ExitFlag = ExitStatus::None;
-                PushLayer<MainMenuLayer>((sf::Vector2f)GetWindowSize(), m_SimSettings);
-                m_ClearColor = sf::Color(0, 0, 0, 255);
-                m_SimIsRunning = false;
-                return;
-            case ExitStatus::Error:
-                CW_ERROR("Saving error");
-                m_ExitFlag = ExitStatus::None;
-                break;
-            default: m_ExitFlag = ExitStatus::None; break;
-            }
-
-            if (m_DebugIsOpen)
-                UpdateDebugInterface();
-            if (m_MenuIsOpen)
-                UpdateMenuInterface();
+            
             if (m_PopupIsOpen)
                 UpdatePopup();
         }
@@ -1316,20 +1408,18 @@ namespace CW {
             PushLayer<SimulationLayer>((sf::Vector2f) GetWindowSize(), m_SimSettings);
             PushLayer<InterfaceLayer>((sf::Vector2f) GetWindowSize());
             m_ClearColor = sf::Color(135, 206, 235, 255);
-            m_DebugIsOpen = false;
             m_SimIsRunning = true;
             return true;
         }
 
-        bool OnSwitchDebugMenu(SwitchDebugMenu&)
+        bool OnSimulationOver(SimulationOver&)
         {
-            m_DebugIsOpen = !m_DebugIsOpen;
-            return true;
-        }
-
-        bool OnSwitchMenu(SwitchMenu&)
-        {
-            m_MenuIsOpen = !m_MenuIsOpen;
+            PopLayer();
+            PopLayer();
+            PushLayer<MainMenuLayer>((sf::Vector2f)GetWindowSize(), m_SimSettings);
+            m_ClearColor = sf::Color(0, 0, 0, 255);
+            m_SimIsRunning = false;
+            m_Pause = false;
             return true;
         }
 
@@ -1386,13 +1476,12 @@ namespace CW {
 
             EraseLayer(0);
             *m_SimSettings = state.Settings;
-            PushLayer<SimulationLayer>((sf::Vector2f) GetWindowSize(), m_SimSettings, &state);
+            PushLayer<SimulationLayer>((sf::Vector2f) GetWindowSize(), m_SimSettings, &state, e.FilePath.c_str());
             PushLayer<InterfaceLayer>((sf::Vector2f) GetWindowSize());
             m_ClearColor = sf::Color(135, 206, 235, 255);
-            m_DebugIsOpen = false;
-            m_CurrentFilePath = e.FilePath;
+            m_SimIsRunning = true;
 
-            CW_TRACE("Simulation loaded successfully: {}", m_CurrentFilePath);
+            CW_TRACE("Simulation loaded successfully: {}", e.FilePath);
 
             return true;
         }
@@ -1404,131 +1493,22 @@ namespace CW {
             return true;
         }
 
-        bool OnSaveResults(SaveResults& e)
-        {
-            if (e.Error)
-            {
-                m_ExitFlag = ExitStatus::Error;
-            }
-            else
-            {
-                switch (m_ExitFlag)
-                {
-                case ExitStatus::SaveAndExit:
-                    m_ExitFlag = ExitStatus::Exit;
-                    m_MenuIsOpen = false;
-                    m_DebugIsOpen = false;
-                    break;
-                case ExitStatus::JustSaving:  m_ExitFlag = ExitStatus::None; break;
-                default: break;
-                }
-            }
-            return true;
-        }
-
         void UpdatePopup()
         {
-            ImGui::Begin("Messege", &m_PopupIsOpen, m_WindowFlags);
+            ImGui::Begin("Messege", &m_PopupIsOpen, WINDOW_FLAGS);
             ImGui::Text(m_PopupMessege.c_str());
             if (ImGui::Button("Ok"))
                 m_PopupIsOpen = false;
             ImGui::End();
         }
 
-        void UpdateDebugInterface()
-        {
-            ImGui::Begin("Debug");
-            if (ImGui::CollapsingHeader("App-statistics"))
-            {
-                const auto& render = Renderer::Get().GetRenderTarget();
-                sf::Vector2i mousePos = sf::Mouse::getPosition();
-                ImGui::Text("fps: %.1f", ImGui::GetIO().Framerate);
-                ImGui::Text("paused: %d", IsPaused());
-                ImGui::Text("mouse position: (%d, %d)", mousePos.x, mousePos.y);
-                ImGui::Text("world mouse position: (%.2f, %.2f)",
-                    render.mapPixelToCoords(mousePos).x,
-                    render.mapPixelToCoords(mousePos).y);
-                ImGui::Text("render target view size: (%.2f, %.2f)", render.getView().getSize().x, render.getView().getSize().y);
-                ImGui::Text("render target view center: (%.2f, %.2f)", render.getView().getCenter().x, render.getView().getCenter().y);
-                ImGui::Spacing();
-            }
-            ImGui::Separator();
-
-            ImGui::Text("Paused: %d", m_Pause);
-            ImGui::Text("Simulation running: %d", m_SimIsRunning);
-            if (ImGui::Button("Switch drone debug visuals"))
-                UserEventHandler::Get().SendEvent(SwitchDroneDebug{});
-
-            if (!m_VirtualTime)
-            {
-                ImGui::SliderInt("Traget UPS", &m_TargetUPS, 60, 1024);
-            }
-            if (ImGui::Button("Switch virtual time"))
-            {
-                m_VirtualTime = !m_VirtualTime;
-                UserEventHandler::Get().SendEvent(SwitchThread{ m_TargetUPS });
-            }
-            ImGui::End();
-        }
-
-        void UpdateMenuInterface()
-        {
-            ImGui::Begin("Menu", nullptr, m_WindowFlags);
-            ImGui::InputText("Path", g_FilePathBuff, sizeof(g_FilePathBuff) / sizeof(*g_FilePathBuff));
-
-            ImGui::SameLine();
-            if (ImGui::SmallButton("clear"))
-            {
-                g_FilePathBuff[0] = '\0';
-            }
-
-            const char* savePath = (g_FilePathBuff[0]) ? g_FilePathBuff : m_CurrentFilePath.c_str();
-            ImGui::Text("Current path: %s", m_CurrentFilePath.c_str());
-            if (savePath[0])
-            {
-                ImGui::Text("Will be saved in: %s", savePath);
-                if (ImGui::Button("Save"))
-                {
-                    m_CurrentFilePath = g_FilePathBuff;
-                    UserEventHandler::Get().SendEvent(SaveSimulation{ savePath });
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("Save and Exit"))
-                {
-                    UserEventHandler::Get().SendEvent(SaveSimulation{ savePath });
-                    g_FilePathBuff[0] = '\0';
-                    m_ExitFlag = ExitStatus::SaveAndExit;
-                }
-            }
-            else
-            {
-                ImGui::Text("Please enter save path");
-            }
-            if (ImGui::Button("Exit"))
-            {
-                m_ExitFlag = ExitStatus::Exit;
-                m_MenuIsOpen = false;
-                m_DebugIsOpen = false;
-                g_FilePathBuff[0] = '\0';
-            }
-            ImGui::End();
-        }
-
     private:
         bool m_SimIsRunning = false;
-        bool m_MenuIsOpen = false;
-        bool m_DebugIsOpen = false;
-        bool m_VirtualTime = false;
-
-        ExitStatus m_ExitFlag = ExitStatus::None;
 
         bool m_PopupIsOpen = false;
         std::string m_PopupMessege = "";
 
-        int m_TargetUPS = 60;
-        std::string m_CurrentFilePath = "";
         Shared<SimulationSettings> m_SimSettings;
-        ImGuiWindowFlags m_WindowFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
     };
 
 } // CW

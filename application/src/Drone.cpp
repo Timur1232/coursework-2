@@ -147,20 +147,7 @@ namespace CW {
 
         wander(deltaTime, sf::degrees(settings.WanderAngleThresholdDeg), sf::radians(settings.RandomWanderAngleRad), resources);
 
-        if (m_TargetResourceIndex && resources.at(*m_TargetResourceIndex).IsCarried())
-        {
-            m_TargetResourceIndex = {};
-        }
-        else if (CheckResourceColission(170.0f, resources))
-        {
-            CW_TRACE("Drone picked {} resources on ({}, {})", resources.at(*m_TargetResourceIndex).GetResources(), resources.at(*m_TargetResourceIndex).GetPos().x, resources.at(*m_TargetResourceIndex).GetPos().y);
-            m_TargetType = TargetType::Navigation;
-            m_AttractionAngle = (m_AttractionAngle - sf::degrees(180.0f)).wrapSigned();
-            m_DirectionAngle = m_AttractionAngle;
-            m_CarriedResources = resources.at(*m_TargetResourceIndex).GetResources();
-            resources.at(*m_TargetResourceIndex).Pickup();
-            m_TargetResourceIndex = {};
-        }
+        
 
         return beaconSpawn;
     }
@@ -194,7 +181,7 @@ namespace CW {
         }
     }
 
-    bool Drone::ReactToResourceReciver(ResourceReciever& reciever, float wanderCooldownSec)
+    bool Drone::ReactToMotherBase(MotherBase& reciever, float wanderCooldownSec)
     {
         if (m_TargetType == TargetType::Navigation)
         {
@@ -259,6 +246,21 @@ namespace CW {
                 m_TargetResourceIndex = closestResourceIndex;
                 m_AttractionAngle = (closestResource->GetPos() - m_Position).angle();
                 m_WanderTimer = 0.0f;
+            }
+        }
+        else if (m_TargetResourceIndex)
+        {
+            if (resources.at(*m_TargetResourceIndex).IsCarried())
+                m_TargetResourceIndex = {};
+            else if (CheckResourceColission(170.0f, resources))
+            {
+                CW_TRACE("Drone picked {} resources on ({}, {})", resources.at(*m_TargetResourceIndex).GetResources(), resources.at(*m_TargetResourceIndex).GetPos().x, resources.at(*m_TargetResourceIndex).GetPos().y);
+                m_TargetType = TargetType::Navigation;
+                m_AttractionAngle = (m_AttractionAngle - sf::degrees(180.0f)).wrapSigned();
+                m_DirectionAngle = m_AttractionAngle;
+                m_CarriedResources = resources.at(*m_TargetResourceIndex).GetResources();
+                resources.at(*m_TargetResourceIndex).Pickup();
+                m_TargetResourceIndex = {};
             }
         }
     }
@@ -409,7 +411,7 @@ namespace CW {
         float deltaTime,
         std::vector<Resource>& resources,
         const ChunkHandler<Beacon>& beacons,
-        ResourceReciever& reciever,
+        MotherBase& reciever,
         const TerrainGenerator& terrain)
     {
         BeaconComponents components;
@@ -447,7 +449,7 @@ namespace CW {
 
             drone.ReactToResources(resources, m_DroneSettings.ViewDistance, m_DroneSettings.FOV);
 
-            if (!drone.ReactToResourceReciver(reciever, m_DroneSettings.WanderCooldownSec))
+            if (!drone.ReactToMotherBase(reciever, m_DroneSettings.WanderCooldownSec))
                 drone.ReactToBeacons(beacons, m_DroneSettings.WanderCooldownSec, m_DroneSettings.FOV, m_DroneSettings.ViewDistance, m_DroneSettings.BitDirections);
         }
         return componentsVec;

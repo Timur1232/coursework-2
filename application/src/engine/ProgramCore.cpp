@@ -12,7 +12,7 @@ namespace CW {
 
 	ProgramCore::ProgramCore()
 	{
-		UserEventHandler::Get().Reserve(1024);
+		EventHandler::Get().Reserve(1024);
 		CW_INFO("Core initialized.");
 	}
 
@@ -152,13 +152,13 @@ namespace CW {
 	void ProgramCore::pollUserEvents()
 	{
 		CW_PROFILE_FUNCTION();
-		auto& events = UserEventHandler::Get().GetEvents();
+		auto& events = EventHandler::Get().GetEvents();
 		for (size_t i = 0; i < events.size(); ++i)
 		{
 			auto& event = events[i];
 			dispatch_user_event<CW_USER_EVENTS_LIST>(event, *m_App);
 		}
-		UserEventHandler::Get().ClearEvents();
+		EventHandler::Get().ClearEvents();
 	}
 
 	void ProgramCore::SetApplication(std::unique_ptr<Application>&& app)

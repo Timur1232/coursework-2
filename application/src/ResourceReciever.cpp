@@ -7,24 +7,24 @@
 
 namespace CW {
 
-	ResourceReciever::ResourceReciever(sf::Vector2f position, int droneCost, float spawnCooldown)
+	MotherBase::MotherBase(sf::Vector2f position, int droneCost, float spawnCooldown)
 		: Object(position), m_RecieveRadius(300.f), m_BroadcastRadius(1000.f),
 		  m_DroneSpawnCooldown(spawnCooldown), m_DroneCost(droneCost)
 	{
 		m_DroneSpawnTimer = m_DroneSpawnCooldown;
 	}
 
-	ResourceReciever::ResourceReciever(const DroneSettings& settings)
-		: ResourceReciever(settings.BasePosition, settings.DroneCost, settings.DroneSpawnCooldown)
+	MotherBase::MotherBase(const DroneSettings& settings)
+		: MotherBase(settings.BasePosition, settings.DroneCost, settings.DroneSpawnCooldown)
 	{
 	}
 
-	void ResourceReciever::DebugInterface() const
+	void MotherBase::DebugInterface() const
 	{
 		ImGui::Text("resources amount: %d", m_ResourceCount);
 	}
 
-	RecieverData ResourceReciever::GetData() const
+	RecieverData MotherBase::GetData() const
 	{
 		return RecieverData{
 			.ResourceCount		= m_ResourceCount,
@@ -36,7 +36,7 @@ namespace CW {
 		};
 	}
 
-	void ResourceReciever::SetData(const RecieverData& data)
+	void MotherBase::SetData(const RecieverData& data)
 	{
 		m_ResourceCount = data.ResourceCount;
 		m_RecieveRadius = data.RecieveRadius;
@@ -46,7 +46,7 @@ namespace CW {
 		m_DroneSpawnCooldown = data.DroneSpawnCooldown;
 	}
 
-	bool ResourceReciever::Update(float deltaTime)
+	bool MotherBase::Update(float deltaTime)
 	{
 		m_DroneSpawnTimer -= deltaTime;
 		if (m_DroneSpawnTimer <= 0.0f && m_ResourceCount >= m_DroneCost)
@@ -58,28 +58,29 @@ namespace CW {
 		return false;
 	}
 
-	int ResourceReciever::GetResources() const
+	int MotherBase::GetResources() const
 	{
 		return m_ResourceCount;
 	}
 
-	float ResourceReciever::GetBroadcastRadius() const
+	float MotherBase::GetBroadcastRadius() const
 	{
 		return m_BroadcastRadius;
 	}
 
-	float ResourceReciever::GetRecieveRadius() const
+	float MotherBase::GetRecieveRadius() const
 	{
 		return m_RecieveRadius;
 	}
 
-	void ResourceReciever::AddResources(int amount)
+	void MotherBase::AddResources(int amount)
 	{
 		CW_TRACE("Added {} resources", amount);
 		m_ResourceCount += amount;
+		m_TotalResourceCount += amount;
 	}
 
-	int ResourceReciever::TakeResources(int amount)
+	int MotherBase::TakeResources(int amount)
 	{
 		int take;
 		if (amount > m_ResourceCount)

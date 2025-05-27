@@ -95,13 +95,23 @@ namespace CW {
 		}
 	}
 
-	void BeaconManager::CollectState(SimulationState& state) const
+	void CW::BeaconManager::CollectState(SimulationState& state, bool debug) const
 	{
 		for (const auto& beacon : m_Beacons)
 		{
-			state.BeaconsPositions.push_back(beacon->GetPos());
-			state.BeaconsTypes.push_back(beacon->GetType());
-			state.BeaconsCharges.push_back(beacon->GetCharge());
+			if (beacon->IsAlive())
+			{
+				state.BeaconsPositions.push_back(beacon->GetPos());
+				state.BeaconsTypes.push_back(beacon->GetType());
+				state.BeaconsCharges.push_back(beacon->GetCharge());
+			}
+		}
+		if (debug)
+		{
+			for (auto& chunk : m_Chunks.GetAllChunks())
+			{
+				state.ChunksPositions.push_back((sf::Vector2f) chunk.GetKey() * m_Chunks.GetChunkSize());
+			}
 		}
 	}
 

@@ -43,26 +43,6 @@ namespace CW {
 		CW_BULD_EVENT_TYPE(SwitchDebugMenu)
 	};
 
-	class SaveSimulation
-		: public Event
-	{
-	public:
-		std::string FilePath;
-
-		SaveSimulation(std::string_view path) : FilePath(path) {}
-		CW_BULD_EVENT_TYPE(SaveSimulation)
-	};
-
-	class SaveResults
-		: public Event
-	{
-	public:
-		bool Error;
-
-		SaveResults(bool error) : Error(error) {}
-		CW_BULD_EVENT_TYPE(SaveResults)
-	};
-
 	class LoadSimulation
 		: public Event
 	{
@@ -71,16 +51,6 @@ namespace CW {
 
 		LoadSimulation(std::string_view path) : FilePath(path) {}
 		CW_BULD_EVENT_TYPE(LoadSimulation)
-	};
-
-	class SwitchThread
-		: public Event
-	{
-	public:
-		int TargetUps;
-
-		SwitchThread(int targetUPS) : TargetUps(targetUPS) {}
-		CW_BULD_EVENT_TYPE(SwitchThread)
 	};
 
 	class MessegeToUser
@@ -93,12 +63,12 @@ namespace CW {
 		CW_BULD_EVENT_TYPE(MessegeToUser)
 	};
 
-	class SwitchDroneDebug
+	class SimulationOver
 		: public Event
 	{
 	public:
-		SwitchDroneDebug() = default;
-		CW_BULD_EVENT_TYPE(SwitchDroneDebug)
+		SimulationOver() = default;
+		CW_BULD_EVENT_TYPE(SimulationOver)
 	};
 
 } // CW

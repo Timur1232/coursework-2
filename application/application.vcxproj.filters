@@ -72,9 +72,6 @@
     <ClCompile Include="src\engine\UPSLimiter.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\debug_utils\Log.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\debug_utils\LineShape.h">

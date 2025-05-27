@@ -19,13 +19,13 @@ namespace CW {
 		float DroneSpawnCooldown = 0.0f;
 	};
 
-	class ResourceReciever
+	class MotherBase
 		: public Object
 	{
 	public:
-		ResourceReciever() = default;
-		ResourceReciever(sf::Vector2f position, int droneCost, float spawnCooldown);
-		ResourceReciever(const DroneSettings& settings);
+		MotherBase() = default;
+		MotherBase(sf::Vector2f position, int droneCost, float spawnCooldown);
+		MotherBase(const DroneSettings& settings);
 
 		void DebugInterface() const;
 
@@ -38,11 +38,14 @@ namespace CW {
 		[[nodiscard]] float GetBroadcastRadius() const;
 		[[nodiscard]] float GetRecieveRadius() const;
 
+		int GetTotalResources() const { return m_TotalResourceCount; }
+
 		void AddResources(int amount);
 		[[nodiscard]] int TakeResources(int amount);
 
 	private:
 		int m_ResourceCount = 0;
+		int m_TotalResourceCount = 0;
 		float m_RecieveRadius = 0.0f;
 		float m_BroadcastRadius = 0.0f;
 

@@ -21,6 +21,7 @@ namespace CW {
         std::vector<sf::Vector2f> BeaconsPositions;
         std::vector<TargetType> BeaconsTypes;
         std::vector<float> BeaconsCharges;
+        std::vector<sf::Vector2f> ChunksPositions;
 
         // Resource
         std::vector<sf::Vector2f> ResourcesPositions;
@@ -34,19 +35,29 @@ namespace CW {
 
         // info
         int ResourceCount = 0;
+        int TotalResourceCount = 0;
 
         void Clear()
         {
             DronesPositions.clear();
             DronesDirections.clear();
             DronesAttractions.clear();
+
             BeaconsPositions.clear();
             BeaconsTypes.clear();
             BeaconsCharges.clear();
+            ChunksPositions.clear();
+
             ResourcesPositions.clear();
             ResourcesRotations.clear();
             ResourcesAmounts.clear();
+
             Terrain.TerrainSections.clear();
+
+            ResieverPosition = { 0.0f, 0.0f };
+
+            ResourceCount = 0;
+            TotalResourceCount = 0;
         }
     };
 

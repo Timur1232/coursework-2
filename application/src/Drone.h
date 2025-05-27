@@ -54,7 +54,7 @@ namespace CW {
 
 		void ReactToBeacons(const ChunkHandler<Beacon>& beacons, float wanderCooldownSec,
 			float FOV, sf::Vector2f viewDistance, bool bitDir);
-		[[nodiscard]] bool ReactToResourceReciver(ResourceReciever& reciever, float wanderCooldownSec);
+		[[nodiscard]] bool ReactToMotherBase(MotherBase& reciever, float wanderCooldownSec);
 
 		void ReactToResources(std::vector<Resource>& resources, sf::Vector2f viewDistance, float FOV);
 		[[nodiscard]] bool CheckResourceColission(float pickUpDist, const std::vector<Resource>& resources);
@@ -102,7 +102,7 @@ namespace CW {
 			float deltaTime,
 			std::vector<Resource>& resources,
 			const ChunkHandler<Beacon>& beacons,
-			ResourceReciever& reciever,
+			MotherBase& reciever,
 			const TerrainGenerator& terrain);
 
 		void Clear();

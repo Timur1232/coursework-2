@@ -3,13 +3,13 @@
 
 namespace CW {
 
-	UserEventHandler& UserEventHandler::Get()
+	EventHandler& EventHandler::Get()
 	{
-		static UserEventHandler handler;
+		static EventHandler handler;
 		return handler;
 	}
 
-	void UserEventHandler::Reserve(size_t eventReserve)
+	void EventHandler::Reserve(size_t eventReserve)
 	{
 		m_UserEvents.reserve(eventReserve);
 	}

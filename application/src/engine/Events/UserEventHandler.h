@@ -26,13 +26,13 @@ namespace CW {
 		}
 	};
 
-	class UserEventHandler
+	class EventHandler
 	{
 	public:
-		UserEventHandler(const UserEventHandler&) = delete;
-		UserEventHandler(UserEventHandler&&) = delete;
+		EventHandler(const EventHandler&) = delete;
+		EventHandler(EventHandler&&) = delete;
 
-		static UserEventHandler& Get();
+		static EventHandler& Get();
 
 		void Reserve(size_t eventReserve);
 
@@ -46,7 +46,7 @@ namespace CW {
 		void ClearEvents() { m_UserEvents.clear(); }
 
 	private:
-		UserEventHandler() = default;
+		EventHandler() = default;
 
 	private:
 		std::vector<MyEvent> m_UserEvents;
