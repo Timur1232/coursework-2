@@ -16,8 +16,6 @@ namespace CW {
 
 	[[nodiscard]] sf::Color beacon_color(TargetType type, float charge);
 
-	// TODO: выдача битового направления или обычного в зависимости от настройки
-
 	class Beacon
 		: public Object
 	{
@@ -27,8 +25,6 @@ namespace CW {
 
 		void WriteToFile(std::ofstream& file) const;
 		void ReadFromFile(std::ifstream& file);
-
-		void InfoInterface(size_t index) const;
 
 		void Update(float deltaTime, const BeaconSettings& bs);
 
@@ -78,9 +74,6 @@ namespace CW {
 		[[nodiscard]] const ChunkHandler<Beacon>& GetChuncks() const { return m_Chunks; }
 		[[nodiscard]] size_t Size() const { return m_Beacons.size(); }
 		[[nodiscard]] size_t Capacity() const { return m_Beacons.capacity(); }
-		
-		void InfoInterface(bool* open);
-		void DebugInterface();
 
 	private:
 		std::vector<IndexedBeacon> m_Beacons;

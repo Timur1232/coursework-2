@@ -1,5 +1,4 @@
 #pragma once
-
 #include "pch.h"
 
 #include "debug_utils/LineShape.h"
@@ -60,9 +59,9 @@ namespace CW {
 		[[nodiscard]] bool CheckResourceColission(float pickUpDist, const std::vector<Resource>& resources);
 
 	private:
-		inline void turn(float deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta);
-		inline void wander(float deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle, const std::vector<Resource>& resource);
-		std::pair<const Beacon*, float> findFurthestInChunk(const Chunk<Beacon>* chunk, float FOV, sf::Vector2f viewDistance);
+		inline void Turn(float deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta);
+		inline void Wander(float deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle, const std::vector<Resource>& resource);
+		std::pair<const Beacon*, float> FindFurthestInChunk(const Chunk<Beacon>* chunk, float FOV, sf::Vector2f viewDistance);
 
 	private:
 		sf::Angle m_DirectionAngle = sf::Angle::Zero;
@@ -114,9 +113,6 @@ namespace CW {
 		[[nodiscard]] size_t Capacity() const { return m_Drones.capacity(); }
 		size_t AliveCount() const { return m_Drones.size() - m_DeadDrones; }
 
-		void InfoInterface(bool* open);
-		void DebugInterface();
-
 		void SetDefaultSettings();
 
 		sf::Vector2f GetFurthestHorizontalReach() const { return m_FurthestHorizontalReach; }
@@ -128,10 +124,6 @@ namespace CW {
 		sf::Vector2f m_FurthestHorizontalReach;
 
 		float m_FOVRadPrecalc;
-
-		// Debug
-		bool m_DrawViewDistance = false;
-		bool m_DrawDirection = false;
 	};
 
 } // CW

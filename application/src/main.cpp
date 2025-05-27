@@ -11,8 +11,6 @@
 
 #include "debug_utils/Log.h"
 #include "debug_utils/Profiler.h"
-#include "utils/ArenaAllocator.h"
-#include "ObjectPallete.h"
 
 #include "SimState.h"
 #include "Camera2D.h"
@@ -33,7 +31,7 @@ namespace CW {
     constexpr float DRONE_SCALE_FACTOR = 300.0f / 1024.0f;
     constexpr float RESOURCE_SCALE_FACTOR = 150.0f / 1024.0f;
     constexpr float BEACON_SCALE_FACTOR = 80.0f / 1024.0f;
-    constexpr float RECIEVER_SCALE_FACTOR = 600.0f / 1024.0f;
+    constexpr float MOTHER_BASE_SCALE_FACTOR = 600.0f / 1024.0f;
     constexpr ImGuiWindowFlags WINDOW_FLAGS = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
     class SimulationLayer
@@ -59,11 +57,13 @@ namespace CW {
               m_MotherBase(settings->Drones),
               m_CurrentFilePath(savePath)
         {
+            // создание спрайта дрона
             m_DroneTexture = CreateUnique<sf::Texture>(SPRITES_FOLDER "drone_sprite.png");
             m_DroneSprite = CreateUnique<sf::Sprite>(*m_DroneTexture);
             m_DroneSprite->setOrigin(static_cast<sf::Vector2f>(m_DroneTexture->getSize()) / 2.0f);
             m_DroneSprite->setScale({ DRONE_SCALE_FACTOR, DRONE_SCALE_FACTOR });
 
+            // создание спрайтов ресурсов
             m_ResourceTextures[0] = CreateUnique<sf::Texture>(SPRITES_FOLDER "scrap_sprite.png");
             m_ResourceTextures[1] = CreateUnique<sf::Texture>(SPRITES_FOLDER "statue_sprite.png");
             m_ResourceTextures[2] = CreateUnique<sf::Texture>(SPRITES_FOLDER "treasure_sprite.png");
@@ -74,26 +74,29 @@ namespace CW {
                 m_ResourceSprites[i]->setScale({ RESOURCE_SCALE_FACTOR, RESOURCE_SCALE_FACTOR });
             }
 
-            m_RecieverTexture = CreateUnique<sf::Texture>(SPRITES_FOLDER "base_sprite.png");
-            m_RecieverSprite = CreateUnique<sf::Sprite>(*m_RecieverTexture);
-            m_RecieverSprite->setOrigin(static_cast<sf::Vector2f>(m_RecieverTexture->getSize()) / 2.0f);
-            m_RecieverSprite->setScale({ RECIEVER_SCALE_FACTOR, RECIEVER_SCALE_FACTOR });
+            // создание спрайта базы
+            m_MotherBaseTexture = CreateUnique<sf::Texture>(SPRITES_FOLDER "base_sprite.png");
+            m_MotherBaseSprite = CreateUnique<sf::Sprite>(*m_MotherBaseTexture);
+            m_MotherBaseSprite->setOrigin(static_cast<sf::Vector2f>(m_MotherBaseTexture->getSize()) / 2.0f);
+            m_MotherBaseSprite->setScale({ MOTHER_BASE_SCALE_FACTOR, MOTHER_BASE_SCALE_FACTOR });
             sf::Vector2f recieverSpritePos = m_MotherBase.GetPos();
             recieverSpritePos.y = -450.0f;
-            m_RecieverSprite->setPosition(recieverSpritePos);
+            m_MotherBaseSprite->setPosition(recieverSpritePos);
 
             if (state)
             {
+                // загрузка состояния из файла
                 *m_Settings = state->Settings;
                 m_Drones.SetState(*state);
                 m_Beacons.SetState(*state);
                 m_Resources.SetState(*state);
-                m_MotherBase.SetData(state->RecieverData);
+                m_MotherBase.SetData(state->MotherBaseData);
                 m_Terrain.SetSettings(state->Settings.TerrainGenerator);
                 m_GeneratedRange = state->GeneratedRange;
             }
             Init(windowSize);
             if (!state)
+                // создание чистой симуляции
                 InitNewSim(settings->DronesCount, { settings->StartingHorizontalPosition, 0.0f });
             m_SimulationRunning = true;
         }
@@ -104,6 +107,7 @@ namespace CW {
                 SyncStopSimulationThread();
         }
 
+        // запуск потока симуляции
         void SpawnSimulationThread()
         {
             m_SimulationThread = std::thread(
@@ -112,6 +116,7 @@ namespace CW {
                 });
         }
 
+        // остановка потока с синхронизацией
         void SyncStopSimulationThread()
         {
             m_SimulationStopRequest = true;
@@ -119,10 +124,12 @@ namespace CW {
             m_SimulationStopRequest = false;
         }
 
+        // дополнительная инициализация
         void Init(const sf::Vector2f& windowSize)
         {
             m_Resources.Reserve(1024);
 
+            // загрузка ресурсов
             if (!m_WaterShader.loadFromFile(SHADERS_FOLDER "water_fragment.glsl", sf::Shader::Type::Fragment))
             {
                 CW_ERROR("Unable to load water shader!");
@@ -141,11 +148,13 @@ namespace CW {
                 m_TerrainTexture.setRepeated(true);
             }
 
+            // генерация начальной области
             GenerateChunkRange(m_GeneratedRange.x, m_GeneratedRange.y);
             GenerateMeshes(m_Terrain.GetTerrain(), m_GeneratedRange);
             m_LeftGeneratedSections.x = m_LeftGeneratedSections.y = m_GeneratedRange.x;
             m_RightGeneratedSections.x = m_RightGeneratedSections.y = m_GeneratedRange.y;
 
+            // шейдеры
             m_WaterShader.setUniform("uResolution", windowSize);
             m_WaterShader.setUniform("uDeepDarkFactor", 3.5f);
             m_WaterShader.setUniform("uWaterYOffset", 300.0f);
@@ -157,13 +166,17 @@ namespace CW {
 
         void Update(float deltaTime) override
         {
+            // обновление менюшек
             if (m_DebugIsOpen)
                 UpdateDebugInterface();
             if (m_MenuIsOpen)
                 UpdateMenuInterface();
 
+            // обновление в одном потоке
             if (m_RunSingleThread && m_SimulationRunning)
                 OneIteration(deltaTime);
+
+            // конец симуляции
             if (m_SimulationRunning && m_CopyState.ResourceCount < m_Settings->Drones.DroneCost &&
                 (!m_RunSingleThread && m_CopyState.DronesDirections.size() == 0
                 || m_RunSingleThread && m_Drones.AliveCount() == 0))
@@ -184,7 +197,7 @@ namespace CW {
             switch (m_ExitFlag)
             {
             case ExitStatus::Exit:
-            case ExitStatus::SaveAndExit:
+            case ExitStatus::SaveAndExit: // корректный выход
                 m_SimulationRunning = false;
                 if (!m_RunSingleThread)
                     SyncStopSimulationThread();
@@ -192,7 +205,7 @@ namespace CW {
                 m_ExitFlag = ExitStatus::None;
                 EventHandler::Get().SendEvent(SimulationOver{});
                 return true;
-            case ExitStatus::Error:
+            case ExitStatus::Error: // ошибка
                 CW_ERROR("Saving error");
                 m_ExitFlag = ExitStatus::None;
                 break;
@@ -201,6 +214,7 @@ namespace CW {
             return false;
         }
 
+        // обновление на паузе
         void PausedUpdate(float) override
         {
             if (HandleExit())
@@ -218,8 +232,6 @@ namespace CW {
                 return;
             if (dispatcher.Dispach<SwitchMenu>(CW_BUILD_EVENT_FUNC(OnSwitchMenu)))
                 return;
-            dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed));
-            dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased));
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
             dispatcher.Dispach<KeyPressed>(CW_BUILD_EVENT_FUNC(OnKeyPressed));
 
@@ -255,6 +267,7 @@ namespace CW {
             m_DarkeningShader.setUniform("uCameraPosition", m_Camera.GetView().getCenter());
             m_DarkeningShader.setUniform("uCameraViewYSize", m_Camera.GetView().getSize().y);
 
+            // отрисовка воды
             auto& renderer = Renderer::Get();
             renderer.ApplyDefaultView();
             renderer.BeginRectangleShape()
@@ -264,6 +277,7 @@ namespace CW {
                 .Draw();
             renderer.SetView(m_Camera.GetView());
 
+            // отрисовка чанков
             if (m_DrawChunks)
             {
                 auto& chunkMeshBuilder = renderer.BeginRectangleShape();
@@ -279,8 +293,10 @@ namespace CW {
                 chunkMeshBuilder.SetDefault();
             }
 
-            Renderer::Get().Draw(*m_RecieverSprite);
+            // отрисовка базы
+            Renderer::Get().Draw(*m_MotherBaseSprite);
 
+            // отрисовка ресурсов
             for (size_t i = 0; i < m_CopyState.ResourcesPositions.size(); ++i)
             {
                 sf::Vector2f resourcePos = m_CopyState.ResourcesPositions[i];
@@ -295,6 +311,7 @@ namespace CW {
                 Renderer::Get().Draw(sprite);
             }
 
+            // отрисовка маяков
             {
                 CW_PROFILE_SCOPE("beacons draw");
                 auto& circleBuilder = Renderer::Get().BeginCircleShape();
@@ -309,6 +326,7 @@ namespace CW {
                 circleBuilder.SetDefault();
             }
 
+            // отрисовка дронов
             {
                 CW_PROFILE_SCOPE("drones draw");
                 for (size_t i = 0; i < m_CopyState.DronesDirections.size(); ++i)
@@ -333,6 +351,7 @@ namespace CW {
                 }
             }
           
+            // отрисовка ландшафта
             {
                 CW_PROFILE_SCOPE("terrain draw");
                 const auto& terrain = m_CopyState.Terrain;
@@ -347,6 +366,7 @@ namespace CW {
             }
         }
 
+        // сбор состояния модели для рендера
         void CollectState(SimulationState& state)
         {
             m_Drones.CollectState(state, m_DebugDroneVisuals);
@@ -358,13 +378,14 @@ namespace CW {
             state.Terrain = m_Terrain.GetTerrain();
         }
 
+        // сбор состояния модели для сохранения
         void CollectState(FullSimulationState& state)
         {
             m_Drones.CollectState(state);
             m_Beacons.CollectState(state);
             m_Resources.CollectState(state);
             state.GeneratedRange = m_GeneratedRange;
-            state.RecieverData = m_MotherBase.GetData();
+            state.MotherBaseData = m_MotherBase.GetData();
             state.Settings = *m_Settings;
         }
 
@@ -398,6 +419,7 @@ namespace CW {
             m_ElapsedTime += deltaTime;
         }
 
+        // функция, запускаемая в отдельном потоке
         void SimulationCycle()
         {
             while (!m_SimulationStopRequest)
@@ -405,41 +427,6 @@ namespace CW {
                 OneIteration(c_FixedDeltaTime);
                 m_Limiter.Wait();
             }
-        }
-
-        bool OnMouseButtonPressed(MouseButtonPressed& e)
-        {
-            /*if (!m_Hold && !ImGui::GetIO().WantCaptureMouse && e.Data.button == sf::Mouse::Button::Left)
-            {
-                switch (m_ObjPallete.GetCurrentType())
-                {
-                case ObjectPallete::Beacon:
-                {
-                    auto [type, bitDir] = m_ObjPallete.GetBeaconComponents();
-                    m_Beacons.CreateBeacon(m_Camera.PixelToWorldPosition(e.Data.position), type, bitDir);
-                    break;
-                }
-                case ObjectPallete::Drone:
-                {
-                    auto [direction, targetType] = m_ObjPallete.GetDroneComponents();
-                    m_Drones.CreateDrone(m_Camera.PixelToWorldPosition(e.Data.position), direction, targetType);
-                    break;
-                }
-                case ObjectPallete::Resource:
-                {
-                    m_Resources.CreateResource(m_Camera.PixelToWorldPosition(e.Data.position), m_ObjPallete.GetRsourceAmount());
-                    break;
-                }
-                }
-                m_Hold = true;
-            }*/
-            return false;
-        }
-
-        bool OnMouseButtonReleased(MouseButtonReleased& e)
-        {
-            m_Hold = m_Hold && e.Data.button != sf::Mouse::Button::Left;
-            return false;
         }
 
         bool OnWindowResized(WindowResized& e)
@@ -494,8 +481,8 @@ namespace CW {
             if (!m_Paused && !m_RunSingleThread)
                 SpawnSimulationThread();
 
-            // reciever
-            file.write(reinterpret_cast<const char*>(&state.RecieverData), sizeof(state.RecieverData));
+            // base
+            file.write(reinterpret_cast<const char*>(&state.MotherBaseData), sizeof(state.MotherBaseData));
 
             // terrain
             file.write(reinterpret_cast<const char*>(&state.GeneratedRange), sizeof(state.GeneratedRange));
@@ -825,7 +812,6 @@ namespace CW {
         SimulationState m_CopyState;
 
         Camera2D m_Camera;
-        bool m_Hold = false;
 
         Shared<SimulationSettings> m_Settings;
 
@@ -860,13 +846,12 @@ namespace CW {
         std::array<Unique<sf::Sprite>, 3> m_ResourceSprites;
         std::array<Unique<sf::Texture>, 3> m_ResourceTextures;
 
-        Unique<sf::Sprite> m_RecieverSprite;
-        Unique<sf::Texture> m_RecieverTexture;
+        Unique<sf::Sprite> m_MotherBaseSprite;
+        Unique<sf::Texture> m_MotherBaseTexture;
 
         // Debug
         bool m_DebugDroneVisuals = false;
         bool m_DrawChunks = false;
-        ObjectPalleteBuilder m_ObjPallete;
     };
 
 
@@ -1043,6 +1028,7 @@ namespace CW {
             return false;
         }
 
+        // начальные настройки симуляции
         void SimulationSettingsMenu()
         {
             sf::Vector2f windowSize = Renderer::Get().GetWindowSize();
@@ -1143,7 +1129,6 @@ namespace CW {
                 ImGui::SliderAngle("Turning speed", &drones.TurningSpeed, 1.0f, 180.0f);
                 ImGui::InputFloat("FOV", &drones.FOV, 0.01f, 0.1f);
                 ImGui::InputFloat2("View distance", &drones.ViewDistance.x);
-                //ImGui::InputFloat("Pickup distance", &drones.PickupDist, 1.0f, 10.0f);
                 ImGui::Spacing();
                 ImGui::InputFloat("Beacon spawn cooldown", &drones.BeaconCooldownSec, 0.5f, 1.0f);
                 ImGui::InputFloat("Wander cooldown", &drones.BeaconCooldownSec, 0.5f, 1.0f);
@@ -1404,7 +1389,7 @@ namespace CW {
 
         bool OnStartSimulation(StartSimulation&)
         {
-            PopLayer();
+            PopLayer(); // удаление MainMenuLayer
             PushLayer<SimulationLayer>((sf::Vector2f) GetWindowSize(), m_SimSettings);
             PushLayer<InterfaceLayer>((sf::Vector2f) GetWindowSize());
             m_ClearColor = sf::Color(135, 206, 235, 255);
@@ -1414,8 +1399,8 @@ namespace CW {
 
         bool OnSimulationOver(SimulationOver&)
         {
-            PopLayer();
-            PopLayer();
+            PopLayer(); // удаление InterfceLayer
+            PopLayer(); // удаление SimulationLayer
             PushLayer<MainMenuLayer>((sf::Vector2f)GetWindowSize(), m_SimSettings);
             m_ClearColor = sf::Color(0, 0, 0, 255);
             m_SimIsRunning = false;
@@ -1436,8 +1421,8 @@ namespace CW {
 
             FullSimulationState state;
 
-            // reciever
-            file.read(reinterpret_cast<char*>(&state.RecieverData), sizeof(state.RecieverData));
+            // base
+            file.read(reinterpret_cast<char*>(&state.MotherBaseData), sizeof(state.MotherBaseData));
 
             // terrain
             file.read(reinterpret_cast<char*>(&state.GeneratedRange), sizeof(state.GeneratedRange));

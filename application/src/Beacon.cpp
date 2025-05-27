@@ -37,16 +37,6 @@ namespace CW {
 		m_Direction = sf::radians(directionRad);
 	}
 
-	void Beacon::InfoInterface(size_t index) const
-	{
-		ImGui::Separator();
-		ImGui::Text("index: %d", index);
-		ImGui::Text("alive: %d", m_Alive);
-		ImGui::Text("beacon position: (%.2f, %.2f)", m_Position.x, m_Position.y);
-		ImGui::Text("beacon charge: %.3f", m_Charge);
-		ImGui::Text("beacon direction: %.2f", m_Direction.asDegrees());
-	}
-
 	void Beacon::Update(float deltaTime, const BeaconSettings& bs)
 	{
 		if (!IsAlive())
@@ -127,12 +117,6 @@ namespace CW {
 		m_BeaconSettings = settings;
 	}
 
-	void BeaconManager::DebugInterface()
-	{
-		ImGui::SliderFloat("charge threshold", &m_BeaconSettings.ChargeThreshold, 0.0f, 1.0f);
-		ImGui::SliderFloat("discharge rate", &m_BeaconSettings.DischargeRate, 0.1f, 100.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
-	}
-
 	void BeaconManager::Update(float deltaTime)
 	{
 		for (size_t i = 0; i < m_Beacons.size() - m_DeadBeacons; ++i)
@@ -194,18 +178,6 @@ namespace CW {
 		m_Beacons.clear();
 		m_DeadBeacons = 0;
 		m_Beacons.reserve(BEACONS_RESERVE);
-	}
-
-	void BeaconManager::InfoInterface(bool* open)
-	{
-		ImGui::Begin("Beacons", open);
-		size_t index = 0;
-		for (auto& beacon : m_Beacons)
-		{
-			beacon->InfoInterface(index);
-			++index;
-		}
-		ImGui::End();
 	}
 
 	sf::Color beacon_color(TargetType type, float charge)

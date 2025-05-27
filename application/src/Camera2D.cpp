@@ -10,44 +10,35 @@ namespace CW {
 	{
 	}
 
-	void Camera2D::DebugInterface()
-	{
-		ImGui::Text("camera position: (%.2f, %.2f)", m_View.getCenter().x, m_View.getCenter().y);
-		ImGui::Text("camera zoom factor: %.2f", m_ZoomFactor);
-		ImGui::Text("camera is moving: %d", m_IsMoving);
-		ImGui::Text("mouse position: (%d, %d)", m_PrevPos.x, m_PrevPos.y);
-		ImGui::Text("mouse world position: (%f, %f)", PixelToWorldPosition(m_PrevPos).x, PixelToWorldPosition(m_PrevPos).y);
-	}
-
-	void CW::Camera2D::OnEvent(Event& event)
+	void Camera2D::OnEvent(Event& event)
 	{
 		EventDispatcher dispatcher(event);
-		if (dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(onMouseButtonPressed)))
+		if (dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMouseButtonPressed)))
 			return;
-		if (dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(onMouseButtonReleased)))
+		if (dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseButtonReleased)))
 			return;
-		if (dispatcher.Dispach<MouseMoved>(CW_BUILD_EVENT_FUNC(onMouseMoved)))
+		if (dispatcher.Dispach<MouseMoved>(CW_BUILD_EVENT_FUNC(OnMouseMoved)))
 			return;
-		if (dispatcher.Dispach<MouseWheelScrolled>(CW_BUILD_EVENT_FUNC(onMouseWheelScrolled)))
+		if (dispatcher.Dispach<MouseWheelScrolled>(CW_BUILD_EVENT_FUNC(OnMouseWheelScrolled)))
 			return;
-		if (dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(onResized)))
+		if (dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnResized)))
 			return;
 	}
 
-	bool Camera2D::onMouseButtonPressed(MouseButtonPressed& e)
+	bool Camera2D::OnMouseButtonPressed(MouseButtonPressed& e)
 	{
 		if (!ImGui::GetIO().WantCaptureMouse)
 			m_IsMoving = e.Data.button == sf::Mouse::Button::Right;
 		return false;
 	}
 
-	bool Camera2D::onMouseButtonReleased(MouseButtonReleased& e)
+	bool Camera2D::OnMouseButtonReleased(MouseButtonReleased& e)
 	{
 		m_IsMoving = m_IsMoving && e.Data.button != sf::Mouse::Button::Right;
 		return false;
 	}
 
-	bool Camera2D::onMouseMoved(MouseMoved& e)
+	bool Camera2D::OnMouseMoved(MouseMoved& e)
 	{
 		if (m_IsMoving)
 		{
@@ -57,7 +48,7 @@ namespace CW {
 		return false;
 	}
 
-	bool Camera2D::onMouseWheelScrolled(MouseWheelScrolled& e)
+	bool Camera2D::OnMouseWheelScrolled(MouseWheelScrolled& e)
 	{
 		if (ImGui::GetIO().WantCaptureMouse)
 			return false;
@@ -74,7 +65,7 @@ namespace CW {
 		return false;
 	}
 
-	bool Camera2D::onResized(WindowResized& e)
+	bool Camera2D::OnResized(WindowResized& e)
 	{
 		m_View.setSize((sf::Vector2f)e.Size);
 		m_View.zoom(m_ZoomFactor);

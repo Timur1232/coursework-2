@@ -32,8 +32,6 @@ namespace CW {
 
         FOV = 0.5f;
 
-        //PickupDist = 70.0f;
-
         BeaconCooldownSec = 5.0f;
         WanderCooldownSec = 5.0f;
         SpawnDroneCooldownSec = 20.0f;
@@ -121,7 +119,7 @@ namespace CW {
         
         bool beaconSpawn = false;
 
-        turn(deltaTime, sf::radians(settings.TurningSpeed), sf::radians(settings.MaxTurningDeltaRad));
+        Turn(deltaTime, sf::radians(settings.TurningSpeed), sf::radians(settings.MaxTurningDeltaRad));
         m_Position += ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle) * settings.Speed * deltaTime;
 
         if (m_Position.y < 250.0f)
@@ -145,9 +143,7 @@ namespace CW {
             m_BeaconTimerSec = settings.BeaconCooldownSec;
         }
 
-        wander(deltaTime, sf::degrees(settings.WanderAngleThresholdDeg), sf::radians(settings.RandomWanderAngleRad), resources);
-
-        
+        Wander(deltaTime, sf::degrees(settings.WanderAngleThresholdDeg), sf::radians(settings.RandomWanderAngleRad), resources);
 
         return beaconSpawn;
     }
@@ -160,10 +156,10 @@ namespace CW {
 
         ChunkPtr<Beacon> chunk = beacons.GetAreaChunk(m_Position);
 
-        auto [furthestBeacon, furthestDistSq] = findFurthestInChunk(chunk.CenterChunk, FOV, viewDistance);
+        auto [furthestBeacon, furthestDistSq] = FindFurthestInChunk(chunk.CenterChunk, FOV, viewDistance);
         for (const Chunk<Beacon>* adjChunk : chunk.AdjacentChunks)
         {
-            auto [furthestInChunk, furthestDistSqInChunk] = findFurthestInChunk(adjChunk, FOV, viewDistance);
+            auto [furthestInChunk, furthestDistSqInChunk] = FindFurthestInChunk(adjChunk, FOV, viewDistance);
             if (furthestInChunk && (!furthestBeacon || furthestDistSqInChunk < furthestDistSq))
             {
                 furthestBeacon = furthestInChunk;
@@ -272,7 +268,7 @@ namespace CW {
         return distance_squared(resources.at(*m_TargetResourceIndex).GetPos(), m_Position) <= pickUpDist * pickUpDist;
     }
 
-    void Drone::turn(float deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta)
+    void Drone::Turn(float deltaTime, sf::Angle turningSpeed, sf::Angle maxTurningDelta)
     {
         sf::Angle deltaAngle;
         auto quarter = angle::quarter(m_AttractionAngle);
@@ -302,7 +298,7 @@ namespace CW {
         m_DirectionAngle = loop(m_DirectionAngle, sf::degrees(-180.0f), sf::degrees(180.0f), deltaAngle);
     }
 
-    void Drone::wander(float deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle, const std::vector<Resource>& resources)
+    void Drone::Wander(float deltaTime, sf::Angle wanderAngleThreshold, sf::Angle randomWanderAngle, const std::vector<Resource>& resources)
     {
         if (m_WanderTimer > 0.0f)
         {
@@ -323,7 +319,7 @@ namespace CW {
         }
     }
 
-    std::pair<const Beacon*, float> Drone::findFurthestInChunk(
+    std::pair<const Beacon*, float> Drone::FindFurthestInChunk(
         const Chunk<Beacon>* chunk, float FOV, sf::Vector2f viewDistance)
     {
         if (!chunk)
@@ -490,67 +486,9 @@ namespace CW {
         }
     }
 
-    void DroneManager::InfoInterface(bool* open)
-    {
-        if (*open)
-        {
-            ImGui::Begin("Drones");
-            size_t index = 0;
-            for (const auto& drone : m_Drones)
-            {
-                ImGui::Separator();
-                ImGui::Text("index: %d", index);
-                ImGui::Text("position: (%.2f, %.2f)", drone.GetPos().x, drone.GetPos().y);
-                ImGui::Text("direction angle: %.2f", drone.GetDirection().asDegrees());
-                ImGui::Text("attraction angle: %.2f", drone.GetAttraction().asDegrees());
-                ImGui::Text("beacon timer: %.1f s", drone.GetBeaconSpawnTimer());
-                ImGui::Text("carried resources: %d", drone.GetCarriedResources());
-                ImGui::Text(drone.GetTargetResourceIndex() ? "has target" : "no target");
-
-                ++index;
-            }
-            ImGui::End();
-        }
-    }
-
-    void DroneManager::DebugInterface()
-    {
-        /*ImGui::Checkbox("show view distance", &m_DrawViewDistance);
-        ImGui::Checkbox("show direction", &m_DrawDirection);
-        if (ImGui::SliderFloat("fov", &m_DroneSettings.FOV, 0.0f, 1.0f))
-        {
-            m_FOVRadPrecalc = std::acos(m_DroneSettings.FOV);
-        }
-        ImGui::SliderFloat("speed", &m_DroneSettings.Speed, 50.0f, 200.0f);
-
-        static float tmp;
-        tmp = m_DroneSettings.TurningSpeed.asRadians();
-        if (ImGui::SliderAngle("turning speed", &tmp, 0.5f, 180.0f))
-            m_DroneSettings.TurningSpeed = sf::radians(tmp);
-
-        tmp = m_DroneSettings.RandomWanderAngleRad.asRadians();
-        if (ImGui::SliderAngle("random wander angle", &tmp, 0.0f, 180.0f))
-            m_DroneSettings.RandomWanderAngleRad = sf::radians(tmp);
-
-        tmp = m_DroneSettings.WanderAngleThresholdDeg.asRadians();
-        if (ImGui::SliderAngle("wander angle threshold", &tmp, 0.01f, 10.0f))
-            m_DroneSettings.WanderAngleThresholdDeg = sf::radians(tmp);
-
-        tmp = m_DroneSettings.MaxTurningDeltaRad.asRadians();
-        if (ImGui::SliderAngle("max turning delta", &tmp, 1.0f, 180.0f))
-            m_DroneSettings.MaxTurningDeltaRad = sf::radians(tmp);
-
-        ImGui::SliderFloat2("view distanse", &m_DroneSettings.ViewDistance.x, 0.0f, 500.0f);
-
-        ImGui::SliderFloat("beacon spawn cooldown", &m_DroneSettings.BeaconCooldownSec, 0.1f, 50.0f);
-        ImGui::SliderFloat("wander cooldown", &m_DroneSettings.WanderCooldownSec, 0.1f, 50.0f);*/
-    }
-
     void DroneManager::SetDefaultSettings()
     {
         m_DroneSettings.SetDefault();
-        m_DrawViewDistance = false;
-        m_DrawDirection = false;
     }
 
 } // CW

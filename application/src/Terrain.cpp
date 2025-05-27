@@ -128,8 +128,6 @@ namespace CW {
 			return false;
 		}
 
-		// TODO: определение коллизии на границах секций
-
 		float sectionStartPosition = CalcSectionStartPosition(section->Key);
 
 		for (int i = -range; i <= range; ++i)

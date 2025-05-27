@@ -17,7 +17,6 @@ namespace std {
 
 namespace CW {
 
-	// TODO: сделать что-то с RESERVE
 	template <has_position T, size_t RESERVE = 32>
 	class Chunk
 	{

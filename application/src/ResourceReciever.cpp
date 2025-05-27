@@ -19,14 +19,9 @@ namespace CW {
 	{
 	}
 
-	void MotherBase::DebugInterface() const
+	MotherBaseData MotherBase::GetData() const
 	{
-		ImGui::Text("resources amount: %d", m_ResourceCount);
-	}
-
-	RecieverData MotherBase::GetData() const
-	{
-		return RecieverData{
+		return MotherBaseData{
 			.ResourceCount		= m_ResourceCount,
 			.RecieveRadius		= m_RecieveRadius,
 			.BroadcastRadius	= m_BroadcastRadius,
@@ -36,7 +31,7 @@ namespace CW {
 		};
 	}
 
-	void MotherBase::SetData(const RecieverData& data)
+	void MotherBase::SetData(const MotherBaseData& data)
 	{
 		m_ResourceCount = data.ResourceCount;
 		m_RecieveRadius = data.RecieveRadius;

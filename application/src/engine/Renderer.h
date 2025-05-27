@@ -157,9 +157,6 @@ namespace CW {
         void SetDefaultViewSize(sf::Vector2f size) { m_DefaultView.setSize(size); }
         void SetDefaultViewCenter(sf::Vector2f center) { m_DefaultView.setCenter(center); }
 
-        /*bool Intersects(const sf::FloatRect& bounds) { return m_RenderTarget->getView().getViewport().findIntersection(bounds).has_value(); }
-        bool Contains(sf::Vector2f point) { return m_RenderTarget->getView().getViewport().contains(point); }*/
-
         RCircleShapeBuilder& BeginCircleShape() { return m_CircleShapeBuilde; }
         RRectangleShapeBuilder& BeginRectangleShape() { return m_RectangleShapeBuilder; }
         RLineShapeBuilder& BeginLineShape() { return m_LineShapeBuilder; }

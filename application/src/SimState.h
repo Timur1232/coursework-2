@@ -67,7 +67,7 @@ namespace CW {
         std::vector<Drone> Drones;
         std::vector<Beacon> Beacons;
         std::vector<Resource> Resources;
-        RecieverData RecieverData;
+        MotherBaseData MotherBaseData;
 
         SimulationSettings Settings;
         sf::Vector2i GeneratedRange;

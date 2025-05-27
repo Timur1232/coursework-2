@@ -17,8 +17,6 @@ namespace CW {
 	public:
 		Camera2D(float x, float y, float width, float height);
 
-		void DebugInterface();
-
 		void OnEvent(Event& event) override;
 
 		const sf::View& GetView() const;
@@ -27,11 +25,11 @@ namespace CW {
 		sf::Vector2f PixelToWorldPosition(sf::Vector2i mousePos) const;
 		
 	private:
-		bool onMouseButtonPressed(MouseButtonPressed& e);
-		bool onMouseButtonReleased(MouseButtonReleased& e);
-		bool onMouseMoved(MouseMoved& e);
-		bool onMouseWheelScrolled(MouseWheelScrolled& e);
-		bool onResized(WindowResized& e);
+		bool OnMouseButtonPressed(MouseButtonPressed& e);
+		bool OnMouseButtonReleased(MouseButtonReleased& e);
+		bool OnMouseMoved(MouseMoved& e);
+		bool OnMouseWheelScrolled(MouseWheelScrolled& e);
+		bool OnResized(WindowResized& e);
 
 	private:
 		sf::View m_View;

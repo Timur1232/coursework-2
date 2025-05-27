@@ -12,7 +12,6 @@ namespace CW {
 		float FOV;
 
 		sf::Vector2f ViewDistance;
-		//float PickupDist;
 
 		float BeaconCooldownSec;
 		float WanderCooldownSec;

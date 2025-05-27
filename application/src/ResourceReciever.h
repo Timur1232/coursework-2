@@ -9,7 +9,7 @@
 
 namespace CW {
 
-	struct RecieverData
+	struct MotherBaseData
 	{
 		int ResourceCount = 0;
 		float RecieveRadius = 0.0f;
@@ -27,10 +27,8 @@ namespace CW {
 		MotherBase(sf::Vector2f position, int droneCost, float spawnCooldown);
 		MotherBase(const DroneSettings& settings);
 
-		void DebugInterface() const;
-
-		RecieverData GetData() const;
-		void SetData(const RecieverData& data);
+		MotherBaseData GetData() const;
+		void SetData(const MotherBaseData& data);
 
 		bool Update(float deltaTime);
 
