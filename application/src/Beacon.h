@@ -35,7 +35,7 @@ namespace CW {
 		float GetCharge() const { return m_Charge; }
 		[[nodiscard]] TargetType GetType() const { return m_Type; }
 		[[nodiscard]] sf::Angle GetDirectionAngle() const;
-		[[nodiscard]] sf::Angle GetBitDirectionAngle() const { return m_Direction; }
+		[[nodiscard]] sf::Angle GetBitDirectionAngle() const;
 		void SetDirection(sf::Angle angle) { m_Direction = angle; }
 
 	private:

@@ -327,25 +327,28 @@ namespace CW {
 
         const Beacon* furthestBeacon = nullptr;
         float furthestDistSq = -1.0f;
-
+        float distSq = -1.0f;
         auto filteredBeacons = *chunk
-            | std::views::filter([&](const Indexed<Beacon, 2>* b) { return b && (*b)->IsAlive() && (*b)->GetType() == m_TargetType; });
+            | std::ranges::views::filter([&](const Indexed<Beacon, 2>* b) { return b && (*b)->IsAlive() && (*b)->GetType() == m_TargetType; })
+            | std::ranges::views::filter(
+                [&](const Indexed<Beacon, 2>* b) {
+                    distSq = distance_squared((*b)->GetPos(), m_Position);
+                    return distSq <= viewDistance.y * viewDistance.y
+                        && distSq >= viewDistance.x * viewDistance.x && distSq > furthestDistSq;
+                })
+            | std::ranges::views::filter(
+                [&](const Indexed<Beacon, 2>* b) {
+                    auto positionDelta = (*b)->GetPos() - m_Position;
+                    return (positionDelta.x != 0.0f || positionDelta.y != 0.0f)
+                        && ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle).dot(positionDelta.normalized()) >= FOV;
+                }
+            );
 
         for (const auto& ibeacon : filteredBeacons)
         {
             const auto& beacon = ibeacon->Object;
-            if (float distSq = distance_squared(beacon.GetPos(), m_Position);
-                distSq <= viewDistance.y * viewDistance.y
-                && distSq >= viewDistance.x * viewDistance.x && distSq > furthestDistSq)
-            {
-                if (auto positionDelta = beacon.GetPos() - m_Position;
-                    (positionDelta.x != 0.0f || positionDelta.y != 0.0f)
-                    && ONE_LENGTH_VEC.rotatedBy(m_DirectionAngle).dot(positionDelta.normalized()) >= FOV)
-                {
-                    furthestDistSq = distSq;
-                    furthestBeacon = &beacon;
-                }
-            }
+            furthestDistSq = distSq;
+            furthestBeacon = &beacon;
         }
         return { furthestBeacon, furthestDistSq };
     }
@@ -374,26 +377,22 @@ namespace CW {
 
     void DroneManager::CollectState(SimulationState& state, bool debug) const
     {
-        for (const auto& drone : m_Drones)
+        auto aliveDrones = m_Drones | std::ranges::views::filter([](const Drone& d) { return d.IsAlive(); });
+        for (const auto& drone : aliveDrones)
         {
-            if (drone.IsAlive())
-            {
-                state.DronesPositions.push_back(drone.GetPos());
-                state.DronesDirections.push_back(drone.GetDirection());
-                if (debug)
-                    state.DronesAttractions.push_back(drone.GetAttraction());
-            }
+            state.DronesPositions.push_back(drone.GetPos());
+            state.DronesDirections.push_back(drone.GetDirection());
+            if (debug)
+                state.DronesAttractions.push_back(drone.GetAttraction());
         }
     }
 
     void DroneManager::CollectState(FullSimulationState& state) const
     {
-        for (const auto& drone : m_Drones)
+        auto aliveDrones = m_Drones | std::ranges::views::filter([](const Drone& d) { return d.IsAlive(); });
+        for (const auto& drone : aliveDrones)
         {
-            if (drone.IsAlive())
-            {
-                state.Drones.push_back(drone);
-            }
+            state.Drones.push_back(drone);
         }
     }
 

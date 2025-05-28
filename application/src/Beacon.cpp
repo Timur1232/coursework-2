@@ -64,6 +64,11 @@ namespace CW {
 
 	sf::Angle Beacon::GetDirectionAngle() const
 	{
+		return m_Direction;
+	}
+
+	sf::Angle Beacon::GetBitDirectionAngle() const
+	{
 		return DIRECTION_ANGLE_TABLE.at(angle_to_bit_direction(m_Direction));
 	}
 
