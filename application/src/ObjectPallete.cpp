@@ -41,9 +41,9 @@ namespace CW {
         return { sf::radians(m_DroneAngle), m_DroneTarget };
     }
 
-    std::tuple<TargetType, byte> ObjectPalleteBuilder::GetBeaconComponents() const
+    std::tuple<TargetType, sf::Angle> ObjectPalleteBuilder::GetBeaconComponents() const
     {
-        return { m_BeaconType, m_BitDirection };
+        return { m_BeaconType, sf::radians(m_BeaconDirection) };
     }
 
     int ObjectPalleteBuilder::GetRsourceAmount() const
@@ -64,34 +64,7 @@ namespace CW {
             if (ImGui::RadioButton("Navigation##Object-pallete", m_BeaconType == TargetType::Navigation))
                 m_BeaconType = TargetType::Navigation;
 
-            ImGui::Text("beacon direction");
-            static bool l = false, r = false, u = false, d = false;
-            ImGui::Checkbox("Left##Object-pallete", &l);
-            if (l)
-                m_BitDirection |= DirectionBit::Left;
-            else
-                m_BitDirection &= ~DirectionBit::Left;
-
-            ImGui::SameLine();
-            ImGui::Checkbox("Right##Object-pallete", &r);
-            if (r)
-                m_BitDirection |= DirectionBit::Right;
-            else
-                m_BitDirection &= ~DirectionBit::Right;
-
-            ImGui::SameLine();
-            ImGui::Checkbox("Up##Object-pallete", &u);
-            if (u)
-                m_BitDirection |= DirectionBit::Up;
-            else
-                m_BitDirection &= ~DirectionBit::Up;
-
-            ImGui::SameLine();
-            ImGui::Checkbox("Down##Object-pallete", &d);
-            if (d)
-                m_BitDirection |= DirectionBit::Down;
-            else
-                m_BitDirection &= ~DirectionBit::Down;
+            ImGui::SliderAngle("beacon direction", &m_BeaconDirection, 0.0f, 360.0f);
             break;
         }
         case ObjectPallete::Drone:

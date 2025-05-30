@@ -25,7 +25,7 @@ namespace CW {
         ObjectPallete GetCurrentType() const;
 
         std::tuple<sf::Angle, TargetType> GetDroneComponents() const;
-        std::tuple<TargetType, byte> GetBeaconComponents() const;
+        std::tuple<TargetType, sf::Angle> GetBeaconComponents() const;
         int GetRsourceAmount() const;
 
     private:
@@ -41,7 +41,7 @@ namespace CW {
 
         // Beacon
         TargetType m_BeaconType = TargetType::Recource;
-        byte m_BitDirection = DirectionBit::None;
+        float m_BeaconDirection = 0.0f;
 
         // Resource
         int m_Amount = 10;

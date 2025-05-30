@@ -19,6 +19,7 @@
 #include "BitDirection.h"
 #include "Terrain.h"
 #include "SimulationSettings.h"
+#include "ObjectPallete.h"
 
 #define SHADERS_FOLDER "res/shaders/"
 #define SPRITES_FOLDER "res/sprites/"
@@ -234,6 +235,8 @@ namespace CW {
                 return;
             dispatcher.Dispach<WindowResized>(CW_BUILD_EVENT_FUNC(OnWindowResized));
             dispatcher.Dispach<KeyPressed>(CW_BUILD_EVENT_FUNC(OnKeyPressed));
+            dispatcher.Dispach<MouseButtonPressed>(CW_BUILD_EVENT_FUNC(OnMousePressed));
+            dispatcher.Dispach<MouseButtonReleased>(CW_BUILD_EVENT_FUNC(OnMouseReleased));
 
             m_Camera.OnEvent(event);
         }
@@ -445,6 +448,64 @@ namespace CW {
         {
             m_MenuIsOpen = !m_MenuIsOpen;
             return true;
+        }
+
+        bool OnMouseReleased(MouseButtonReleased& e)
+        {
+            m_MouseButtonHold = !m_MouseButtonHold && e.Data.button == sf::Mouse::Button::Left;
+            return true;
+        }
+
+        bool OnMousePressed(MouseButtonPressed& e)
+        {
+            if (!m_MouseButtonHold && e.Data.button == sf::Mouse::Button::Left)
+            {
+                m_MouseButtonHold = true;
+                switch (m_ObjectPallete.GetCurrentType())
+                {
+                case ObjectPallete::Drone:
+                case ObjectPallete::Beacon:
+                case ObjectPallete::Resource:
+                    if (!m_RunSingleThread)
+                        SyncStopSimulationThread();
+                    break;
+                default: break;
+                }
+
+                sf::Vector2f position = m_Camera.PixelToWorldPosition(e.Data.position);
+                switch (m_ObjectPallete.GetCurrentType())
+                {
+                case ObjectPallete::Drone: {
+                    auto [dirAngle, targetType] = m_ObjectPallete.GetDroneComponents();
+                    m_Drones.CreateDrone(position, dirAngle, targetType);
+                    break;
+                }
+                case ObjectPallete::Beacon: {
+                    auto [targetType, angle] = m_ObjectPallete.GetBeaconComponents();
+                    m_Beacons.CreateBeacon(position, targetType, angle);
+                    break;
+                }
+                case ObjectPallete::Resource: {
+                    int amount = m_ObjectPallete.GetRsourceAmount();
+                    m_Resources.CreateResource(position, sf::Angle::Zero, amount);
+                    break;
+                }
+                default: break;
+                }
+
+                switch (m_ObjectPallete.GetCurrentType())
+                {
+                case ObjectPallete::Drone:
+                case ObjectPallete::Beacon:
+                case ObjectPallete::Resource:
+                    if (!m_RunSingleThread)
+                        SpawnSimulationThread();
+                    break;
+                default: break;
+                }
+                return true;
+            }
+            return false;
         }
 
         void InitNewSim(size_t droneCount, sf::Vector2f startPosition)
@@ -727,6 +788,10 @@ namespace CW {
                 ImGui::Checkbox("Drone debug visuals", &m_DebugDroneVisuals);
                 ImGui::Checkbox("Chuck debug visuals", &m_DrawChunks);
             }
+
+            ImGui::Separator();
+            if (ImGui::CollapsingHeader("Object-pallete"))
+                m_ObjectPallete.UpdateInterface();
             
             ImGui::End();
         }
@@ -852,6 +917,8 @@ namespace CW {
         // Debug
         bool m_DebugDroneVisuals = false;
         bool m_DrawChunks = false;
+        ObjectPalleteBuilder m_ObjectPallete;
+        bool m_MouseButtonHold = false;
     };
 
 
