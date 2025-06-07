@@ -24,7 +24,7 @@
 #define SHADERS_FOLDER "res/shaders/"
 #define SPRITES_FOLDER "res/sprites/"
 #define SAVES_FOLDER   "saves/"
-#define SAVE_EXTENSION ".s"
+#define SAVE_EXTENSION ".save"
 
 namespace CW {
 
